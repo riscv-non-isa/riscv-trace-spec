@@ -2,11 +2,9 @@ SPEC=riscv-trace-spec
 
 INCLUDES_TEX = introduction.tex
 
-FIGURES = fig/*
-
 all:	$(SPEC).pdf
 
-$(SPEC).pdf: $(SPEC).tex $(FIGURES) $(INCLUDES_TEX) 
+$(SPEC).pdf: $(SPEC).tex $(INCLUDES_TEX) 
 	pdflatex -shell-escape $< && makeindex $(SPEC) && pdflatex -shell-escape $<
 
 publish:	$(SPEC).pdf
@@ -29,5 +27,5 @@ changelog.tex: .git/logs/HEAD Makefile
 	    sed -e "s,\\\\,{\\\\textbackslash},g" -e "s,[_#^],\\\\&,g" -e s/^/\\\\/ >> changelog.tex
 
 clean:
-	rm -f $(SPEC).pdf *.aux $(SPEC).toc $(SPEC).log 
+	rm -f $(SPEC).pdf *.aux $(SPEC).toc $(SPEC).log $(SPEC).aux $(SPEC).idx $(SPEC).ilg $(SPEC).ind $(SPEC).lof $(SPEC).log $(SPEC).lot $(SPEC).out $(SPEC).pdf $(SPEC).toc
 	    
