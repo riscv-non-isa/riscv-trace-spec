@@ -1,0 +1,51 @@
+%=======================================================================
+% riscv-trace.tex
+%-----------------------------------------------------------------------
+
+\documentclass[twoside,11pt]{book}
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\input{preamble}
+
+% All registers are named here. That way when we rename one we'll get errors if
+% there are still references to the old name.
+
+\usepackage{makeidx}
+\makeindex
+
+\usepackage{xspace}
+
+\newcommand{\versionnum}{0.01-DRAFT}
+
+\begin{document}
+\setcounter{footnote}{0}
+
+\title{RISC-V Processor Trace\\
+Version \versionnum
+}
+\author{Gajinder Panesar \textless gajinder.panesar@ultrasoc.com\textgreater}
+
+\maketitle
+
+\markboth{RISC-V Processor Trace Version \versionnum}
+{RISC-V Processor Trace Version \versionnum}
+\thispagestyle{empty}
+
+\frontmatter
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+\input{introduction}
+\input{branchTrace.tex}
+\input{ingressPort.tex}
+\input{exampleAlgorithm.tex}
+\input{payload.tex}
+\newpage
+
+
+\end{document}

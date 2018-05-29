@@ -1,0 +1,123 @@
+\chapter{Ingress Port} \label{Interface}
+
+\section{Instruction Interface}
+This section describes the interface between a RISC-V core and the
+trace encoder. The trace interface conveys information about
+instruction-retirement and exception events.
+
+Table~\ref{tab:ingress} lists the signals in the interface. The {\bf
+  valid} signal is 1 if and only if an instruction retires or traps
+(either by generating a synchronous exception or taking an interrupt).
+The remaining fields in the packet are only defined when valid is 1.
+
+The {\bf iaddr} field holds the address of the instruction that retired or
+trapped. If address translation is enabled, it is a virtual address,
+else it is a physical address. Virtual addresses narrower than XLEN
+bits are sign-extended, and physical addresses narrower than XLEN bits
+are zero-extended.
+
+The {\bf insn} field holds the instruction that retired or
+trapped. For instructions narrower than the maximum width, e.g., those
+in the RISC-V C extension, the unused high-order bits are
+zero-filled. The length of the instruction can be determined by
+examining the low-order bits of the instruction, as described in The
+RISC-V Instruction Set Manual, Volume I: User-Level ISA, Version 2.1
+[1]. The width of the {\bf insn} field, ILEN, is 32 bits for current
+implementations.
+
+The {\bf priv} field indicates the privilege mode at the time of instruction
+execution. (On an exception, the next valid trace packet's {\bf priv} field
+gives the privilege mode of the activated trap handler.) The width of
+the {\bf priv} field, PRIVLEN, is 3, and it is encoded as shown in Table 3
+2.
+
+The exception field is 0 if this packet corresponds to a retired
+instruction, or 1 if it corresponds to an exception or interrupt.  In
+the former case, the cause and interrupt fields are undefined and the
+tval field is zero.  In the latter case, the fields are set as
+follows:
+
+\begin{itemize}
+  \item {\bf interrupt} is 0 for synchronous exceptions and 1 for
+    interrupts.
+  \item {\bf cause} supplies the exception or interrupt cause, as
+    would be written to the lower CAUSELEN bits of the mcause CSR. For
+    current implementations, CAUSELEN=log2XLEN.
+  \item {\bf tval} supplies the associated trap value, e.g., the
+    faulting virtual address for address exceptions, as would be
+    written to the {\bf mtval} CSR.
+\end{itemize}
+
+Future optional extensions may define {\bf tval} to provide ancillary
+information in cases where it currently supplies zero.  For cores that
+can retire N instructions per clock cycle, this interface is
+replicated N times.  Lower- numbered entries correspond to older
+instructions.  If fewer than N instructions retire, the valid packets
+need not be consecutive, i.e., there may be invalid packets between
+two valid packets. If one of the instructions is an exception, no
+younger instruction will be valid.
+
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder signals}
+    \label{tab:ingress}
+    \begin{tabulary}{\textwidth}{|l|l|}
+        \hline
+        {\bf Signal} & {\bf Function} \\
+        \hline
+        ivalid & Instruction has retired or trapped (exception) \\
+        \hline
+        iexception & Exception \\
+        \hline
+        interrupt & 0 if the exception was synchronous; 1 if interrupt \\
+        \hline
+        cause [CAUSELEN-1:0] & Exception cause \\
+        \hline
+        tval[XLEN-1]& Exception data \\
+        \hline
+        priv[PRIVLEN-1:0] & Privilege mode during execution \\
+        \hline
+        iaddr [XLEN-1:0] & The address of the instruction \\
+        \hline
+        instr[ILEN-1:0] & The instruction \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\subsection {Instruction Opcode at Fetch}
+
+Some cores may not keep hold of the instruction through the pipeline,
+in those cases the instruction must be provided at the fetch
+stage. Pre-decoded instructions will then be queued through a FIFO in
+the encoder for use at retirement.
+
+To support speculative execution, a {\it retract count} input will allow a
+specified number of queued instructions to be deleted from the input
+side of the queue within the encoder.
+
+The signals in Table~\ref{tab:ingressfetch} will be presented to the
+encoder in such systems. Note {\bf fvalid} only applies to the {\bf
+  insn}, all other signals in Table~\ref{tab:ingress} are still valid
+when {\bf ivalid} is high.
+
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder optional signals}
+    \label{tab:ingressfetch}
+    \begin{tabulary}{\textwidth}{|l|l|}
+        \hline
+        {\bf Signal} & {\bf Function} \\
+        \hline
+        fvalid & Instruction presented is valid at fetch stage \\
+        \hline
+        retract[RETRACTLEN-1:0] & Number of newest fetched instructions to discard \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\subsection {Side band signals}
+
+In some circumstances there will be some side band signals which may
+affect the encoder's behaviour, for example to start and/or stop
+encoding. There will sometimes be cases where the encoder may be
+required to affect the behaviour of the core, for example halting.

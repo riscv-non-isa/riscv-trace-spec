@@ -1,0 +1,96 @@
+\chapter{Branch Trace} \label{Branch Trace}
+
+
+\section{Instruction Delta Tracing} \label{Delta Tracing}
+
+Instruction delta tracing, also known as branch tracing, works by
+tracking execution from a known start address by sending information
+about the deltas taken by the program. Deltas are typically introduced
+by jump, call, return and branch type instructions, although
+interrupts and exceptions are also types of delta.
+
+Instruction trace delta modes provide an efficient encoding of an
+instruction sequence by exploiting the deterministic way the processor
+behaves based on the program it is executing. The approach relies on
+an offline copy of the program being available to the decoder, so it
+is generally unsuitable for either dynamic (self-modifying) programs
+or those where access to the program binary is prohibited. There is no
+need for either assembly or high-level source code to be available,
+although such source code will aid the debugger in presenting the
+decoded trace.
+
+This approach can be extended to cope with small sections of
+deterministically dynamic code by arranging for the decoder to request
+instruction memory from the target. Memory lookups generally lead to a
+prohibitive reduction in performance, although they are suitable for
+examining modest jump tables, such as the exception/interrupt vector
+pointers of an operating system which may be adjusted at boot up and
+when services are registered.  Both static and dynamically linked
+programs can be traced using this approach. Statically linked programs
+are straightforward as they generally operate in a known address
+space, often mapping directly to physical memory. Dynamically linked
+programs require the debugger to keep track of memory allocation
+operations using either a trace or stop-mode debugging.
+
+\subsection{Sequential Instructions} \label{Sequential Instructions}
+
+For instruction set architectures where all instructions are executed
+unconditionally or at least their execution can be determined based on
+the program, the instructions between the deltas are assumed to be
+executed sequentially. This characteristic means that there is no need
+to report them via the trace, only whether the branch was taken or not
+and the address of taken indirect jump.
+
+\subsection{Unpredictable PC Discontinuities} \label{unpredpc}
+
+If the program counter is changed by an amount that cannot be
+determined from the execution binary, the trace decoder needs to be
+given the destination address (i.e. the address of the next valid
+instruction).  Examples of this are indirect jumps, where
+the next instruction address is determined by the contents of a
+register rather than a constant embedded in the source code.
+
+\subsection{Branches} \label{branches}
+
+When a branch occurs, the decoder must be informed of whether it was
+taken or not.  For a direct branch, this is sufficient.  There are no
+indirect branches in RISC-V; an indirect jump is an unpredictable PC
+discontinuity.
+
+\subsection{Interrupts and Exceptions} \label{interruptsexceptions}
+
+Interrupts are a different type of delta, they generally occur
+asynchronously to the program's execution rather than intentionally as
+a result of a specific instruction or event. Exceptions can be thought
+of in the same way, even though they can be typically linked back to a
+specific instruction address.  The decoder generally does not know
+where an interrupt occurs in the instruction sequence, so the trace
+must report the address where normal program flow ceased, as well as
+give an indication of the asynchronous destination which may be as
+simple as reporting the exception type.  When an interrupt or
+exception occurs, or the processor is halted, the final instruction
+executed beforehand must be traced.  Following this, for an interrupt
+or exception, the next valid instruction address (the first of the
+interrupt or exception handler) must be traced in order to instruct the
+trace decoder to classify the instruction as an indirect jump even
+if it is not.
+
+\subsection{Synchronisation} \label{synchronisation}
+
+In order to make the trace robust there needs to be regular
+synchronisation points within the trace. Synchronisation is made by
+sending a full valued instruction address (and potentially a context
+identifier). The decoder and debugger may also benefit from sending
+the reason for synchronising. The frequency of synchronisation is a
+trade-off between robustness and trace bandwidth.
+
+The instruction trace encoder needs to synchronise fully:
+
+\begin{itemize}
+
+\item After a reset.
+  \item When it becomes qualified\footnote{Qualification is when certain conditions have been met so that a function can be enabled and executed} and instructions have been executed since losing qualification which needed logging by the instruction or data trace encoder.
+\item If the instruction is the first of an interrupt service routine or
+exception handler (hardware context change).
+\item After a prolonged period of time.
+\end{itemize}

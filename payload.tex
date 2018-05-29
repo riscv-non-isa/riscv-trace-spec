@@ -1,0 +1,92 @@
+\chapter{Trace Encoder Output Packet}
+
+Used to output encoded instruction trace.  Four different formats are used according to the needs of the encoding algorithm.
+
+\begin{table}[htp]
+    \centering
+    \caption{Packet Format 0 and 1}
+    \label{tab:te_inst0-1}
+    \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
+        \hline
+        {\bf Field name} & {\bf Bits} & {\bf Description} \\
+        \hline
+        msg-type & 2 & set to 0x2 \\
+        \hline
+        format	& 2	& 00 (full-delta): includes branch map and full address \newline
+                        01 (diff-delta): includes branch map and differential address\\
+        \hline
+        branches & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
+        0-1: 	1 bit \newline
+        2-9: 	9 bits \newline
+        10-17: 	17 bits \newline
+        18-25: 	25 bits \newline
+        26-31: 	31 bits  \\
+        \hline
+        branch-map & See\footnote{Number of bits determined by branches field} & An array of bits indicating whether branches are taken or not.\newline
+        Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
+        0: branch taken \newline
+        1: branch not taken \\
+        \hline
+        address	& See\footnote {\label{iaddressbits}Number of bits is iaddress-width-p - iaddress-lsb-p} & Differential or full instruction address, according to format.  \newline
+        When branches is 31 (indicating a full address map), the address is only valid if the instruction immediately prior to the final branch causes an unpredicatable discontinuity.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+    \centering
+    \caption{Packet Format 2}
+    \label{tab:te_inst2}
+    \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
+        \hline
+        msg-type & 2 & set to 0x2 \\
+        \hline
+        {\bf Field name} & {\bf Bits} & {\bf Description} \\
+        \hline
+        format	& 2	& 10 (addr-only): address and no branch map\\
+        \hline
+        address & See\footnote {\label{addressbitslsbmsb}Total number of bits for address is iaddress-width-p - iaddress-lsb-p.} & Address \newline
+        Address is always differential unless full-address is set\\ 
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Packet Format 3}
+    \label{tab:te_inst3}
+    \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
+      \hline
+          {\bf Field name} & {\bf Bits} & {\bf Description} \\
+          \hline
+          msg-type & 2 & Set to 0x2. \\
+          \hline
+          format & 2 & 11: sync \\
+          \hline
+          subformat & 2 & Sync sub-format omits fields when not required: \newline
+          00 (start): ecause, interrupt and tval omitted \newline
+          01 (exception): All fields present (address omitted if implicit-except in set-trace is 1) \newline
+          10 (context): address, branch, ecause, interrupt and tval omitted \newline
+          11 : reserved \\
+          \hline
+          context &  See\footnote {\label{contextbits} Total number of bits for contextis context-width-p unless nocontext-p is 1, in which case it is 0} & The instruction context \\
+          \hline
+          privilege & See\footnote {\label{pivilegewidth} Number of bits is privilege-width-p} & The current privilege level. \\
+          \hline
+          branch & 1 & If the address points to a branch instruction, set to 1 if the branch was not taken. \newline
+          Has no meaning if this instruction is not a branch. \\
+          \hline
+          address & See\footnote {\label{subformatbits} Number of bits is iaddress-width-p - iaddress-lsb-p, unless subformat is 10, or subformat is 01 and implicit-except in set-trace is 1, in which case the number of bits is 0 (no address).} & Full instruction address.  Address alignment is determined by iaddress-lsb-p. \\
+          \hline
+          ecause & See\footnote {\label{ecausebits} Number of bits is ecause-width-p if subformat is 01, or 0 otherwise (no exception).} & Exception cause. \\
+          \hline
+          interrupt & See\footnote {\label{interruptbits}Number of bits is 1 if subformat is 01, or 0 otherwise (no exception).}
+ & Interrupt \\
+          \hline
+          tval & See\footnote {\label{tvalbits} Number of bits is iaddress-width-p if subformat is 01 and notval-p is 0, or 0 otherwise (no exception).}
+ & Trap value \\
+          \hline
+    \end{tabulary}
+\end{table}
+
