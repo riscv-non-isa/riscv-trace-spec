@@ -10,8 +10,6 @@ Used to output encoded instruction trace.  Four different formats are used accor
         \hline
         {\bf Field name} & {\bf Bits} & {\bf Description} \\
         \hline
-        msg-type & 2 & set to 0x2 \\
-        \hline
         format	& 2	& 00 (full-delta): includes branch map and full address \newline
                         01 (diff-delta): includes branch map and differential address\\
         \hline
@@ -40,14 +38,12 @@ Used to output encoded instruction trace.  Four different formats are used accor
     \label{tab:te_inst2}
     \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
         \hline
-        msg-type & 2 & set to 0x2 \\
-        \hline
         {\bf Field name} & {\bf Bits} & {\bf Description} \\
         \hline
         format	& 2	& 10 (addr-only): address and no branch map\\
         \hline
         address & See\footnote {\label{addressbitslsbmsb}Total number of bits for address is iaddress-width-p - iaddress-lsb-p.} & Address \newline
-        Address is always differential unless full-address is set\\ 
+        Address is always differential unless full-address (TODO: needs to be explained) is set\\ 
         \hline
     \end{tabulary}
 \end{table}
@@ -60,26 +56,24 @@ Used to output encoded instruction trace.  Four different formats are used accor
       \hline
           {\bf Field name} & {\bf Bits} & {\bf Description} \\
           \hline
-          msg-type & 2 & Set to 0x2. \\
-          \hline
-          format & 2 & 11: sync \\
+          format & 2 & 11 (sync): synchronisation\\
           \hline
           subformat & 2 & Sync sub-format omits fields when not required: \newline
           00 (start): ecause, interrupt and tval omitted \newline
-          01 (exception): All fields present (address omitted if implicit-except in set-trace is 1) \newline
+          01 (exception): All fields present (address omitted if implicit-except in set-trace is 1 (TODO: needs to be explained)) \newline
           10 (context): address, branch, ecause, interrupt and tval omitted \newline
           11 : reserved \\
           \hline
           context &  See\footnote {\label{contextbits} Total number of bits for contextis context-width-p unless nocontext-p is 1, in which case it is 0} & The instruction context \\
           \hline
-          privilege & See\footnote {\label{pivilegewidth} Number of bits is privilege-width-p} & The current privilege level. \\
+          privilege & See\footnote {\label{pivilegewidth} Number of bits is privilege-width-p} & The current privilege level \\
           \hline
           branch & 1 & If the address points to a branch instruction, set to 1 if the branch was not taken. \newline
           Has no meaning if this instruction is not a branch. \\
           \hline
-          address & See\footnote {\label{subformatbits} Number of bits is iaddress-width-p - iaddress-lsb-p, unless subformat is 10, or subformat is 01 and implicit-except in set-trace is 1, in which case the number of bits is 0 (no address).} & Full instruction address.  Address alignment is determined by iaddress-lsb-p. \\
+          address & See\footnote {\label{subformatbits} Number of bits is iaddress-width-p - iaddress-lsb-p, unless subformat is 10, or subformat is 01 and implicit-except in set-trace is 1, in which case the number of bits is 0 (no address).} & Full instruction address.  Address alignment is determined by iaddress-lsb-p (TODO: needs to be explained). \\
           \hline
-          ecause & See\footnote {\label{ecausebits} Number of bits is ecause-width-p if subformat is 01, or 0 otherwise (no exception).} & Exception cause. \\
+          ecause & See\footnote {\label{ecausebits} Number of bits is ecause-width-p if subformat is 01, or 0 otherwise (no exception).} & Exception cause \\
           \hline
           interrupt & See\footnote {\label{interruptbits}Number of bits is 1 if subformat is 01, or 0 otherwise (no exception).}
  & Interrupt \\

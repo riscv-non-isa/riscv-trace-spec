@@ -28,4 +28,3 @@ changelog.tex: .git/logs/HEAD Makefile
 
 clean:
 	rm -f $(SPEC).pdf *.aux $(SPEC).toc $(SPEC).log $(SPEC).aux $(SPEC).idx $(SPEC).ilg $(SPEC).ind $(SPEC).lof $(SPEC).log $(SPEC).lot $(SPEC).out $(SPEC).pdf $(SPEC).toc
-	    
