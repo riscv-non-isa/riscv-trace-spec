@@ -1,0 +1,69 @@
+\chapter{Filtering} \label{ch:filtering}
+
+
+The instruction trace encoder must be able to filter on the following inputs to the encoder:
+
+\begin{itemize}
+  \item The instruction address 
+  \item The context 
+  \item The exception cause 
+  \item Whether the exception is an interrupt or not 
+  \item The privilege level
+  \item Tval 
+  \item User specific signals
+\end{itemize}
+
+Internal to the encoder will be several comparators and filters. The
+actual number of these will vary for different classes of devices. The
+filters and comparators must be configured to provide the trace and
+filtering required. There will be three command types needed to set up
+the filtering operation.
+
+\begin{enumerate}
+    \item Set up comparator 
+    \begin{itemize}
+      \item Which input bus to compare
+        \begin {enumerate}
+          \item instruction
+          \item address
+          \item context
+          \item tval
+          \item exception
+          \item user
+        \end{enumerate}
+      \item Value e.g. start address
+    \end{itemize}
+    \item Set up filter 
+    \begin{itemize}
+      \item Which comparator(s) to use which filtering operation to enable
+        \begin {enumerate}
+          \item \textit {eq}
+          \item \textit {neq}
+          \item \textit {lt}
+          \item \textit {lte}
+          \item \textit {gt}
+          \item \textit {gte}
+          \item \textit {always}
+          \end{enumerate}
+    \end{itemize}
+    \item Set match 
+    \begin{itemize}
+      \item Configure matching behaviour for exception, privilege and user sideband
+    \end{itemize}
+\end{enumerate}
+
+The user may wish to:
+
+\begin{enumerate}
+  \item Trace instructions between a range of addresses
+  \item Trace instruction from one address to another
+  \item Trace interrupt service routine
+  \item Start/stop trace when in a particular privilege 
+  \item Start/stop trace when context changes or is a particular value
+  \begin {itemize}
+    \item This can be HARTs and/or software contexts. If the latter this would be 
+    \item Start/stop trace when specific instruction
+    \item Start/stop using User specific signals 
+    \item This could be the specific CSR value being presented to the Encoder
+  \end{itemize}
+\end{enumerate}
