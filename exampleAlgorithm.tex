@@ -1,6 +1,8 @@
 \chapter{Example Algorithm}
 
-An example algorithm for compressed branch trace is given in figure \ref{fig:algo} 
+An example algorithm for compressed branch trace is given in figure \ref{fig:algo}. In the diagram, {\textit {unprediscon}} is short for unpredictable discontinuity; when the program counter changes in a manner that cannot be predicted from the source code alone. {\textit {te\_inst}} is the name of a type of packet emitted by the encoder. 
+
+\textit{Context} is a generic term that refers to the threadID. This could be the HART ID and/or the software context id. This is reported when there is a change.
 
 \begin{figure}[l]
 \begin{center}

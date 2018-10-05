@@ -5,84 +5,82 @@ This section describes the interface between a RISC-V core and the
 trace encoder. The trace interface conveys information about
 instruction-retirement and exception events.
 
-Table~\ref{tab:ingress} lists the signals in the interface. The {\bf
-  valid} signal is 1 if and only if an instruction retires or traps
-(either by generating a synchronous exception or taking an interrupt).
-The remaining fields in the packet are only defined when valid is 1.
-
-The {\bf iaddr} field holds the address of the instruction that retired or
-trapped. If address translation is enabled, it is a virtual address,
-else it is a physical address. Virtual addresses narrower than XLEN
-bits are sign-extended, and physical addresses narrower than XLEN bits
-are zero-extended.
-
-The {\bf insn} field holds the instruction that retired or
-trapped. For instructions narrower than the maximum width, e.g., those
-in the RISC-V C extension, the unused high-order bits are
-zero-filled. The length of the instruction can be determined by
-examining the low-order bits of the instruction, as described in The
-RISC-V Instruction Set Manual, Volume I: User-Level ISA, Version 2.1
-[1]. The width of the {\bf insn} field, ILEN, is 32 bits for current
-implementations.
-
-The {\bf priv} field indicates the privilege mode at the time of instruction
-execution. (On an exception, the next valid trace packet's {\bf priv} field
-gives the privilege mode of the activated trap handler.) The width of
-the {\bf priv} field, PRIVLEN, is 3, and it is encoded as shown in Table 3
-2 (TODO: this reference doesn't exist).
-
-The exception field is 0 if this packet corresponds to a retired
-instruction, or 1 if it corresponds to an exception or interrupt.  In
-the former case, the cause and interrupt fields are undefined and the
-tval field is zero.  In the latter case, the fields are set as
-follows:
-
-\begin{itemize}
-  \item {\bf interrupt} is 0 for synchronous exceptions and 1 for
-    interrupts.
-  \item {\bf cause} supplies the exception or interrupt cause, as
-    would be written to the lower CAUSELEN bits of the mcause CSR. For
-    current implementations, CAUSELEN=log2XLEN.
-  \item {\bf tval} supplies the associated trap value, e.g., the
-    faulting virtual address for address exceptions, as would be
-    written to the {\bf mtval} CSR.
-\end{itemize}
-
-Future optional extensions may define {\bf tval} to provide ancillary
-information in cases where it currently supplies zero.  For cores that
-can retire N instructions per clock cycle, this interface is
-replicated N times.  Lower- numbered entries correspond to older
-instructions.  If fewer than N instructions retire, the valid packets
-need not be consecutive, i.e., there may be invalid packets between
-two valid packets. If one of the instructions is an exception, no
-younger instruction will be valid.
-
 \begin{table}[htp]
     \centering
     \caption{Core-Encoder signals}
     \label{tab:ingress}
     \begin{tabulary}{\textwidth}{|l|l|}
         \hline
-        {\bf Signal} & {\bf Function} \\
+        \textbf {Signal} & \textbf {Function} \\
         \hline
-        ivalid & Instruction has retired or trapped (exception) \\
+        \textbf {ivalid} & Instruction has retired or trapped (exception) \\
         \hline
-        iexception & Exception \\
+        \textbf {iexception} & Exception \\
         \hline
-        interrupt & 0 if the exception was synchronous; 1 if interrupt \\
+        \textbf {interrupt} & 0 if the exception was synchronous; 1 if interrupt \\
         \hline
-        cause [CAUSELEN-1:0] & Exception cause \\
+        \textbf {cause} [\textit{CAUSELEN}-1:0] & Exception cause \\
         \hline
-        tval[XLEN-1]& Exception data \\
+        \textbf {tval}[\textit{XLEN}-1]& Exception data \\
         \hline
-        priv[PRIVLEN-1:0] & Privilege mode during execution \\
+        \textbf {priv}[\textit{PRIVLEN}-1:0] & Privilege mode during execution \\
         \hline
-        iaddr [XLEN-1:0] & The address of the instruction \\
+        \textbf {iaddr} [\textit{XLEN}-1:0] & The address of the instruction \\
         \hline
-        instr[ILEN-1:0] & The instruction \\
+        \textbf{instr}[\textit{ILEN}-1:0] & The instruction \\
         \hline
     \end{tabulary}
 \end{table}
+
+Table~\ref{tab:ingress} lists the signals in the interface. The {\bf
+  valid} signal is 1 if and only if an instruction retires or traps
+(either by generating a synchronous exception or taking an interrupt).
+The remaining fields in the word are only defined when valid is 1.
+
+The \textbf {iaddr} bus holds the address of the instruction that
+retired or trapped. If address translation is enabled, it is a virtual
+address, else it is a physical address. Virtual addresses narrower
+than \textit {XLEN} bits are sign-extended to make computation of differential
+addresses easier, and physical addresses narrower than \textit {XLEN} bits are
+zero-extended.
+
+The \textbf {instr} bus holds the instruction that retired or
+trapped. For instructions narrower than the maximum width, e.g., those
+in the RISC-V C extension, the unused high-order bits are
+zero-filled. The length of the instruction can be determined by
+examining the low-order bits of the instruction, as described in The
+RISC-V Instruction Set Manual, Volume I: User-Level ISA, Version 2.1
+[1]. The width of the \textbf {insn} bus, \textit {ILEN}, is 32 bits for current
+implementations.
+
+The \textbf {priv} bus indicates the privilege mode at the time of instruction
+execution. (On an exception, the next valid ingress word's \textbf {priv} bus
+gives the privilege mode of the activated trap handler.) The width of
+the \textbf {priv} bus, \textit {PRIVLEN}, is typically 3. The actual vaues do not have any special meaning within the encoder other than when filtering. When the level changes the encoder will output the new value in a packet.
+
+The exception bus is 0 if this ingress word corresponds to a retired
+instruction, or 1 if it corresponds to an exception or interrupt.  In
+the former case, the cause and interrupt buses are undefined and the
+tval bus is zero.  In the latter case, the buses are set as
+follows:
+
+\begin{itemize}
+  \item \textbf {interrupt} is 0 for synchronous exceptions and 1 for
+    interrupts.
+  \item \textbf {cause} supplies the exception or interrupt cause, as
+    would be written to the lower \textit {CAUSELEN} bits of the mcause CSR.
+  \item \textbf {tval} supplies the associated trap value, e.g., the
+    faulting virtual address for address exceptions, as would be
+    written to the \textbf {mtval} CSR. Future optional extensions may define \textbf {tval} to provide ancillary information in cases where it currently supplies zero.  
+\end{itemize}
+
+For cores that can retire N instructions per clock cycle, this
+interface is replicated N times.  Lower- numbered entries correspond
+to older instructions.  If fewer than N instructions retire, the valid
+ingress words need not be consecutive, i.e., there may be invalid
+ingress words between two valid ingress words. If one of the
+instructions is an exception, no younger instruction will be valid.
+
 
 \subsection {Instruction Opcode at Fetch}
 
@@ -96,9 +94,9 @@ specified number of queued instructions to be deleted from the input
 side of the queue within the encoder.
 
 The signals in Table~\ref{tab:ingressfetch} will be presented to the
-encoder in such systems. Note {\bf fvalid} only applies to the {\bf
+encoder in such systems. Note \textbf {fvalid} only applies to the {\bf
   insn}, all other signals in Table~\ref{tab:ingress} are still valid
-when {\bf ivalid} is high.
+when \textbf {ivalid} is high.
 
 \begin{table}[htp]
     \centering
@@ -106,11 +104,11 @@ when {\bf ivalid} is high.
     \label{tab:ingressfetch}
     \begin{tabulary}{\textwidth}{|l|l|}
         \hline
-        {\bf Signal} & {\bf Function} \\
+        \textbf {Signal} & \textbf {Function} \\
         \hline
-        fvalid & Instruction presented is valid at fetch stage \\
+        \textbf {fvalid} & Instruction presented is valid at fetch stage \\
         \hline
-        retract[RETRACTLEN-1:0] & Number of newest fetched instructions to discard \\
+        \textbf {retract}[\textit{RETRACTLEN}-1:0] & Number of newest fetched instructions to discard \\
         \hline
     \end{tabulary}
 \end{table}
@@ -121,3 +119,60 @@ In some circumstances there will be some side band signals which may
 affect the encoder's behaviour, for example to start and/or stop
 encoding. There will sometimes be cases where the encoder may be
 required to affect the behaviour of the core, for example halting.
+
+\subsection {Parameters}
+
+The encoder will have some configurable or variable parameters. Some of these are related to port widths whilst others may indicate the presence or otherwise of various feature, e.g. filter or comparitors.
+
+How the parameters are input to the encoder is implementation specific.  
+
+\begin{table}[htp]
+    \centering
+    \caption{Parameters to the encoder}
+    \label{tab:parameters}
+    \begin{tabulary}{\textwidth}{|l|p{25mm}|p{80mm}|}
+        \hline
+        \textbf {Parameter name} & \textbf {Range} & \textbf {Description} \\
+        \hline
+        \textit {context\_width\_p} & 1-32 & Width of context bus \\
+        \hline
+        \textit {ecause\_width\_p} & 1-16 & Width of exception cause bus \\
+        \hline
+        \textit {iaddress\_lsb\_p} & 0-3 & LSB of instruction address bus \\
+        \hline
+        \textit {iaddress\_width\_p} & 2-128 & Width of instruction address bus. This is the same as \textit {XLEN}\\
+        \hline
+        \textit {itrace\_fast\_p} & 0 or 1 & Support fast profiling only (no delta mode 1) \\
+        \hline
+        \textit {nocontext\_p} & 0 or 1 & Ignore context if 1 \\
+        \hline
+        \textit {notval\_p} & 0 or 1 & Ignore trap value if 1 \\
+        \hline
+        \textit {privilege\_width\_p} & 1-4 & Width of privilege bus \\
+        \hline
+        \textit {privilege\_reset\_p} & 0-15 & Default privilege authorization value \\
+        \hline
+        \textit {ecause\_choice\_p} & 0-6 & Number of bits of exception cause to match using multiple choice \\
+        \hline
+        \textit {filter\_context\_p} & 0,1 & Filtering on context supported when 1 \\
+        \hline
+        \textit {filter\_ecause\_p} & 0-15 & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter-ecause-p} \\
+        \hline
+        \textit {filter\_interrupt\_p} & 0,1 & Filtering on interrupt supported when 1 \\
+        \hline
+        \textit {filter\_privilege\_p} & 0,1 & Filtering on privilege supported when 1 \\
+        \hline
+        \textit {filter\_tval\_p} & 0,1 & Filtering on trap value supported when 1 \\
+        \hline
+        \textit {user\_width\_p} & 0-256 & Width of user-defined filter qualifier input bus \\
+        \hline
+        \textit {retires\_p} & 1-4 & Maximum number of instructions that can retire simultaneously \\
+        \hline
+        \textit {insn\_width\_p}	& 32, 64, 128 & Width of instruction bus \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\subsection {Discovery of parameter values}
+
+The parameters used by the encoder must be discoverable at runtime.

@@ -3,6 +3,9 @@
 %-----------------------------------------------------------------------
 
 \documentclass[twoside,11pt]{book}
+\usepackage{footnote}
+
+\makesavenoteenv{tabulary}
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{4}
 
@@ -16,7 +19,7 @@
 
 \usepackage{xspace}
 
-\newcommand{\versionnum}{0.01-DRAFT}
+\newcommand{\versionnum}{0.02-DRAFT}
 
 \begin{document}
 \setcounter{footnote}{0}
@@ -43,6 +46,7 @@ Version \versionnum
 \input{introduction}
 \input{branchTrace.tex}
 \input{ingressPort.tex}
+\input{filtering.tex}
 \input{exampleAlgorithm.tex}
 \input{payload.tex}
 \newpage

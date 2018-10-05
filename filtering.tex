@@ -24,17 +24,10 @@ the filtering operation.
     \begin{itemize}
       \item Which input bus to compare
         \begin {enumerate}
-          \item instruction
           \item address
           \item context
           \item tval
-          \item exception
-          \item user
         \end{enumerate}
-      \item Value e.g. start address
-    \end{itemize}
-    \item Set up filter 
-    \begin{itemize}
       \item Which comparator(s) to use which filtering operation to enable
         \begin {enumerate}
           \item \textit {eq}
@@ -46,9 +39,12 @@ the filtering operation.
           \item \textit {always}
           \end{enumerate}
     \end{itemize}
+
+  \item Value e.g. start address
+    \item Set up filter 
     \item Set match 
     \begin{itemize}
-      \item Configure matching behaviour for exception, privilege and user sideband
+      \item Configure matching behaviour for exception, privilege and user sideban
     \end{itemize}
 \end{enumerate}
 

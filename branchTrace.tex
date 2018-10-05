@@ -30,7 +30,7 @@ programs can be traced using this approach. Statically linked programs
 are straightforward as they generally operate in a known address
 space, often mapping directly to physical memory. Dynamically linked
 programs require the debugger to keep track of memory allocation
-operations using either a trace or stop-mode debugging.
+operations using either trace or stop-mode debugging.
 
 \subsection{Sequential Instructions} \label{Sequential Instructions}
 
@@ -38,10 +38,10 @@ For instruction set architectures where all instructions are executed
 unconditionally or at least their execution can be determined based on
 the program, the instructions between the deltas are assumed to be
 executed sequentially. This characteristic means that there is no need
-to report them via the trace, only whether the branch was taken or not
+to report them via the trace, only whether the branches were taken or not
 and the address of taken indirect jump.
 
-\subsection{Unpredictable PC Discontinuities} \label{unpredpc}
+\subsection{Unpredictable PC Discontinuity} \label{unpredpc}
 
 If the program counter is changed by an amount that cannot be
 determined from the execution binary, the trace decoder needs to be
@@ -75,13 +75,13 @@ interrupt or exception handler) must be traced in order to instruct the
 trace decoder to classify the instruction as an indirect jump even
 if it is not.
 
-\subsection{Synchronisation} \label{synchronisation}
+\subsection{Synchronization} \label{synchronization}
 
 In order to make the trace robust there needs to be regular
-synchronisation points within the trace. Synchronisation is made by
+synchronization points within the trace. Synchronization is made by
 sending a full valued instruction address (and potentially a context
 identifier). The decoder and debugger may also benefit from sending
-the reason for synchronising. The frequency of synchronisation is a
+the reason for synchronising. The frequency of synchronization is a
 trade-off between robustness and trace bandwidth.
 
 The instruction trace encoder needs to synchronise fully:
@@ -89,7 +89,7 @@ The instruction trace encoder needs to synchronise fully:
 \begin{itemize}
 
 \item After a reset.
-  \item When it becomes qualified\footnote{Qualification is when certain conditions have been met so that a function can be enabled and executed} and instructions have been executed since losing qualification which needed logging by the instruction or data trace encoder.
+  \item When tracing starts.
 \item If the instruction is the first of an interrupt service routine or
 exception handler (hardware context change).
 \item After a prolonged period of time.

@@ -1,10 +1,66 @@
 \chapter{Introduction}
 \label{sec:intro}
 
+In complex systems understanding program behaviour is not easy.
+Unsurprisingly in such systems, software sometimes does not behave as
+expected. This may be due to a number of factors, for example,
+interactions with other cores, software, peripherals, realtime
+events, poor implementations or some combination of all of the above.
+
+It is not always possible to use a debugger to observe behaviour of a
+running system as this is intrusive.  Providing visibility of program
+execution is important.  This needs to be done without swamping the
+system with vast amounts of data and one method of achieving this is
+via Processor Branch Trace.
+
+This works by tracking execution from a known start address and sending
+messages about the deltas taken by the program. These deltas are typically
+introduced by jump, call, return and branch type instructions,
+although interrupts and exceptions are also types of deltas.
+
+Software, known as a decoder, will take this compressed branch trace
+and reconstruct the program flow. This can be done off-line or
+whilst the system is executing.
+
+In RISC-V, all instructions are executed unconditionally or at least
+their execution can be determined based on the program, the
+instructions between the deltas are assumed to be executed
+sequentially.  This characteristic means that there is no need to
+report them via the trace, only whether the branches were taken or not
+and the address of taken indirect branches or jumps. If the program
+counter is changed by an amount that cannot be determined from the
+execution binary, the trace decoder needs to be given the destination
+address (i.e. the address of the next valid instruction).  Examples of
+this are indirect branches or jumps, where the next instruction
+address is determined by the contents of a register rather than a
+constant embedded in the source code
+
+Interrupts generally occur asynchronously to the program's execution
+rather than intentionally as a result of a specific instruction or
+event.  Exceptions can be thought of in the same way, even though they
+can be typically linked back to a specific instruction address.  The
+decoder generally does not know where an interrupt occurs in the
+instruction sequence, so the trace encoder must report the address
+where normal program flow ceased, as well as give an indication of the
+asynchronous destination which may be as simple as reporting the
+exception type.  When an interrupt or exception occurs, or the
+processor is halted, the final instruction executed beforehand must be
+traced.
 
 
-\section{Terminology}
+This document serves to specify the ingress port (the signals between
+the RISC-V core and the encoder), compressed branch trace algorithm and
+the packet format used to encapsulate the compressed branch trace
+information.
 
+\subsection{Nomenclature}
 
-\subsection{Context}
+In the following sections items in \textbf{font} are signals or
+attributes within a packet.
 
+Items in \textit {italics} refer to parameters either built into the
+hardware or configurable hardware values.
+
+A decoder is a piece of software that takes the packets emitted by the
+encoder and is able to reconstruct the execution flow of the code
+executed in the RISC-V core.
