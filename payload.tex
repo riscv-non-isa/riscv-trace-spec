@@ -1,6 +1,23 @@
 \chapter{Trace Encoder Output Packet}
 
-Used to output encoded instruction trace.  Four different formats are used according to the needs of the encoding algorithm.
+The packets emerging from the encoder can be up to 35 bytes long
+including 2 header bytes, an optional 2 byte timestamp and a variable
+length payload. This can be seen in figure \ref{fig:packet-format}
+
+\begin{figure}[h]
+\begin{center}
+  \includegraphics[height=1cm, width=9cm]{packet.jpg}
+  \caption{Packet Format}
+  \label{fig:packet-format}
+\end{center}
+\end{figure}
+
+
+This packet format is used to output encoded instruction
+trace.  Four different formats are used according to the needs of the
+encoding algorithm. The following tables show the format of the
+payload - i.e. not including the optional timestamp and not including
+the the 2 byte header.
 
 \begin{table}[htp]
     \centering
