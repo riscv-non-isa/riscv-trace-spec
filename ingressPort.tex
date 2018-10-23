@@ -52,13 +52,13 @@ in the RISC-V C extension, the unused high-order bits are
 zero-filled. The length of the instruction can be determined by
 examining the low-order bits of the instruction, as described in The
 RISC-V Instruction Set Manual, Volume I: User-Level ISA, Version 2.1
-[1]. The width of the \textbf {insn} bus, \textit {ILEN}, is 32 bits for current
+[1]. The width of the \textbf {insn} bus, \textit {insn\_width\_p}, is 32 bits for current
 implementations.
 
 The \textbf {priv} bus indicates the privilege mode at the time of instruction
 execution. (On an exception, the next valid ingress word's \textbf {priv} bus
 gives the privilege mode of the activated trap handler.) The width of
-the \textbf {priv} bus, \textit {PRIVLEN}, is typically 3. The actual vaues do not have any special meaning within the encoder other than when filtering. When the level changes the encoder will output the new value in a packet.
+the \textbf {priv} bus, \textit {privilege\_width\_p}, is typically 3. The actual vaues do not have any special meaning within the encoder other than when filtering. When the level changes the encoder will output the new value in a packet.
 
 The exception bus is 0 if this ingress word corresponds to a retired
 instruction, or 1 if it corresponds to an exception or interrupt.  In
@@ -70,7 +70,7 @@ follows:
   \item \textbf {interrupt} is 0 for synchronous exceptions and 1 for
     interrupts.
   \item \textbf {cause} supplies the exception or interrupt cause, as
-    would be written to the lower \textit {CAUSELEN} bits of the mcause CSR.
+    would be written to the lower \textit {ecause\_width\_p} bits of the mcause CSR.
   \item \textbf {tval} supplies the associated trap value, e.g., the
     faulting virtual address for address exceptions, as would be
     written to the \textbf {mtval} CSR. Future optional extensions may define \textbf {tval} to provide ancillary information in cases where it currently supplies zero.  
