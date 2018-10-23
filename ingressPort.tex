@@ -19,15 +19,17 @@ instruction-retirement and exception events.
         \hline
         \textbf {interrupt} & 0 if the exception was synchronous; 1 if interrupt \\
         \hline
-        \textbf {cause} [\textit{CAUSELEN}-1:0] & Exception cause \\
+        \textbf {cause} [\textit{context\_width\_p}-1:0] & Exception cause \\
         \hline
         \textbf {tval}[\textit{XLEN}-1]& Exception data \\
         \hline
-        \textbf {priv}[\textit{PRIVLEN}-1:0] & Privilege mode during execution \\
+        \textbf {priv}[\textit{privilege\_width\_p}-1:0] & Privilege mode during execution \\
+        \hline
+        \textbf {context}[\textit{context\_width\_p}-1:0] & Context and/or Hart ID \\
         \hline
         \textbf {iaddr} [\textit{XLEN}-1:0] & The address of the instruction \\
         \hline
-        \textbf{instr}[\textit{ILEN}-1:0] & The instruction \\
+        \textbf{instr}[\textit{insn\_width\_p}-1:0] & The instruction \\
         \hline
     \end{tabulary}
 \end{table}
@@ -119,6 +121,37 @@ In some circumstances there will be some side band signals which may
 affect the encoder's behaviour, for example to start and/or stop
 encoding. There will sometimes be cases where the encoder may be
 required to affect the behaviour of the core, for example halting.
+
+\begin{table}[htp]
+    \centering
+    \caption{User Sideband Encoder Ingress signals}
+    \label{tab:ingress-side-band}
+    \begin{tabulary}{\textwidth}{|l|l|}
+        \hline
+        \textbf {Signal} & \textbf {Function} \\
+       \hline
+        \textbf {user} [\textit{user\_width\_p}-1:0] &  Sideband signals \\
+        \hline
+        \textbf {halted}& Core is halted \\
+        \hline
+        \textbf {reset}& Core in reset \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{User Sideband Encoder Egress signals}
+    \label{tab:ingress-side-band}
+    \begin{tabulary}{\textwidth}{|l|l|}
+        \hline
+        \textbf {Signal} & \textbf {Function} \\
+        \hline
+        \textbf {halt}& Halt request to core \\
+        \hline
+    \end{tabulary}
+\end{table}
+
 
 \subsection {Parameters}
 
