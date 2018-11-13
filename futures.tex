@@ -1,0 +1,34 @@
+\chapter{Future directions} \label{Future}
+
+The current focus is the compressed branch trace, however there a
+number of other types of processor trace that would be useful. These
+should be considered as possible features that maybe added in future,
+once the current scope has been completed.
+
+\section{Data trace}
+
+The trace encoder will outputs packets to communicate information
+about loads and stores to an off-chip decoder.  To reduce the amount
+of bandwidth required, reporting data values will be optional, and
+both address and data will be able to be encoded differentially when
+it is beneficial to do so.  This entails outputting the difference
+between the new value and the previous value of the same transfer
+size, irrespective of transfer direction.
+
+Unencoded values will be used for synchronisation and at other times.
+
+\section {Fast profiling}
+
+In this mode the encoder will provide a non-intrusive alternative to
+the traditional method of profiling, which requires the processor to
+be halted periodically so that the program counter can be sampled.
+The encoder will issue packets when an exception, call or return is
+detected, to report the next instruction executed (i.e. the
+destination instruction).  Optionally, the encoder will also be able to
+report the current instruction (i.e. the source instruction).
+
+\section {Inter-instruction cycle counts}
+
+In this mode the encoder will trace where the CPU is stalling by
+reporting the number of cycles between successive instruction
+retirements.
