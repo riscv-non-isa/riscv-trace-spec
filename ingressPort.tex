@@ -13,7 +13,7 @@ instruction-retirement and exception events.
         \hline
         \textbf {Signal} & \textbf {Function} \\
         \hline
-        \textbf {ivalid} & Instruction has retired or trapped (exception) \\
+        \textbf {iretire} & Instruction has retired \\
         \hline
         \textbf {iexception} & Exception \\
         \hline
@@ -34,10 +34,9 @@ instruction-retirement and exception events.
     \end{tabulary}
 \end{table}
 
-Table~\ref{tab:ingress} lists the signals in the interface. The {\bf
-  valid} signal is 1 if and only if an instruction retires or traps
-(either by generating a synchronous exception or taking an interrupt).
-The remaining fields in the word are only defined when valid is 1.
+Table~\ref{tab:ingress} lists the signals in the interface. The
+\textbf {iretire} signal is 1 if and only if an instruction retires.
+The remaining fields in the word are only defined when \textbf{iretire} is 1.
 
 The \textbf {iaddr} bus holds the address of the instruction that
 retired or trapped. If address translation is enabled, it is a virtual
@@ -60,10 +59,10 @@ execution. (On an exception, the next valid ingress word's \textbf {priv} bus
 gives the privilege mode of the activated trap handler.) The width of
 the \textbf {priv} bus, \textit {privilege\_width\_p}, is typically 3. The actual vaues do not have any special meaning within the encoder other than when filtering. When the level changes the encoder will output the new value in a packet.
 
-The exception bus is 0 if this ingress word corresponds to a retired
+The exception signal is 0 if this ingress word corresponds to a retired
 instruction, or 1 if it corresponds to an exception or interrupt.  In
 the former case, the cause and interrupt buses are undefined and the
-tval bus is zero.  In the latter case, the buses are set as
+tval bus is undefined.  In the latter case, the buses are set as
 follows:
 
 \begin{itemize}
@@ -83,6 +82,35 @@ ingress words need not be consecutive, i.e., there may be invalid
 ingress words between two valid ingress words. If one of the
 instructions is an exception, no younger instruction will be valid.
 
+\subsection {Normal execution to interrupt execution}
+
+In some CPU implementations it is possible to move directly from
+normal execution to the 1st instruction of the interrupt handler
+without any dead cycles in between.  In this case the CPU retires
+instruction N, and on the next following cycle executes the 1st
+instruction of the interrupt handler.  In this situation, the
+interrupt would need to be indicated at the same time as N retires.
+
+The interface supports this in the following manner.
+
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder Exception in zero cycle signals}
+    \label{tab:zeroCycle}
+    \begin{tabulary}{\textwidth}{|l|l|l|}
+        \hline
+        \textbf {iexception} & \textbf {iretire} & \textbf {Meaning} \\
+        \hline
+        0 & 0 & Idle \\
+        \hline
+        0 & 1 & Instruction retires \\
+        \hline
+        1 & 0 & Exception raised \\
+        \hline
+        1 & 1 & Exception raised and instruction retires \\
+        \hline
+    \end{tabulary}
+\end{table}
 
 \subsection {Instruction Opcode at Fetch}
 
@@ -96,9 +124,8 @@ specified number of queued instructions to be deleted from the input
 side of the queue within the encoder.
 
 The signals in Table~\ref{tab:ingressfetch} will be presented to the
-encoder in such systems. Note \textbf {fvalid} only applies to the {\bf
-  insn}, all other signals in Table~\ref{tab:ingress} are still valid
-when \textbf {ivalid} is high.
+encoder in such systems. Note \textbf {fvalid} only applies to the \textbf {insn}, all other signals in Table~\ref{tab:ingress} are still valid
+when \textbf {iretire} is high.
 
 \begin{table}[htp]
     \centering
@@ -120,7 +147,7 @@ when \textbf {ivalid} is high.
 In some circumstances there will be some side band signals which may
 affect the encoder's behaviour, for example to start and/or stop
 encoding. There will sometimes be cases where the encoder may be
-required to affect the behaviour of the core, for example halting.
+required to affect the behaviour of the core, for example stalling.
 
 \begin{table}[htp]
     \centering
@@ -132,7 +159,7 @@ required to affect the behaviour of the core, for example halting.
        \hline
         \textbf {user} [\textit{user\_width\_p}-1:0] &  Sideband signals \\
         \hline
-        \textbf {halted}& Core is halted \\
+        \textbf {halted}& Core is stalled or halted \\
         \hline
         \textbf {reset}& Core in reset \\
         \hline
@@ -147,7 +174,7 @@ required to affect the behaviour of the core, for example halting.
         \hline
         \textbf {Signal} & \textbf {Function} \\
         \hline
-        \textbf {halt}& Halt request to core \\
+        \textbf {stall}& Stall request to core \\
         \hline
     \end{tabulary}
 \end{table}
@@ -155,11 +182,14 @@ required to affect the behaviour of the core, for example halting.
 
 \subsection {Parameters}
 
-The encoder will have some configurable or variable parameters. Some of these are related to port widths whilst others may indicate the presence or otherwise of various feature, e.g. filter or comparitors.
+The encoder will have some configurable or variable parameters. Some
+of these are related to port widths whilst others may indicate the
+presence or otherwise of various feature, e.g. filter or comparitors.
+Table~\ref{tab:parameters} outlines the list of parameters.
 
 How the parameters are input to the encoder is implementation specific.  
-
-\begin{table}[htp]
+\FloatBarrier
+\begin{table}[h]
     \centering
     \caption{Parameters to the encoder}
     \label{tab:parameters}
@@ -205,7 +235,39 @@ How the parameters are input to the encoder is implementation specific.
         \hline
     \end{tabulary}
 \end{table}
+\FloatBarrier
 
 \subsection {Discovery of parameter values}
 
-The parameters used by the encoder must be discoverable at runtime.
+The parameters used by the encoder must be discoverable at
+runtime. Some external entity, for example a debugger or a supervisory
+hart would issue a discovery command to the encoder. The encoder will
+provide the discovery information as encapsulated in the following
+parameters in one or more different formats.  The preferred format
+would be in a packet which is sent over the trace infrastructure.
+
+Another format would may be allowing the external enity to read the
+values from some register or memory mapped space maintained by the
+encoder.
+
+\begin{itemize}
+    \item \textit {minor\_revision}. Identifies the minor revision.
+    \item \textit {version}. Identifies the module version.
+    \item \textit {comparators}. The number of comparators is comparators+1.
+    \item \textit {filters}. Number of filters is filters+1.
+    \item \textit {context\_width}. Width of context input bus is \textit {context\_width}+1.
+    \item \textit {ecause\_choice}. Number of LSBs of the ecause input bus that can be filtered using multiple choice.
+    \item \textit {ecause\_width}. Width of the ecause input bus is \textit {ecause\_width}+1.
+    \item \textit {filter\_context}. Filtering on the \textit {context} input bus supported when 1.
+    \item \textit {filter\_ecause}. Filtering on the ecause input bus supported when non-zero.  Number of nested exceptions supported is $2^\frac{\textit {filter\_ecause}}{}$.
+    \item \textit {filter\_interrupt}. Filtering on the interrupt input signal supported when 1.
+    \item \textit {filter\_privilege}. Filtering on the privilege input bus supported when 1.
+    \item \textit {filter\_tval}. Filtering on the tval input bus supported when 1.
+    \item \textit {iaddress\_lsb}. LSB of iaddress output in trace encoder data messages.
+    \item \textit {iaddress\_width}. Width of the iaddress input bus is \textit {iaddress\_width} + 1.
+    \item \textit {nocontext}. Context ignored when 1.
+    \item \textit {notval}. Trap value ignored when 1.
+    \item \textit {privilege\_width}. Width of the privilege input bus is \textit {privilege\_width} + 1.
+    \item \textit {rv32}. ISA is RV32 when 1
+    \item \textit {insn\_width}. Width of insn input bus is $2^\frac{\textit {insn\_width}+5}{}$
+\end{itemize}
