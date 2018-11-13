@@ -4,7 +4,7 @@ INCLUDES_TEX = introduction.tex
 
 all:	$(SPEC).pdf
 
-$(SPEC).pdf: $(SPEC).tex $(INCLUDES_TEX) 
+$(SPEC).pdf: $(SPEC).tex $(INCLUDES_TEX) vc.tex 
 	pdflatex -shell-escape $< && makeindex $(SPEC) && pdflatex -shell-escape $<
 
 publish:	$(SPEC).pdf
