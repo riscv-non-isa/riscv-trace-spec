@@ -1,27 +1,33 @@
 \chapter{Trace Encoder Output Packet}
 
-The packets emerging from the encoder can be up to 35 bytes long
-including 2 header bytes, an optional 2 byte timestamp and a variable
-length payload. This can be seen in figure \ref{fig:packet-format}
+Figure \ref{fig:packet-format} gives an example basic structure of the
+packet energing from the encoder. This gives an example of how the
+payload maybe encapsulated. Different instantiations or
+implementations may have different encapsulating structures. These
+would typically be dependent upon such things as the trace routing
+infrastructure within the SoC.
+
+The remainder of this section describes the contents of the Payload
+portion which should be independent of the infrastructure..
 
 \begin{figure}[h]
 \begin{center}
-  \includegraphics[height=1cm, width=9cm]{packet.jpg}
+  \includegraphics[height=1cm, width=9cm]{newPacket.jpg}
   \caption{Packet Format}
   \label{fig:packet-format}
 \end{center}
 \end{figure}
 
 
-This packet format is used to output encoded instruction
+This packet payload format is used to output encoded instruction
 trace.  Four different formats are used according to the needs of the
 encoding algorithm. The following tables show the format of the
 payload - i.e. not including the optional timestamp and not including
-the the 2 byte header.
+the the index and header.
 
 \begin{table}[htp]
     \centering
-    \caption{Packet Format 0 and 1}
+    \caption{Packet Payload Format 0 and 1}
     \label{tab:te_inst0-1}
     \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
         \hline
@@ -51,7 +57,7 @@ the the 2 byte header.
         1: branch not taken \\
         \hline
         \textbf{address}	& Number of bits \newline 
-                  is \textit {iaddress-width-p - iaddress-lsb-p} & 
+                  is \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
                     Differential or full instruction address, according to \textbf {format}.  \newline
                     When branches is 0, the address is invalid, and is formed by sign extending branch-map.\\
         \hline
@@ -61,7 +67,7 @@ the the 2 byte header.
 
 \begin{table}[!h]
     \centering
-    \caption{Packet Format 2}
+    \caption{Packet Payload Format 2}
     \label{tab:te_inst2}
     \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
         \hline
@@ -71,7 +77,7 @@ the the 2 byte header.
         \hline
         \textbf{address} & Total number of bits 
                   for address is
-                  \textit {iaddress-width-p - iaddress-lsb-p}. & 
+                  \textit {iaddress\_width\_p - iaddress\_lsb\_p}. & 
                   Address is always differential unless the encoder has been configured to only use full-address\\ 
         \hline
     \end{tabulary}
@@ -79,7 +85,7 @@ the the 2 byte header.
 
 \begin{table}[htp]
     \centering
-    \caption{Packet Format 3}
+    \caption{Packet Payload Format 3}
     \label{tab:te_inst3}
     \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
       \hline
@@ -95,26 +101,26 @@ the the 2 byte header.
           \hline
           \textbf{context} &  Total number of bits 
                      for context is  
-                     \textit {context-width-p} 
+                     \textit {context\_width\_p} 
                      unless  
-                     \textit {nocontext-p} is 1,  
+                     \textit {nocontext\_p} is 1,  
                      in which case it is 0 & 
                      The instruction context \\
           \hline
           \textbf{privilege} & Number of bits is  
-                      \textit {privilege-width-p} & 
+                      \textit {privilege\_width\_p} & 
                       The current privilege level \\
           \hline
           \textbf{branch} & 1 & If the address points to a branch instruction, set to 1 if the branch was not taken. 
           Has no meaning if this instruction is not a branch. \\
           \hline
           \textbf{address} & number of bits is  
-                    \textit {iaddress-width-p - iaddress-lsb-p},  
+                    \textit {iaddress\_width\_p - iaddress\_lsb\_p},  
                     unless subformat is 10, & 
-                    Full instruction address.  Address alignment is determined by \textit {iaddress-lsb-p} Address must be left shifted in order to recreate original byte address \\
+                    Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address \\
           \hline
           \textbf{ecause} & Number of bits is  
-                   \textit {ecause-width-p} if  
+                   \textit {ecause\_width\_p} if  
                    subformat is 01,  
                    or 0 otherwise  
                    (no exception). & 
@@ -126,9 +132,9 @@ the the 2 byte header.
                       Interrupt \\
           \hline
           \textbf{tval} & Number of bits is  
-                 \textit {iaddress-width-p}  
+                 \textit {iaddress\_width\_p}  
                  if subformat is  
-                 01 and \textit {notval-p} is 
+                 01 and \textit {notval\_p} is 
                  0, or 0 otherwise  
                  (no exception). & 
                  Trap value \\
@@ -136,3 +142,29 @@ the the 2 byte header.
     \end{tabulary}
 \end{table}
 
+\begin{table}[!h]
+    \centering
+    \caption{te\_support payload}
+    \label{tab:te_support}
+    \begin{tabulary}{\textwidth}{|l|p{8mm}|p{80mm}|}
+        \hline
+        \textbf {Field name} & \textbf {Bits} & \textbf {Description} \\
+        \hline
+        \textbf{msg\_type}	& 2	& Set to 0x0\\
+        \hline
+        \textbf{control\_code} & 6 & Set to 0x34 \\
+        \hline
+        \textbf{support\_type} & 4 & Set to 0 to indicate \textit{itrace\_status} \\
+        \hline
+        \textbf{enable} & 1 & Value of \textbf {trace\_enable}\\
+        \hline
+        \textbf{encoder\_mode} & 2 & Value of \textbf {encoder\_mode}\\
+        \hline
+        \textbf{qual\_status} & 2 & Indicates qualification status\newline
+          00 (no\_change): No change to filter qualification \newline
+          01 (ended\_rep): Qualification ended, preceding \textbf {te\_inst} sent explicitly to indicate last qualification instruction\newline
+          10: Reserved\newline
+          11 : (ended\_ntr): Qualification ended, no unreported instructions (so preceeding \textbf {te\_instr} would have been sent anyway, even if it wasn't the last qualified instruction)\\
+        \hline
+    \end{tabulary}
+\end{table}

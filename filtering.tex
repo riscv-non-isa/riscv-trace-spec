@@ -63,3 +63,26 @@ The user may wish to:
     \item This could be the specific CSR value being presented to the Encoder
   \end{itemize}
 \end{enumerate}
+
+\section {Using trigger outputs from Debug Module}
+
+The debug module of the RISC-V core may have a trigger unit. This exposes a 4-bit field as shown in figure
+
+\begin{table}[!h]
+    \centering
+    \caption{Debug module trigger support (mcontrol)}
+    \label{tab:debugModuleTriggerSupport}
+    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+        \hline
+        \textbf {Value} & \textbf {Description} \\
+        \hline
+        2	& Trace on\\
+        \hline
+        3 & Trace off \\
+        \hline
+        4 & Trace single. The 'single' action for an instruction
+        trigger could cause a synchronisation point to be recorded; for a data
+        trigger it could be a watchpoint trace. \\
+        \hline
+    \end{tabulary}
+\end{table}
