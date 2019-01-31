@@ -51,7 +51,7 @@ instruction-retirement and exception events.
         \textbf {ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed\\
         \hline
         \textbf {context\_type}[\textit{context\_width\_p}-1:0] & Behavior type of \textbf {context}\newline
-        0: Context change with dicontinuity\newline
+        0: Context change with discontinuity\newline
         1: Precise context change\newline
         2: Imprecise context change\newline
         3: Notification\\
@@ -65,14 +65,14 @@ block of instructions starting at \textbf{iaddr}, all of which retired
 at the same cycle. Note if \textbf{itype} is 1 or 2 (indicating an
 exception or an interrupt), the number of instructions retired may be
 zero. \textbf{cause} and \textbf{tval} are only defined if
-\textbf{itype} is 1 or 2. is \textbf {iretire}=0 and \textbf{itype}=0,
+\textbf{itype} is 1 or 2. If \textbf {iretire}=0 and \textbf{itype}=0,
 the values of all other signals are undefined.
 
 
 \textbf {iretire} contains the number of halfwords represented by
 instructions retired in this bundle. Half words rather than
 instruction count enables the encoder to easily compute the 'from'
-address of a branch or exception without having access to opcode.
+address of a branch or exception without having access to the opcode.
 
 If address translation is enabled, \textbf {iaddr} is a virtual
 address, else it is a physical address. Virtual addresses narrower
@@ -108,7 +108,7 @@ Table~\ref{tab:itype} specifies the instructions for the various \textbf{itype} 
         \hline
         Unpredictable call & 8 & \textit{\textbf {jalr}} x1/x5, rs unless preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs\newline
 \textit{\textbf {c.jalr}} rs1 unless preceded by \textit{\textbf {auipc}} rs1, \textit{\textbf {lui}} rs1 or \textit{\textbf {c.lui}} rs1\newline
-\textit{\textbf {jalr}} x0, rs where rs !=x1/5, unless preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs (tail call)\newline
+\textit{\textbf {jalr}} x0, rs where rs !=x1/x5, unless preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs (tail call)\newline
 \textit{\textbf {c.jr}} rs1 where rs1 !=x1/x5, unless preceded by \textit{\textbf {auipc}} rs1, \textit{\textbf {lui}} rs1 or \textit{\textbf {c.lui}} rs1 (tail call) \\
         \hline
         Predictable call & 9 & \textit{\textbf {jal}} x1/x5\newline
@@ -144,10 +144,10 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         Context change with discontinuity & 0 &  An example would be a change of HART.\newline
         Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
-        This is basically treated the same as an exception\\
+        Treated the same as an exception\\
         \hline
         Precise context change & 1 & Need to output the address of the 1st instruction, and the new context.\newline
-        If there were unreported branches beforehand, these need to output those first.\newline
+        If there were unreported branches beforehand, these need to be output first.\newline
         Treated the same as a privilege change\\
         \hline
         Imprecise context change & 2 & An example would be a SW thread change.\newline
@@ -156,7 +156,6 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         Notification & 3 & An example would be a watchpoint.\newline
         Need to output the address of the watchpoint instruction.\newline
-        Similar to an updiscon.\newline
         The context itself is not output\\
         \hline
     \end{tabulary}
@@ -237,7 +236,8 @@ of these are related to port widths whilst others may indicate the
 presence or otherwise of various feature, e.g. filter or comparators.
 Table~\ref{tab:parameters} outlines the list of parameters.
 
-How the parameters are input to the encoder is implementation specific.  
+How the parameters are input to the encoder is implementation specific. The number range of some of the parameters  may be implementation specific. 
+
 \FloatBarrier
 \begin{table}[h]
     \centering
