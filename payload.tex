@@ -1,14 +1,16 @@
-\chapter{Trace Encoder Output Packet}
+\chapter{Trace Encoder Output Packets} \label{packets}
 
 Figure \ref{fig:packet-format} gives an example basic structure of the
 packet energing from the encoder. This gives an example of how the
-payload maybe encapsulated. Different instantiations or
-implementations may have different encapsulating structures. These
+payload maybe encapsulated.  The header includes the packet length, and
+the index identifies the source of the packet.  Different instantiations or
+implementations may have different encapsulating structures, but must
+provide this information by some means. These
 would typically be dependent upon such things as the trace routing
 infrastructure within the SoC.
 
 The remainder of this section describes the contents of the Payload
-portion which should be independent of the infrastructure..
+portion which should be independent of the infrastructure.
 
 \begin{figure}[h]
 \begin{center}
@@ -23,7 +25,16 @@ This packet payload format is used to output encoded instruction
 trace.  Four different formats are used according to the needs of the
 encoding algorithm. The following tables show the format of the
 payload - i.e. not including the optional timestamp and not including
-the the index and header.
+encapsulation infomation the index and header.
+
+In order to achieve best performance, actual packet lengths must be adjusted using 'sign based compression'.
+At the very minimum this should be applied to the address field, but ideally will be applied to the whole 
+packet.  This technique eliminates identical bits from the most significant end of the packet, and adjusts
+the length of the packet accordingly.  A decoder receiving this shortened packet can reconstruct the 
+original full-length packet by sign-extending from the most significant received bit.  An example of how
+this technique is used to choose between address formats is given in Section~\ref{addresses}.  The same
+principal can be applied to the entire packet, and the length (typically given in bytes) adjusted 
+accordingly.
 
 \begin{table}[htp]
     \centering
@@ -150,21 +161,41 @@ the the index and header.
         \hline
         \textbf {Field name} & \textbf {Bits} & \textbf {Description} \\
         \hline
-        \textbf{msg\_type}	& 2	& Set to 0x0\\
+        \textbf{support\_type} & 4 & Set to 0 to indicate instruction trace status \\
         \hline
-        \textbf{control\_code} & 6 & Set to 0x34 \\
+        \textbf{enable} & 1 & Indicates if encoder is enabled\\
         \hline
-        \textbf{support\_type} & 4 & Set to 0 to indicate \textit{itrace\_status} \\
-        \hline
-        \textbf{enable} & 1 & Value of \textbf {trace\_enable}\\
-        \hline
-        \textbf{encoder\_mode} & 2 & Value of \textbf {encoder\_mode}\\
+        \textbf{encoder\_mode} & N & Identifies trace algorithm\newline
+          Details implementation dependent.  Currently Branch trace is the only mode defined.\\
         \hline
         \textbf{qual\_status} & 2 & Indicates qualification status\newline
           00 (no\_change): No change to filter qualification \newline
-          01 (ended\_rep): Qualification ended, preceding \textbf {te\_inst} sent explicitly to indicate last qualification instruction\newline
+          01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
           10: Reserved\newline
-          11 : (ended\_ntr): Qualification ended, no unreported instructions (so preceeding \textbf {te\_instr} would have been sent anyway, even if it wasn't the last qualified instruction)\\
+          11 : (ended\_ntr): Qualification ended, no unreported instructions (so preceeding \textbf{te\_inst} would have been sent anyway, even if it wasn't the last qualified instruction)\\
+        \hline
+        \textbf{options} & N & Values of all run-time configuration bits\newline
+          Number of bits and definitions implementation dependent.  Examples might be\newline
+          - Always output full addresses (SW debug option)\newline
+          - Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
+          - Don't report function return addresses\\
+          \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[!h]
+    \centering
+    \caption{packet\_lost payload}
+    \label{tab:te_support}
+    \begin{tabulary}{\textwidth}{|l|p{8mm}|p{80mm}|}
+        \hline
+        \textbf {Field name} & \textbf {Bits} & \textbf {Description} \\
+        \hline
+        \textbf{high\_loss} & 1 & Qualitative indication of loss severity.  Heuristic is implementation specific.\\
+        \hline
+        \textbf{lost\_stream} & N & Identifies the source of lost packets\newline
+          Number of bits and encoding implementation specific.  Provides for encoders to independently indicate loss of 
+          different types of packets (e.g. instruction trace, data trace, etc.)\\
         \hline
     \end{tabulary}
 \end{table}

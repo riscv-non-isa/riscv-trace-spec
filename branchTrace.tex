@@ -41,10 +41,10 @@ executed sequentially. This characteristic means that there is no need
 to report them via the trace, only whether the branches were taken or not
 and the address of taken indirect jump.
 
-\subsection{Unpredictable PC Discontinuity} \label{unpredpc}
+\subsection{Uninferable PC Discontinuity} \label{uninfpc}
 
 If the program counter is changed by an amount that cannot be
-determined from the execution binary, the trace decoder needs to be
+inferred from the execution binary, the trace decoder needs to be
 given the destination address (i.e. the address of the next valid
 instruction).  Examples of this are indirect jumps, where
 the next instruction address is determined by the contents of a
@@ -54,7 +54,7 @@ register rather than a constant embedded in the source code.
 
 When a branch occurs, the decoder must be informed of whether it was
 taken or not.  For a direct branch, this is sufficient.  There are no
-indirect branches in RISC-V; an indirect jump is an unpredictable PC
+indirect branches in RISC-V; an indirect jump is an uninferable PC
 discontinuity.
 
 \subsection{Interrupts and Exceptions} \label{interruptsexceptions}

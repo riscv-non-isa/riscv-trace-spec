@@ -1,9 +1,126 @@
 \chapter{Ingress Port} \label{Interface}
 
+\section{Interface Requirements}
+This section describes in general terms the information which must be passed from the RISC-V core to the trace encoder,
+and distinguishes between what is mandatory, and what is optional.
+
+The following information is mandatory:
+
+\begin{itemize}
+  \item The number of instructions that are being retired;
+  \item Whether there has been an exception or interrupt, and if so the cause (from the \textbf{\textit{mcause/scause}} CSR)
+        and trap value (from the \textbf{\textit{mtval/stval}} CSR);
+  \item The current privilege level of the RISC-V core;
+  \item The \textit{instruction\_type} of retired instructions for:
+    \begin{itemize}
+      \item Jumps with a target that cannot be inferred from the source code;
+      \item Taken branches;
+      \item Return from exception or interrupt (\textbf{\textit{*ret}} instructions).
+    \end{itemize}
+  \item The \textit{instruction\_address} for:
+    \begin{itemize}
+      \item Jumps with a target that \textit{cannot} be inferred from the source code;
+      \item Taken branches;
+      \item The instruction executed immediately after a jump or taken branch (also referred to as the target or destination of the jump or taken branch);
+      \item The last instruction executed before an exception or interrupt;
+      \item The first instruction executed following an exception or interrupt;
+      \item The last instruction executed before a privilege change;
+      \item The first instruction executed following a privilege change;
+      \item The first and last instruction being retired.
+    \end{itemize}
+  \item The number of nontaken branches being retired.
+\end{itemize}
+
+The following information is optional:
+
+\begin{itemize}
+  \item Context information:
+    \begin{itemize}
+      \item The context and/or Hart ID;
+      \item The type of action to take when context changes.
+    \end{itemize}
+  \item The \textit{instruction\_type} of instructions for:
+    \begin{itemize}
+      \item Calls with a target that \textit{cannot} be inferred from the source code;
+      \item Calls with a target that \textit{can} be inferred from the source code;
+      \item Tail-calls with a target that \textit{cannot} be inferred from the source code;
+      \item Tail-calls with a target that \textit{can} be inferred from the source code;
+      \item Returns with a target that \textit{cannot} be inferred from the source code;
+      \item Returns with a target that \textit{can} be inferred from the source code;
+      \item Co-routine swap;
+      \item Jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
+      \item Jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code;
+      \item Nontaken branches.
+    \end{itemize}
+  \item If context is supported then the \textit{instruction\_address} for:
+    \begin{itemize}
+      \item The last instruction executed before a context change;
+      \item The first instruction executed following a context change.
+    \end{itemize}
+\end{itemize}
+
+The mandatory information is the bare-minimum required to implement the branch trace algorithm outlined in Chapter~\ref{Algorithm}.  
+The optional information facilitates alternative or improved trace algorithms:
+
+\begin{itemize}
+  \item Significant improvements in trace efficiency can be achieved by not reporting the return addresses of functions where the 
+    associated function call has been traced.  This requires the encoder to keep track of the number of nested function calls,
+    and to do this it must be aware of all calls and returns regardless of whether the target can be inferred or not;
+  \item A simpler algorithm useful for basic code profiling would only report function calls and returns, again 
+    regardless of whether the target can be inferred or not;
+  \item Branch prediction techniques can be used to further improve the encoder efficiency, particularly for loops.  This
+    requires the encoder to be aware of the address of nontaken branches.
+\end{itemize}
+
+\subsection {Jump Classification and Target Inference} \label{Jump Classes}
+
+Jumps are classified as \textit{inferable}, or \textit{uninferable}.  An \textit{inferable} jump has a target which can be
+deduced form the source code.  This means the target of the jump is supplied via
+
+\begin{itemize}
+  \item a constant;
+  \item a register which contains a constant (e.g. the destination of an \textbf{\textit{lui}} or \textbf{\textit{c.lui}});
+  \item a register which contains a constant offset from the PC (e.g. the destination of an \textbf{\textit{auipc}}).
+\end{itemize}
+
+Jumps which are not \textit{inferable} are by definition \textit{uninferable}.
+
+Jumps may optionally be further classified according to the recommended calling convention:
+
+\begin{itemize}
+  \item \textit{Calls}: 
+    \begin{itemize}
+      \item \textbf{\textit{jal}} x1;
+      \item \textbf{\textit{jal}} x5;
+      \item \textbf{\textit{jalr}} x1, rs  where rs != x1;
+      \item \textbf{\textit{jalr}} x5, rs  where rs != x5;
+      \item \textbf{\textit{c.jalr}} rs1.
+    \end{itemize}
+  \item \textit{Tail-calls}: 
+    \begin{itemize}
+      \item \textbf{\textit{jalr}} x0, rs where rs != x1 and rs != x5;
+      \item \textbf{\textit{c.jr}} rs1 where rs1 != x1 and rs1 != x5.
+    \end{itemize}
+  \item \textit{Returns}: 
+    \begin{itemize}
+      \item \textbf{\textit{jalr}} x0, rs where rs == x1 or rs == x5;
+      \item \textbf{\textit{c.jr}} rs1 where rs1 == x1 or rs1 == x5.
+    \end{itemize}
+  \item \textit{Co-routine swap}: 
+    \begin{itemize}
+      \item \textbf{\textit{jalr}} x1, x1;
+      \item \textbf{\textit{jalr}} x5, x5.
+    \end{itemize}
+  \item \textit{Other}: 
+    \begin{itemize}
+      \item \textbf{\textit{jal}} rd where rd != x1 and rd != x5;
+      \item \textbf{\textit{jalr}} rd, rs where rd != x0 and rd != x1 and rd != x5.
+    \end{itemize}
+\end{itemize}
+
 \section{Instruction Interface}
 This section describes the interface between a RISC-V core and the
-trace encoder. The trace interface conveys information about
-instruction-retirement and exception events.
+trace encoder that conveys the information described in the previous section. 
 
 \begin{table}[htp]
     \centering
@@ -13,48 +130,50 @@ instruction-retirement and exception events.
         \hline
         \textbf {Signal} & \textbf {Function} \\
         \hline
-        \textbf {iretire} [\textit{iretire\_width\_p}-1:0] & Number of halfwords represented by instructions retired in this block\\
+        \textbf{iretire}[\textit{iretire\_width\_p}-1:0] & Number of halfwords represented by instructions retired in this block.\\
         \hline
-        \textbf {ntkn} [\textit{ntkn\_width\_p}-1:0] & Number of nontaken branches in this block\\
+        \textbf{ntkn}[\textit{ntkn\_width\_p}-1:0] & Number of nontaken branches in this block.\\
         \hline
-        \textbf {itype} [\textit{itype\_width\_p}-1:0] & Termination type of the instruction block\newline
-        0: Final instruction in the block is none of the other named \textbf{itype} codes\newline
-        1: Exception. An exception occurred following the final retired instruction in the block\newline
-        2: Interrupt. An interrupt occurred following the final retired instruction in the block\newline
-        3: Exception return\newline
-        4: Reserved\newline
-        5: Reserved\newline
-        6: Taken branch\newline
-        7: Reserved\newline
-        8: Unpredictable call\newline
-        9: Predictable call\newline
-        10: Unpredictable return\newline
-        11: Predictable return\newline
-        12: Unpredictable non call/return jump\newline
-        13: Predictable non call/return jump\\
+        \textbf{itype}[\textit{itype\_width\_p}-1:0] & Termination type of the instruction block (see Section \ref{Jump Classes} for definitions of codes 6 - 15):\newline
+        0: Final instruction in the block is none of the other named \textbf{itype} codes;\newline
+        1: Exception. An exception occurred following the final retired instruction in the block;\newline
+        2: Interrupt. An interrupt occurred following the final retired instruction in the block;\newline
+        3: Exception return;\newline
+        4: Nontaken branch;\newline
+        5: Taken branch;\newline
+        6: Uninferable jump;\newline
+        7: Co-routine swap;\newline
+        8: Uninferable call;\newline
+        9: Inferrable call;\newline
+        10: Uninferable tail-call;\newline
+        11: Inferrable call;\newline
+        12: Uninferable return;\newline
+        13: Inferrable return;\newline
+        14: Other uninferable jump;\newline
+        15: Other inferable jump.\\
         \hline
-        \textbf {cause} [\textit{context\_width\_p}-1:0] & Exception or interrupt cause (\textbf{\textit{mcause/scause}}), \newline
-        Ignored unless \textbf {itype}=1 or 2\\
+        \textbf{cause}[\textit{context\_width\_p}-1:0] & Exception or interrupt cause (\textbf{\textit{mcause/scause}}), \newline
+        Ignored unless \textbf {itype}=1 or 2.\\
         \hline
-        \textbf {tval}[\textit{iaddress\_width\_p}-1:0]& The associated trap value, e.g., the
+        \textbf{tval}[\textit{iaddress\_width\_p}-1:0]& The associated trap value, e.g. the
     faulting virtual address for address exceptions, as would be
-    written to the \textbf {mtval/stval} CSR. Future optional extensions may define \textbf {tval} to provide ancillary information in cases where it currently supplies zero\newline
-    Ignored unless \textbf {itype}=1 or 2\\
+    written to the \textbf{mtval/stval} CSR. Future optional extensions may define \textbf{tval} to provide ancillary information in cases where it currently supplies zero\newline
+    Ignored unless \textbf{itype}=1 or 2.\\
         \hline
-        \textbf {priv}[\textit{privilege\_width\_p}-1:0] & Privilege level for all instructions in this block\\
+        \textbf{priv}[\textit{privilege\_width\_p}-1:0] & Privilege level for all instructions in this block.\\
         \hline
-        \textbf {context}[\textit{context\_width\_p}-1:0] & Context and/or Hart ID for all instructions in this block\\
+        \textbf{context}[\textit{context\_width\_p}-1:0] & Context and/or Hart ID for all instructions in this block.\\
         \hline
-        \textbf {iaddr} [\textit{iaddress\_width\_p}-1:0] & The address of the 1st instruction retired in this block.\newline
+        \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & The address of the 1st instruction retired in this block.\newline
         Invalid if \textbf{iretires}=0 \\
         \hline
-        \textbf {ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed\\
+        \textbf {ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed.\\
         \hline
-        \textbf {context\_type}[\textit{context\_width\_p}-1:0] & Behavior type of \textbf {context}\newline
-        0: Context change with discontinuity\newline
-        1: Precise context change\newline
-        2: Imprecise context change\newline
-        3: Notification\\
+        \textbf {context\_type}[\textit{context\_width\_p}-1:0] & Behavior type of \textbf{context}\newline
+        0: Context change with discontinuity;\newline
+        1: Precise context change;\newline
+        2: Imprecise context change;\newline
+        3: Notification.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -62,19 +181,19 @@ instruction-retirement and exception events.
 Table~\ref{tab:ingress} lists the signals in the interface. The
 information presented on the ingress port represents a contiguous
 block of instructions starting at \textbf{iaddr}, all of which retired
-at the same cycle. Note if \textbf{itype} is 1 or 2 (indicating an
+in the same cycle. Note if \textbf{itype} is 1 or 2 (indicating an
 exception or an interrupt), the number of instructions retired may be
 zero. \textbf{cause} and \textbf{tval} are only defined if
-\textbf{itype} is 1 or 2. If \textbf {iretire}=0 and \textbf{itype}=0,
+\textbf{itype} is 1 or 2. If \textbf{iretire}=0 and \textbf{itype}=0,
 the values of all other signals are undefined.
 
+\textbf {iretire} contains the number of half-words represented by
+instructions retired in this block, and \textbf {ilastsize} the size of the last
+instruction.  Half-words rather than instruction count enables the encoder to easily compute the address of
+the last instruction in the block without having access to the size of every 
+instruction in the block.
 
-\textbf {iretire} contains the number of halfwords represented by
-instructions retired in this bundle. Half words rather than
-instruction count enables the encoder to easily compute the 'from'
-address of a branch or exception without having access to the opcode.
-
-If address translation is enabled, \textbf {iaddr} is a virtual
+If address translation is enabled, \textbf{iaddr} is a virtual
 address, else it is a physical address. Virtual addresses narrower
 than \textit{iaddress\_width\_p} bits must be sign-extended to make
 computation of differential addresses easier, and physical addresses
@@ -82,10 +201,11 @@ narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
 
 For cores that can retire a maximum of N taken branches per clock
 cycle, the signal group (\textbf{iretire}, \textbf{itype},
-\textbf{ntkn}) must be replicated N times. Signal group 0
+\textbf{ntkn}, \textbf{ilastsize}, \textbf{iaddr}) must be replicated N times. Signal group 0
 represents information about the oldest instruction block, and group N-1
 represents the newest instruction block. The interface supports no more
-than one exception or interrupt per cycle and so \textbf{cause} and
+than one privilege, context, exception or interrupt per cycle and so \textbf{priv}, 
+\textbf{context}, \textbf{context\_type}, \textbf{cause} and
 \textbf{tval} are not replicated. Futhermore, \textbf{itype} can only
 take the value 1 or 2 in one of the signal groups, and this must be
 the newest valid group (i.e. \textbf{iretires} and \textbf{itype} must
@@ -95,42 +215,6 @@ first. For example, if there is one taken branch, use only group 0, if
 there are two taken branches, instructions upto the 1st taken branch
 must be reported in group 0 and instructions upto the 2nd taken branch
 must be reported in group 1 and son on.
-
-Table~\ref{tab:itype} specifies the instructions for the various \textbf{itype} values.
-
-\begin{table}[htp]
-    \centering
-    \caption{Call/return \textbf{itype} values and corresponding instructions}
-    \label{tab:itype}
-    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
-        \hline
-        \textbf {Type} & \textbf {Value} & \textbf {Instructions} \\
-        \hline
-        Unpredictable call & 8 & \textit{\textbf {jalr}} x1/x5, rs unless preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs\newline
-\textit{\textbf {c.jalr}} rs1 unless preceded by \textit{\textbf {auipc}} rs1, \textit{\textbf {lui}} rs1 or \textit{\textbf {c.lui}} rs1\newline
-\textit{\textbf {jalr}} x0, rs where rs !=x1/x5, unless preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs (tail call)\newline
-\textit{\textbf {c.jr}} rs1 where rs1 !=x1/x5, unless preceded by \textit{\textbf {auipc}} rs1, \textit{\textbf {lui}} rs1 or \textit{\textbf {c.lui}} rs1 (tail call) \\
-        \hline
-        Predictable call & 9 & \textit{\textbf {jal}} x1/x5\newline
-\textit{\textbf {c.jal}}\newline
-\textit{\textbf {jalr}} x1/x5, rs preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs\newline
-\textit{\textbf {c.jalr}} rs1 preceded by \textit{\textbf {auipc}} rs1, \textit{\textbf {lui}} rs1 or \textit{\textbf {c.lui}} rs1\newline
-\textit{\textbf {jalr}} x0, rs where rs !=x1/5 preceded by \textit{\textbf {auipc}} rs, \textit{\textbf {lui}} rs or \textit{\textbf {c.lui}} rs (tail call)\newline
-\textit{\textbf {c.jr}} rs1 where rs1 !=x1/x5 preceded by \textit{\textbf {auipc}} rs1, \textit{\textbf {lui}} rs1 or \textit{\textbf {c.lui}} rs1 (tail call)\\
-        \hline
-        Unpredictable return & 10 & \textit{\textbf {jalr}} x0, x1/x5 unless preceded by \textit{\textbf {auipc}} x1/x5, \textit{\textbf {lui}} x1/x5 or \textit{\textbf {c.lui}} x1/x5\newline
-
-\textit{\textbf {c.jr}} x1/x5 unless preceded by \textit{\textbf {auipc}} x1/x5, \textit{\textbf {lui}} x1/x5 or \textit{\textbf {c.lui}} x1/x5\\
-        \hline
-        Predictable return & 11 & \textit{\textbf {jalr}} x0, x1/x5 preceded by \textit{\textbf {auipc}} x1/x5, \textit{\textbf {lui}} x1/x5 or \textit{\textbf {c.lui}} x1/x5\newline
-\textit{\textbf {c.jr}} x1/x5 preceded by \textit{\textbf {auipc}} x1/x5, \textit{\textbf {lui}} x1/x5 or \textit{\textbf {c.lui}} x1/x5\\
-        \hline
-        Unpredictable non call/return jump & 12 & \textit{\textbf {jalr}}, \textit{\textbf {c.jalr}}, \textit{\textbf {c.jr}} not matching any of the above\\
-        \hline
-        Predictable non call/return jump & 13 & \textit{\textbf {jal}} not matching any of the above\\
-        \hline
-    \end{tabulary}
-\end{table}
 
 Table~\ref{tab:context-type} specifies the actions for the various \textbf{context\_type} values.
 
@@ -144,11 +228,11 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         Context change with discontinuity & 0 &  An example would be a change of HART.\newline
         Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
-        Treated the same as an exception\\
+        Treated the same as an exception.\\
         \hline
         Precise context change & 1 & Need to output the address of the 1st instruction, and the new context.\newline
         If there were unreported branches beforehand, these need to be output first.\newline
-        Treated the same as a privilege change\\
+        Treated the same as a privilege change.\\
         \hline
         Imprecise context change & 2 & An example would be a SW thread change.\newline
         Report the new context value at the earliest convenient opportunity.\newline
@@ -156,10 +240,30 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         Notification & 3 & An example would be a watchpoint.\newline
         Need to output the address of the watchpoint instruction.\newline
-        The context itself is not output\\
+        The context itself is not output.\\
         \hline
     \end{tabulary}
 \end{table}
+
+\subsection {Example Interface Configurations}
+
+The ingress interface may be used in a number of different configurations.  For example:
+
+\begin{itemize}
+  \item For a core that retires no more than one instruction per cycle, the simplest solution is to provide details of every retired instruction explicitly:
+    \begin{itemize}
+      \item \textit{iretire\_width\_p} = 2;
+      \item Set \textbf{iretire} to 1 for 16-bit instructions and 2 for 32-bit instructions;
+      \item \textit{ntkn\_width\_p} = 1;
+      \item Set \textbf{ntkn} to 1 if the instruction is a nontaken branch, zero otherwise;
+    \end{itemize}
+  \item For a core that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
+    solution is to use one of each of the signals from Table~\ref{tab:ingress}, with \textbf{iretire} indicating the 
+    total number of instructions retired.  However, an alternative approach would be to provide explicit details of every 
+    instruction retired by using N sets of the signal group (\textbf{iretire}, \textbf{itype}, \textbf{ntkn}, 
+    \textbf{ilastsize}, \textbf{iaddr}) with the groups detailing one instruction each (replicating the single retirement example N times).  
+\end{itemize}
+
 
 \subsection {Example Signal Blocks}
 
@@ -171,17 +275,17 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         \textbf {Retired} & \textbf {Instruction Trace Bundle} \\
         \hline
-        1000: \textbf {\textit{divuw}} &  \textbf {iretire}=7, \textbf {iaddr}=0x1000, \textbf {ntkn}=0, \textbf {itype}=4\\
-        1004: \textbf {\textit{add}} &  \\
-        1008: \textbf {\textit{or}} &  \\
-        100C: \textbf {\textit{c.jalr}} &  \\
+        1000: \textbf{\textit{divuw}} &  \textbf{iretire}=7, \textbf{iaddr}=0x1000, \textbf{ntkn}=0, \textbf{itype}=4\\
+        1004: \textbf{\textit{add}} &  \\
+        1008: \textbf{\textit{or}} &  \\
+        100C: \textbf{\textit{c.jalr}} &  \\
         \hline
-        0940: \textbf {\textit{addi}} &  \textbf {iretire}=4, \textbf {iaddr}=0x0940, \textbf {ntkn}=1, \textbf {itype}=6\\
-        1004: \textbf {\textit{c.beq}} &  \\
-        1008: \textbf {\textit{c.bnez}} &  \\
+        0940: \textbf{\textit{addi}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0940, \textbf{ntkn}=1, \textbf{itype}=6\\
+        1004: \textbf{\textit{c.beq}} &  \\
+        1008: \textbf{\textit{c.bnez}} &  \\
         \hline
-        0988: \textbf {\textit{lbu}} &  \textbf {iretire}=4, \textbf {iaddr}=0x0988, \textbf {ntkn}=0, \textbf {itype}=0\\
-        098C: \textbf {\textit{csrrw}} &  \\
+        0988: \textbf{\textit{lbu}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0988, \textbf{ntkn}=0, \textbf{itype}=0\\
+        098C: \textbf{\textit{csrrw}} &  \\
         \hline
     \end{tabulary}
 \end{table}
@@ -204,13 +308,13 @@ will need to be applied to the \textbf{context} value.
     \label{tab:ingress-side-band}
     \begin{tabulary}{\textwidth}{|l|l|}
         \hline
-        \textbf {Signal} & \textbf {Function} \\
+        \textbf{Signal} & \textbf{Function} \\
        \hline
-        \textbf {user} [\textit{user\_width\_p}-1:0] &  Sideband signals \\
+        \textbf{user} [\textit{user\_width\_p}-1:0] &  Sideband signals \\
         \hline
-        \textbf {halted}& Core is stalled or halted \\
+        \textbf{halted}& Core is stalled or halted \\
         \hline
-        \textbf {reset}& Core in reset \\
+        \textbf{reset}& Core in reset \\
         \hline
     \end{tabulary}
 \end{table}
@@ -221,9 +325,9 @@ will need to be applied to the \textbf{context} value.
     \label{tab:engress-side-band}
     \begin{tabulary}{\textwidth}{|l|l|}
         \hline
-        \textbf {Signal} & \textbf {Function} \\
+        \textbf{Signal} & \textbf{Function} \\
         \hline
-        \textbf {stall}& Stall request to core \\
+        \textbf{stall}& Stall request to core \\
         \hline
     \end{tabulary}
 \end{table}
@@ -245,45 +349,45 @@ How the parameters are input to the encoder is implementation specific. The numb
     \label{tab:parameters}
     \begin{tabulary}{\textwidth}{|l|p{25mm}|p{80mm}|}
         \hline
-        \textbf {Parameter name} & \textbf {Range} & \textbf {Description} \\
+        \textbf{Parameter name} & \textbf{Range} & \textbf{Description} \\
         \hline
-        \textit {context\_width\_p} & 1-32 & Width of context bus \\
+        \textit{context\_width\_p} & 1-32 & Width of context bus \\
         \hline
-        \textit {ecause\_width\_p} & 1-16 & Width of exception cause bus \\
+        \textit{ecause\_width\_p} & 1-16 & Width of exception cause bus \\
         \hline
-        \textit {iaddress\_lsb\_p} & 0-3 & LSB of instruction address bus \\
+        \textit{iaddress\_lsb\_p} & 0-3 & LSB of instruction address bus \\
         \hline
-        \textit {iaddress\_width\_p} & 2-128 & Width of instruction address bus. This is the same as \textit {XLEN}\\
+        \textit{iaddress\_width\_p} & 2-128 & Width of instruction address bus. This is the same as \textit {XLEN}\\
         \hline
-        \textit {nocontext\_p} & 0 or 1 & Ignore context if 1 \\
+        \textit{nocontext\_p} & 0 or 1 & Ignore context if 1 \\
         \hline
-        \textit {notval\_p} & 0 or 1 & Ignore trap value if 1 \\
+        \textit{notval\_p} & 0 or 1 & Ignore trap value if 1 \\
         \hline
-        \textit {privilege\_width\_p} & 1-4 & Width of privilege bus \\
+        \textit{privilege\_width\_p} & 1-4 & Width of privilege bus \\
         \hline
-        \textit {ecause\_choice\_p} & 0-6 & Number of bits of exception cause to match using multiple choice \\
+        \textit{ecause\_choice\_p} & 0-6 & Number of bits of exception cause to match using multiple choice \\
         \hline
-        \textit {filter\_context\_p} & 0,1 & Filtering on context supported when 1 \\
+        \textit{filter\_context\_p} & 0,1 & Filtering on context supported when 1 \\
         \hline
-        \textit {filter\_ecause\_p} & 0-15 & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter-ecause-p} \\
+        \textit{filter\_ecause\_p} & 0-15 & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter-ecause-p} \\
         \hline
-        \textit {filter\_interrupt\_p} & 0,1 & Filtering on interrupt supported when 1 \\
+        \textit{filter\_interrupt\_p} & 0,1 & Filtering on interrupt supported when 1 \\
         \hline
-        \textit {filter\_privilege\_p} & 0,1 & Filtering on privilege supported when 1 \\
+        \textit{filter\_privilege\_p} & 0,1 & Filtering on privilege supported when 1 \\
         \hline
-        \textit {filter\_tval\_p} & 0,1 & Filtering on trap value supported when 1 \\
+        \textit{filter\_tval\_p} & 0,1 & Filtering on trap value supported when 1 \\
         \hline
-        \textit {user\_width\_p} & 0-256 & Width of user-defined filter qualifier input bus \\
+        \textit{user\_width\_p} & 0-256 & Width of user-defined filter qualifier input bus \\
         \hline
-        \textit {taken\_branches\_p} & 1-8 & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
+        \textit{taken\_branches\_p} & 1-8 & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
         \hline
-        \textit {itype\_width\_p} & 3-4 & Width of the \textbf{itype} bus\\
+        \textit{itype\_width\_p} & 3-4 & Width of the \textbf{itype} bus\\
         \hline
-        \textit {iretire\_width\_p} & 2-8 & Width of the \textbf{iretire} bus\\
+        \textit{iretire\_width\_p} & 2-8 & Width of the \textbf{iretire} bus\\
         \hline
-        \textit {ntkn\_width\_p} & 1-5 & Width of the \textbf{ntkn} bus\\
+        \textit{ntkn\_width\_p} & 1-5 & Width of the \textbf{ntkn} bus\\
         \hline
-        \textit {context\_type\_width\_p} & 2 & Width of the \textbf{context\_type} bus\\
+        \textit{context\_type\_width\_p} & 2 & Width of the \textbf{context\_type} bus\\
         \hline
     \end{tabulary}
 \end{table}
@@ -303,28 +407,28 @@ values from some register or memory mapped space maintained by the
 encoder.
 
 \begin{itemize}
-    \item \textit {minor\_revision}. Identifies the minor revision.
-    \item \textit {version}. Identifies the module version.
-    \item \textit {comparators}. The number of comparators is comparators+1.
-    \item \textit {filters}. Number of filters is filters+1.
-    \item \textit {context\_width}. Width of context input bus is \textit {context\_width}+1.
-    \item \textit {ecause\_choice}. Number of LSBs of the ecause input bus that can be filtered using multiple choice.
-    \item \textit {ecause\_width}. Width of the ecause input bus is \textit {ecause\_width}+1.
-    \item \textit {filter\_context}. Filtering on the \textit {context} input bus supported when 1.
-    \item \textit {filter\_ecause}. Filtering on the ecause input bus supported when non-zero.  Number of nested exceptions supported is $2^\frac{\textit {filter\_ecause}}{}$.
-    \item \textit {filter\_interrupt}. Filtering on the interrupt input signal supported when 1.
-    \item \textit {filter\_privilege}. Filtering on the privilege input bus supported when 1.
-    \item \textit {filter\_tval}. Filtering on the tval input bus supported when 1.
-    \item \textit {iaddress\_lsb}. LSB of iaddress output in trace encoder data messages.
-    \item \textit {iaddress\_width}. Width of the iaddress input bus is \textit {iaddress\_width} + 1.
-    \item \textit {nocontext}. Context ignored when 1.
-    \item \textit {notval}. Trap value ignored when 1.
-    \item \textit {privilege\_width}. Width of the privilege input bus is \textit {privilege\_width} + 1.
-    \item \textit {rv32}. ISA is RV32 when 1.
-    \item \textit {itype\_width}. Width of the \textbf{itype} bus.
-    \item \textit {iretire\_width}. Width of the \textbf{iretire} bus.
-    \item \textit {ntkn\_width}. Width of the \textbf{ntkn} bus.
-    \item \textit {ilastsize\_width}. Width of the \textbf{ilastsize} bus.
-    \item \textit {taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated
-    \item \textit {context\_type\_width}. Width of the \textbf{context\_type} bus
+    \item \textit{minor\_revision}. Identifies the minor revision.
+    \item \textit{version}. Identifies the module version.
+    \item \textit{comparators}. The number of comparators is comparators+1.
+    \item \textit{filters}. Number of filters is filters+1.
+    \item \textit{context\_width}. Width of context input bus is \textit{context\_width}+1.
+    \item \textit{ecause\_choice}. Number of LSBs of the ecause input bus that can be filtered using multiple choice.
+    \item \textit{ecause\_width}. Width of the ecause input bus is \textit{ecause\_width}+1.
+    \item \textit{filter\_context}. Filtering on the \textit{context} input bus supported when 1.
+    \item \textit{filter\_ecause}. Filtering on the ecause input bus supported when non-zero.  Number of nested exceptions supported is $2^\frac{\textit {filter\_ecause}}{}$.
+    \item \textit{filter\_interrupt}. Filtering on the interrupt input signal supported when 1.
+    \item \textit{filter\_privilege}. Filtering on the privilege input bus supported when 1.
+    \item \textit{filter\_tval}. Filtering on the tval input bus supported when 1.
+    \item \textit{iaddress\_lsb}. LSB of iaddress output in trace encoder data messages.
+    \item \textit{iaddress\_width}. Width of the iaddress input bus is \textit{iaddress\_width} + 1.
+    \item \textit{nocontext}. Context ignored when 1.
+    \item \textit{notval}. Trap value ignored when 1.
+    \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
+    \item \textit{rv32}. ISA is RV32 when 1.
+    \item \textit{itype\_width}. Width of the \textbf{itype} bus.
+    \item \textit{iretire\_width}. Width of the \textbf{iretire} bus.
+    \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus.
+    \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus.
+    \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated
+    \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus
 \end{itemize}

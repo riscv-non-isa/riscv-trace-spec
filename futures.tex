@@ -1,7 +1,8 @@
 \chapter{Future directions} \label{Future}
 
 The current focus is the compressed branch trace, however there a
-number of other types of processor trace that would be useful. These
+number of other types of processor trace that would be useful 
+(detailed below in no particular order). These
 should be considered as possible features that maybe added in future,
 once the current scope has been completed.
 
@@ -17,7 +18,7 @@ size, irrespective of transfer direction.
 
 Unencoded values will be used for synchronisation and at other times.
 
-\section {Fast profiling}
+\section{Fast profiling}
 
 In this mode the encoder will provide a non-intrusive alternative to
 the traditional method of profiling, which requires the processor to
@@ -27,8 +28,27 @@ detected, to report the next instruction executed (i.e. the
 destination instruction).  Optionally, the encoder will also be able to
 report the current instruction (i.e. the source instruction).
 
-\section {Inter-instruction cycle counts}
+\section{Don't report the addresses of function returns}
+
+In well behaved programs, the return from a function adjusts the PC back to the 
+instruction immediately following the original function call.  As long as the 
+encoder was enabled when the function call occurred (i.e. the call was traced),
+the decoding software will be able to infer the return address of the function.
+As function returns are usually performed using indirect jumps (e.g. \textit{jalr})
+they would normally be treated as uninferable.  This run-time optional mode would
+treat them as inferable, and would typically result in a significant increase in
+trace efficiency.
+
+\section{Inter-instruction cycle counts}
 
 In this mode the encoder will trace where the CPU is stalling by
 reporting the number of cycles between successive instruction
 retirements.
+
+\section{Using branch prediction to further improve efficiency}
+
+Rather than outputting branch maps detailing the taken/not taken state of every branch,
+the encoder could include a branch predictor.  This would allow the encoder to 
+report "N branches executed that matched the prediction", which would be a lot more
+efficient in some circumstances, for example tight loops.  The decoder would need to 
+model the same branch prediction algorithm in software.
