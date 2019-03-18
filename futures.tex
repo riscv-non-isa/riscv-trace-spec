@@ -39,6 +39,14 @@ they would normally be treated as uninferable.  This run-time optional mode woul
 treat them as inferable, and would typically result in a significant increase in
 trace efficiency.
 
+\section{Don't report the addresses of exceptions}
+
+The exception handler base address is specified by \textbf{\textit{stvec/mtvec}}, and 
+optionally the lower address bits can be specified by (\textbf{\textit{mcause/scause}}.
+As the latter is reported by the trace encoder when an exception occurs, the target
+of the exception handler does not need to be reported explicitly, and an option to 
+eliminate this would improve efficiency.
+
 \section{Inter-instruction cycle counts}
 
 In this mode the encoder will trace where the CPU is stalling by
@@ -52,3 +60,13 @@ the encoder could include a branch predictor.  This would allow the encoder to
 report "N branches executed that matched the prediction", which would be a lot more
 efficient in some circumstances, for example tight loops.  The decoder would need to 
 model the same branch prediction algorithm in software.
+
+\section{Using a jump target cache to further improve efficiency}
+
+The encoder could include a small cache of uninferable jump targets, managed using a
+least-recently-used (LRU) algorithm.  When an uninferable PC discontinuity occurs, if 
+the target address is present in the cache, report the index number of the cache
+entry (typically just a few bits) rather than the target address itself.  The decoder 
+would need to model the cache in order to know the target address associated with
+each cache entry.
+

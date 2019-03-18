@@ -1,21 +1,28 @@
 \chapter{Trace Encoder Output Packets} \label{packets}
 
-Figure \ref{fig:packet-format} gives an example basic structure of the
-packet energing from the encoder. This gives an example of how the
-payload maybe encapsulated.  The header includes the packet length, and
-the index identifies the source of the packet.  Different instantiations or
-implementations may have different encapsulating structures, but must
-provide this information by some means. These
-would typically be dependent upon such things as the trace routing
-infrastructure within the SoC.
+Figure~\ref{fig:packet-format} gives an example of a possible basic structure for 
+packets emerging from the encoder, in network order (1st transmitted byte is on the left).
+This shows how the payload maybe encapsulated.  The header includes the packet length, and 
+the index identifies the source of the packet.  
+Different instantiations or implementations may have different encapsulating structures.  
+This will typically be dependent upon such things as the trace routing infrastructure within the 
+SoC.  In order to support this, the encoder must provide the following information to the encapsulator:
+
+\begin{itemize}
+  \item The packet type;
+  \item The packet length, in bytes;
+  \item The packet payload.
+\end{itemize}
 
 The remainder of this section describes the contents of the Payload
-portion which should be independent of the infrastructure.
+portion which should be independent of the infrastructure.  In each table, the fields are listed in
+transmission order: first field in the table is transmited first, and multi-bit fields are 
+transmitted LSB first.
 
 \begin{figure}[h]
 \begin{center}
   \includegraphics[height=1cm, width=9cm]{newPacket.jpg}
-  \caption{Packet Format}
+  \caption{Example Encapsulated Packet Format}
   \label{fig:packet-format}
 \end{center}
 \end{figure}
@@ -24,10 +31,9 @@ portion which should be independent of the infrastructure.
 This packet payload format is used to output encoded instruction
 trace.  Four different formats are used according to the needs of the
 encoding algorithm. The following tables show the format of the
-payload - i.e. not including the optional timestamp and not including
-encapsulation infomation the index and header.
+payload - i.e. excluding any encapsulation.
 
-In order to achieve best performance, actual packet lengths must be adjusted using 'sign based compression'.
+In order to achieve best performance, actual packet lengths may be adjusted using 'sign based compression'.
 At the very minimum this should be applied to the address field, but ideally will be applied to the whole 
 packet.  This technique eliminates identical bits from the most significant end of the packet, and adjusts
 the length of the packet accordingly.  A decoder receiving this shortened packet can reconstruct the 
@@ -35,6 +41,9 @@ original full-length packet by sign-extending from the most significant received
 this technique is used to choose between address formats is given in Section~\ref{addresses}.  The same
 principal can be applied to the entire packet, and the length (typically given in bytes) adjusted 
 accordingly.
+
+Where the payload length given in the following tables, or after applying sign-based compression, is not a 
+multiple of whole bytes in length, the payload must be sign-extended to the nearest byte boundary.
 
 \begin{table}[htp]
     \centering

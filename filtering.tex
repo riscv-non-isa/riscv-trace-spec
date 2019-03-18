@@ -44,7 +44,7 @@ the filtering operation.
     \item Set up filter 
     \item Set match 
     \begin{itemize}
-      \item Configure matching behaviour for exception, privilege and user sideban
+      \item Configure matching behaviour for exception, privilege and user sideband
     \end{itemize}
 \end{enumerate}
 
@@ -59,14 +59,15 @@ The user may wish to:
   \begin {itemize}
     \item This can be HARTs and/or software contexts. If the latter this would be 
     \item Start/stop trace when specific instruction
-    \item Start/stop using User specific signals 
+    \item Start/stop based on \textbf{user} sideband signals 
     \item This could be the specific CSR value being presented to the Encoder
   \end{itemize}
 \end{enumerate}
 
 \section {Using trigger outputs from Debug Module}
 
-The debug module of the RISC-V core may have a trigger unit. This exposes a 4-bit field as shown in figure
+The debug module of the RISC-V core may have a trigger unit. This exposes a 4-bit field as shown 
+in table \ref{tab:debugModuleTriggerSupport}.
 
 \begin{table}[!h]
     \centering
@@ -76,13 +77,14 @@ The debug module of the RISC-V core may have a trigger unit. This exposes a 4-bi
         \hline
         \textbf {Value} & \textbf {Description} \\
         \hline
-        2	& Trace on\\
+        2 & Trace on\\
         \hline
         3 & Trace off \\
         \hline
         4 & Trace single. The 'single' action for an instruction
-        trigger could cause a synchronisation point to be recorded; for a data
-        trigger it could be a watchpoint trace. \\
+        trigger could cause just that instruction to be traced if connected to a \textbf{user} input;
+        Alternatively it could be used to assert the 'Notification' \textbf{context\_type} to generate
+        a watchpoint trace. \\
         \hline
     \end{tabulary}
 \end{table}

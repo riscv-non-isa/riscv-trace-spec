@@ -75,7 +75,7 @@ The optional information facilitates alternative or improved trace algorithms:
 \subsection {Jump Classification and Target Inference} \label{Jump Classes}
 
 Jumps are classified as \textit{inferable}, or \textit{uninferable}.  An \textit{inferable} jump has a target which can be
-deduced form the source code.  This means the target of the jump is supplied via
+deduced from the source code.  This means the target of the jump is supplied via
 
 \begin{itemize}
   \item a constant;
@@ -134,7 +134,7 @@ trace encoder that conveys the information described in the previous section.
         \hline
         \textbf{ntkn}[\textit{ntkn\_width\_p}-1:0] & Number of nontaken branches in this block.\\
         \hline
-        \textbf{itype}[\textit{itype\_width\_p}-1:0] & Termination type of the instruction block (see Section \ref{Jump Classes} for definitions of codes 6 - 15):\newline
+        \textbf{itype}[\textit{itype\_width\_p}-1:0] & Termination type of the instruction block (see Section~\ref{Jump Classes} for definitions of codes 6 - 15):\newline
         0: Final instruction in the block is none of the other named \textbf{itype} codes;\newline
         1: Exception. An exception occurred following the final retired instruction in the block;\newline
         2: Interrupt. An interrupt occurred following the final retired instruction in the block;\newline
@@ -146,13 +146,13 @@ trace encoder that conveys the information described in the previous section.
         8: Uninferable call;\newline
         9: Inferrable call;\newline
         10: Uninferable tail-call;\newline
-        11: Inferrable call;\newline
+        11: Inferrable tail-call;\newline
         12: Uninferable return;\newline
         13: Inferrable return;\newline
         14: Other uninferable jump;\newline
         15: Other inferable jump.\\
         \hline
-        \textbf{cause}[\textit{context\_width\_p}-1:0] & Exception or interrupt cause (\textbf{\textit{mcause/scause}}), \newline
+        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & Exception or interrupt cause (\textbf{\textit{mcause/scause}}), \newline
         Ignored unless \textbf {itype}=1 or 2.\\
         \hline
         \textbf{tval}[\textit{iaddress\_width\_p}-1:0]& The associated trap value, e.g. the
@@ -167,9 +167,9 @@ trace encoder that conveys the information described in the previous section.
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & The address of the 1st instruction retired in this block.\newline
         Invalid if \textbf{iretires}=0 \\
         \hline
-        \textbf {ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed.\\
+        \textbf{ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed.\\
         \hline
-        \textbf {context\_type}[\textit{context\_width\_p}-1:0] & Behavior type of \textbf{context}\newline
+        \textbf{context\_type}[\textit{context\_type\_width\_p}-1:0] & Behavior type of \textbf{context}\newline
         0: Context change with discontinuity;\newline
         1: Precise context change;\newline
         2: Imprecise context change;\newline
@@ -216,6 +216,15 @@ there are two taken branches, instructions upto the 1st taken branch
 must be reported in group 0 and instructions upto the 2nd taken branch
 must be reported in group 1 and son on.
 
+The \textbf{context} field can be used to convey any additional information to the decoder.  For example:
+
+\begin{itemize}
+  \item The Hart ID;
+  \item The software thread ID;
+  \item It could be used to convey the values of CSRs to the decoder by setting \textbf{context} to the 
+    CSR number and value when a CSR is written.
+\end{itemize}
+
 Table~\ref{tab:context-type} specifies the actions for the various \textbf{context\_type} values.
 
 \begin{table}[htp]
@@ -226,7 +235,7 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         \textbf {Type} & \textbf {Value} & \textbf {Actions} \\
         \hline
-        Context change with discontinuity & 0 &  An example would be a change of HART.\newline
+        Context change with discontinuity & 0 &  An example would be a change of Hart.\newline
         Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
         Treated the same as an exception.\\
         \hline
@@ -265,24 +274,24 @@ The ingress interface may be used in a number of different configurations.  For 
 \end{itemize}
 
 
-\subsection {Example Signal Blocks}
+\subsection {Example Retirement Sequences}
 
 \begin{table}[htp]
     \centering
-    \caption{Example 1 : 9 Instructions retired in one cycle, 3 branches} 
-    \label{tab:signal-block-9-instructions-3-branches}
+    \caption{Example 1 : 9 Instructions retired over three cycles, 2 branches} 
+    \label{tab:signal-block-9-instructions-2-branches}
     \begin{tabulary}{\textwidth}{|l|l|}
         \hline
-        \textbf {Retired} & \textbf {Instruction Trace Bundle} \\
+        \textbf {Retired} & \textbf {Instruction Trace Block} \\
         \hline
-        1000: \textbf{\textit{divuw}} &  \textbf{iretire}=7, \textbf{iaddr}=0x1000, \textbf{ntkn}=0, \textbf{itype}=4\\
+        1000: \textbf{\textit{divuw}} &  \textbf{iretire}=7, \textbf{iaddr}=0x1000, \textbf{ntkn}=0, \textbf{itype}=8\\
         1004: \textbf{\textit{add}} &  \\
         1008: \textbf{\textit{or}} &  \\
         100C: \textbf{\textit{c.jalr}} &  \\
         \hline
-        0940: \textbf{\textit{addi}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0940, \textbf{ntkn}=1, \textbf{itype}=6\\
-        1004: \textbf{\textit{c.beq}} &  \\
-        1008: \textbf{\textit{c.bnez}} &  \\
+        0940: \textbf{\textit{addi}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0940, \textbf{ntkn}=1, \textbf{itype}=5\\
+        0944: \textbf{\textit{c.beq}} &  \\
+        0946: \textbf{\textit{c.bnez}} &  \\
         \hline
         0988: \textbf{\textit{lbu}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0988, \textbf{ntkn}=0, \textbf{itype}=0\\
         098C: \textbf{\textit{csrrw}} &  \\
@@ -291,10 +300,10 @@ The ingress interface may be used in a number of different configurations.  For 
 \end{table}
 
 
-\subsection {Side band signals}
+\subsection {Sideband signals}
 
-In some circumstances there will be some side band signals which may
-affect the encoder's behaviour, for example to start and/or stop
+In some circumstances there will be some sideband signals which may
+affect the encoder's behavior, for example to start and/or stop
 encoding.
 There will sometimes be cases where the encoder may be
 required to affect the behaviour of the core, for example stalling.
@@ -310,7 +319,7 @@ will need to be applied to the \textbf{context} value.
         \hline
         \textbf{Signal} & \textbf{Function} \\
        \hline
-        \textbf{user} [\textit{user\_width\_p}-1:0] &  Sideband signals \\
+        \textbf{user} [\textit{user\_width\_p}-1:0] &  Filtering sideband signals (see Chapter~\ref{ch:filtering})\\
         \hline
         \textbf{halted}& Core is stalled or halted \\
         \hline
@@ -332,7 +341,6 @@ will need to be applied to the \textbf{context} value.
     \end{tabulary}
 \end{table}
 
-
 \subsection {Parameters}
 
 The encoder will have some configurable or variable parameters. Some
@@ -351,41 +359,43 @@ How the parameters are input to the encoder is implementation specific. The numb
         \hline
         \textbf{Parameter name} & \textbf{Range} & \textbf{Description} \\
         \hline
-        \textit{context\_width\_p} & 1-32 & Width of context bus \\
+        \textit{context\_width\_p} &  & Width of context bus \\
         \hline
-        \textit{ecause\_width\_p} & 1-16 & Width of exception cause bus \\
+        \textit{ecause\_width\_p} &  & Width of exception cause bus \\
         \hline
-        \textit{iaddress\_lsb\_p} & 0-3 & LSB of instruction address bus \\
+        \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
         \hline
-        \textit{iaddress\_width\_p} & 2-128 & Width of instruction address bus. This is the same as \textit {XLEN}\\
+        \textit{iaddress\_width\_p} & & Width of instruction address bus. This is the same as \textit{XLEN}\\
         \hline
-        \textit{nocontext\_p} & 0 or 1 & Ignore context if 1 \\
+        \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
         \hline
-        \textit{notval\_p} & 0 or 1 & Ignore trap value if 1 \\
+        \textit{notval\_p} & 0 or 1 & Exclude trap value from \textit{te\_inst} packets if 1 \\
         \hline
-        \textit{privilege\_width\_p} & 1-4 & Width of privilege bus \\
+        \textit{privilege\_width\_p} & & Width of privilege bus \\
         \hline
-        \textit{ecause\_choice\_p} & 0-6 & Number of bits of exception cause to match using multiple choice \\
+        \textit{ecause\_choice\_p} & & Number of bits of exception cause to match using multiple choice \\
         \hline
-        \textit{filter\_context\_p} & 0,1 & Filtering on context supported when 1 \\
+        \textit{filter\_context\_p} & 0 or 1 & Filtering on context supported when 1 \\
         \hline
-        \textit{filter\_ecause\_p} & 0-15 & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter-ecause-p} \\
+        \textit{filter\_ecause\_p} & & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter\_ecause\_p} \\
         \hline
-        \textit{filter\_interrupt\_p} & 0,1 & Filtering on interrupt supported when 1 \\
+        \textit{filter\_interrupt\_p} & 0 or 1 & Filtering on interrupt supported when 1 \\
         \hline
-        \textit{filter\_privilege\_p} & 0,1 & Filtering on privilege supported when 1 \\
+        \textit{filter\_privilege\_p} & 0 or 1 & Filtering on privilege supported when 1 \\
         \hline
-        \textit{filter\_tval\_p} & 0,1 & Filtering on trap value supported when 1 \\
+        \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 \\
         \hline
-        \textit{user\_width\_p} & 0-256 & Width of user-defined filter qualifier input bus \\
+        \textit{user\_width\_p} & & Width of user-defined filter qualifier input bus \\
         \hline
-        \textit{taken\_branches\_p} & 1-8 & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
+        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
         \hline
-        \textit{itype\_width\_p} & 3-4 & Width of the \textbf{itype} bus\\
+        \textit{itype\_width\_p} & & Width of the \textbf{itype} bus\\
         \hline
-        \textit{iretire\_width\_p} & 2-8 & Width of the \textbf{iretire} bus\\
+        \textit{iretire\_width\_p} & & Width of the \textbf{iretire} bus\\
         \hline
-        \textit{ntkn\_width\_p} & 1-5 & Width of the \textbf{ntkn} bus\\
+        \textit{ilastsize\_width\_p} & & Width of the \textbf{ilastsize} bus\\
+        \hline
+        \textit{ntkn\_width\_p} & & Width of the \textbf{ntkn} bus\\
         \hline
         \textit{context\_type\_width\_p} & 2 & Width of the \textbf{context\_type} bus\\
         \hline
@@ -402,33 +412,33 @@ provide the discovery information as encapsulated in the following
 parameters in one or more different formats.  The preferred format
 would be in a packet which is sent over the trace infrastructure.
 
-Another format would may be allowing the external enity to read the
+Another format would may be allowing the external entity to read the
 values from some register or memory mapped space maintained by the
 encoder.
 
 \begin{itemize}
     \item \textit{minor\_revision}. Identifies the minor revision.
     \item \textit{version}. Identifies the module version.
-    \item \textit{comparators}. The number of comparators is comparators+1.
-    \item \textit{filters}. Number of filters is filters+1.
-    \item \textit{context\_width}. Width of context input bus is \textit{context\_width}+1.
+    \item \textit{comparators}. The number of comparators is \textit{comparators} + 1.
+    \item \textit{filters}. Number of filters is \textit{filters} + 1.
+    \item \textit{context\_width}. Width of context input bus is \textit{context\_width} + 1.
     \item \textit{ecause\_choice}. Number of LSBs of the ecause input bus that can be filtered using multiple choice.
-    \item \textit{ecause\_width}. Width of the ecause input bus is \textit{ecause\_width}+1.
+    \item \textit{ecause\_width}. Width of the ecause input bus is \textit{ecause\_width} + 1.
     \item \textit{filter\_context}. Filtering on the \textit{context} input bus supported when 1.
     \item \textit{filter\_ecause}. Filtering on the ecause input bus supported when non-zero.  Number of nested exceptions supported is $2^\frac{\textit {filter\_ecause}}{}$.
     \item \textit{filter\_interrupt}. Filtering on the interrupt input signal supported when 1.
     \item \textit{filter\_privilege}. Filtering on the privilege input bus supported when 1.
     \item \textit{filter\_tval}. Filtering on the tval input bus supported when 1.
-    \item \textit{iaddress\_lsb}. LSB of iaddress output in trace encoder data messages.
+    \item \textit{iaddress\_lsb}. LSB of iaddress output in trace encoder data messages is \textit{iaddress\_lsb} + 1.
     \item \textit{iaddress\_width}. Width of the iaddress input bus is \textit{iaddress\_width} + 1.
     \item \textit{nocontext}. Context ignored when 1.
     \item \textit{notval}. Trap value ignored when 1.
     \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
     \item \textit{rv32}. ISA is RV32 when 1.
-    \item \textit{itype\_width}. Width of the \textbf{itype} bus.
-    \item \textit{iretire\_width}. Width of the \textbf{iretire} bus.
-    \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus.
-    \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus.
-    \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated
-    \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus
+    \item \textit{itype\_width}. Width of the \textbf{itype} bus is \textit{itype\_width} + 1.
+    \item \textit{iretire\_width}. Width of the \textbf{iretire} bus is \textit{iretire\_width} + 1.
+    \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus is \textit{ntkn\_width} + 1.
+    \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus is \textit{ilastsize\_width} + 1.
+    \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated is \textit{taken\_branches} + 1.
+    \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus is \textit{context\_type\_width} + 1.
 \end{itemize}
