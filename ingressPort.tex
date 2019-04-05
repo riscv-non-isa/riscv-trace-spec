@@ -120,19 +120,15 @@ Jumps may optionally be further classified according to the recommended calling 
 
 \section{Instruction Interface}
 This section describes the interface between a RISC-V core and the
-trace encoder that conveys the information described in the previous section. 
+trace encoder that conveys the information described in the previous section.  
 
 \begin{table}[htp]
     \centering
-    \caption{Core-Encoder signals}
-    \label{tab:ingress}
+    \caption{Core-Encoder signals - common}
+    \label{tab:common-ingress}
     \begin{tabulary}{\textwidth}{|l|p{80mm}|}
         \hline
         \textbf {Signal} & \textbf {Function} \\
-        \hline
-        \textbf{iretire}[\textit{iretire\_width\_p}-1:0] & Number of halfwords represented by instructions retired in this block.\\
-        \hline
-        \textbf{ntkn}[\textit{ntkn\_width\_p}-1:0] & Number of nontaken branches in this block.\\
         \hline
         \textbf{itype}[\textit{itype\_width\_p}-1:0] & Termination type of the instruction block (see Section~\ref{Jump Classes} for definitions of codes 6 - 15):\newline
         0: Final instruction in the block is none of the other named \textbf{itype} codes;\newline
@@ -167,8 +163,6 @@ trace encoder that conveys the information described in the previous section.
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & The address of the 1st instruction retired in this block.\newline
         Invalid if \textbf{iretires}=0 \\
         \hline
-        \textbf{ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed.\\
-        \hline
         \textbf{context\_type}[\textit{context\_type\_width\_p}-1:0] & Behavior type of \textbf{context}\newline
         0: Context change with discontinuity;\newline
         1: Precise context change;\newline
@@ -178,8 +172,56 @@ trace encoder that conveys the information described in the previous section.
     \end{tabulary}
 \end{table}
 
-Table~\ref{tab:ingress} lists the signals in the interface. The
-information presented on the ingress port represents a contiguous
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder signals - multiple retirement}
+    \label{tab:multi-ingress}
+    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+        \hline
+        \textbf {Signal} & \textbf {Function} \\
+        \hline
+        \textbf{iretire}[\textit{iretire\_width\_p}-1:0] & Number of halfwords represented by instructions retired in this block.\\
+        \hline
+        \textbf{ilastsize}[\textit{ilastsize\_width\_p}-1:0] & The size of the last retired instruction. For cases where the address of the last retired instruction is needed.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder signals - multiple non-taken branches}
+    \label{tab:multintb-ingress}
+    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+        \hline
+        \textbf {Signal} & \textbf {Function} \\
+        \hline
+        \textbf{ntkn}[\textit{ntkn\_width\_p}-1:0] & Number of nontaken branches in this block.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder signals - single retirement}
+    \label{tab:single-ingress}
+    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+        \hline
+        \textbf {Signal} & \textbf {Function} \\
+        \hline
+        \textbf{iretire}[0:0] & Number of instructions retired in this block (0 or 1).\\
+        \hline
+        \hline
+    \end{tabulary}
+\end{table}
+
+Tables~\ref{tab:common-ingress}, ~\ref{tab:multi-ingress} and ~\ref{tab:multintb-ingress}
+list the signals in the interface designed to efficiently support retirement of multiple 
+instructions per cycle.  The following discussion describes the multiple-retirement behavior.  
+However, for cores that can only retire one instruction at a time, the signalling can be 
+simplified, and this is discussed subsequently in Section~\ref{sec:single-retire}.  
+
+The information presented on the ingress port represents a contiguous
 block of instructions starting at \textbf{iaddr}, all of which retired
 in the same cycle. Note if \textbf{itype} is 1 or 2 (indicating an
 exception or an interrupt), the number of instructions retired may be
@@ -187,11 +229,11 @@ zero. \textbf{cause} and \textbf{tval} are only defined if
 \textbf{itype} is 1 or 2. If \textbf{iretire}=0 and \textbf{itype}=0,
 the values of all other signals are undefined.
 
-\textbf {iretire} contains the number of half-words represented by
-instructions retired in this block, and \textbf {ilastsize} the size of the last
+\textbf{iretire} contains the number of half-words represented by
+instructions retired in this block, and \textbf{ilastsize} the size of the last
 instruction.  Half-words rather than instruction count enables the encoder to easily compute the address of
 the last instruction in the block without having access to the size of every 
-instruction in the block.
+instruction in the block.  
 
 If address translation is enabled, \textbf{iaddr} is a virtual
 address, else it is a physical address. Virtual addresses narrower
@@ -199,9 +241,18 @@ than \textit{iaddress\_width\_p} bits must be sign-extended to make
 computation of differential addresses easier, and physical addresses
 narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
 
+Cores can retire multiple non-taken branches per clock cycle, indicated via \textbf{ntkn}.
+However, a consequence of this is that the encoder will be unaware of the addresses of some non-taken branches, 
+which will prevent the use of a branch predictor to improve compression (see Section~\ref{sec:branch-prediction}.
+For cores that can only retire a maximum of one non-taken branch per clock cycle,
+\textbf{ntkn} can be omitted, provided all non-taken branches are indicated via \textbf{itype}.  
+The number of non-taken branches is \textbf{ntkn} if \textbf{ntkn} is non-zero, or 1 if \textbf{itype} = 4 and \textbf{ntkn} is zero.
+In other words, if for example \textbf{ntkn} is 2 and \textbf{itype} = 4, the encoder will interpret this as 2 non-taken branches,
+not 3.
+
 For cores that can retire a maximum of N taken branches per clock
 cycle, the signal group (\textbf{iretire}, \textbf{itype},
-\textbf{ntkn}, \textbf{ilastsize}, \textbf{iaddr}) must be replicated N times. Signal group 0
+\textbf{ntkn} (if present), \textbf{ilastsize}, \textbf{iaddr}) must be replicated N times. Signal group 0
 represents information about the oldest instruction block, and group N-1
 represents the newest instruction block. The interface supports no more
 than one privilege, context, exception or interrupt per cycle and so \textbf{priv}, 
@@ -254,25 +305,37 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
     \end{tabulary}
 \end{table}
 
-\subsection {Example Interface Configurations}
+\subsection {Simplifications for single-retirement} \label{sec:single-retire}
 
-The ingress interface may be used in a number of different configurations.  For example:
-
+For cores that can only retire one instruction at a time, the interface can be simplified to
+the signals listed in tables~\ref{tab:common-ingress} and ~\ref{tab:single-ingress}.  The 
+simplifications can be summarized as follows:
+ 
 \begin{itemize}
-  \item For a core that retires no more than one instruction per cycle, the simplest solution is to provide details of every retired instruction explicitly:
-    \begin{itemize}
-      \item \textit{iretire\_width\_p} = 2;
-      \item Set \textbf{iretire} to 1 for 16-bit instructions and 2 for 32-bit instructions;
-      \item \textit{ntkn\_width\_p} = 1;
-      \item Set \textbf{ntkn} to 1 if the instruction is a nontaken branch, zero otherwise;
-    \end{itemize}
-  \item For a core that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
-    solution is to use one of each of the signals from Table~\ref{tab:ingress}, with \textbf{iretire} indicating the 
-    total number of instructions retired.  However, an alternative approach would be to provide explicit details of every 
-    instruction retired by using N sets of the signal group (\textbf{iretire}, \textbf{itype}, \textbf{ntkn}, 
-    \textbf{ilastsize}, \textbf{iaddr}) with the groups detailing one instruction each (replicating the single retirement example N times).  
+  \item As the number of instructions that are retired in a block is only 0 or 1, the 
+    encoder does not need information to enable it to deduce the address of the last instruction 
+    retired (it is the same as the 1st and only instruction retired).  So 
+    \textbf{ilastsize} is not necessary, and \textbf{iretire} simply indicates whether an
+    instruction retired or not;
+  \item As the number of non-taken branches retired is never more than 1, and can always
+    be indicated via \textbf{itype}, \textbf{ntkn} is not necessary.
 \end{itemize}
 
+The parameter \textit{retires\_p} which indicates to the encoder the maximum number of 
+instructions that can be retired per cycle can be used by an encoder capable of supporting single or 
+multiple retirement to select the appropriate interpretation of \textbf{iretire}.  
+\textbf{ilastsize} and \textbf{ntkn} encoder inputs must be tied low when attached to a single-retirement
+core that does not provide these outputs.
+
+
+\subsection {Alternative Multiple-retirement interface configurations}
+
+For a core that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
+solution is to use one of each of the signals from tables~\ref{tab:common-ingress}, ~\ref{tab:multi-ingress} and 
+optionally ~\ref{tab:multintb-ingress}.  However, an alternative approach would be to provide explicit details of every 
+instruction retired by using N sets of the signal group (\textbf{iretire}, \textbf{itype}) from 
+tables~\ref{tab:common-ingress} and ~\ref{tab:single-ingress} with the groups detailing one instruction each 
+(replicating the single retirement example N times).  
 
 \subsection {Example Retirement Sequences}
 
@@ -359,19 +422,17 @@ How the parameters are input to the encoder is implementation specific. The numb
         \hline
         \textbf{Parameter name} & \textbf{Range} & \textbf{Description} \\
         \hline
+        \textit{bpred\_size\_p} & & Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size\_p}}. 
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no branch predictor implemented.\\
+        \hline
+        \textit{call\_counter\_size\_p} &  & Number of bits in the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size\_p}}.
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return call counter implemented.\\
+        \hline
+        \textit{context\_type\_width\_p} & 2 & Width of the \textbf{context\_type} bus\\
+        \hline
         \textit{context\_width\_p} &  & Width of context bus \\
         \hline
         \textit{ecause\_width\_p} &  & Width of exception cause bus \\
-        \hline
-        \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
-        \hline
-        \textit{iaddress\_width\_p} & & Width of instruction address bus. This is the same as \textit{XLEN}\\
-        \hline
-        \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
-        \hline
-        \textit{notval\_p} & 0 or 1 & Exclude trap value from \textit{te\_inst} packets if 1 \\
-        \hline
-        \textit{privilege\_width\_p} & & Width of privilege bus \\
         \hline
         \textit{ecause\_choice\_p} & & Number of bits of exception cause to match using multiple choice \\
         \hline
@@ -385,19 +446,29 @@ How the parameters are input to the encoder is implementation specific. The numb
         \hline
         \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 \\
         \hline
-        \textit{user\_width\_p} & & Width of user-defined filter qualifier input bus \\
+        \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
         \hline
-        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
-        \hline
-        \textit{itype\_width\_p} & & Width of the \textbf{itype} bus\\
+        \textit{iaddress\_width\_p} & & Width of instruction address bus. This is the same as \textit{XLEN}\\
         \hline
         \textit{iretire\_width\_p} & & Width of the \textbf{iretire} bus\\
         \hline
         \textit{ilastsize\_width\_p} & & Width of the \textbf{ilastsize} bus\\
         \hline
+        \textit{itype\_width\_p} & & Width of the \textbf{itype} bus\\
+        \hline
+        \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
+        \hline
+        \textit{notval\_p} & 0 or 1 & Exclude trap value from \textit{te\_inst} packets if 1 \\
+        \hline
         \textit{ntkn\_width\_p} & & Width of the \textbf{ntkn} bus\\
         \hline
-        \textit{context\_type\_width\_p} & 2 & Width of the \textbf{context\_type} bus\\
+        \textit{privilege\_width\_p} & & Width of privilege bus \\
+        \hline
+        \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
+        \hline
+        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
+        \hline
+        \textit{user\_width\_p} & & Width of user-defined filter qualifier input bus \\
         \hline
     \end{tabulary}
 \end{table}
@@ -421,6 +492,9 @@ encoder.
     \item \textit{version}. Identifies the module version.
     \item \textit{comparators}. The number of comparators is \textit{comparators} + 1.
     \item \textit{filters}. Number of filters is \textit{filters} + 1.
+    \item \textit{bpred\_size}. Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size}}.  No predictor if 0.
+    \item \textit{call\_counter\_size}. Width of the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size}}.  No counter if 0.
+    \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus is \textit{context\_type\_width} + 1.
     \item \textit{context\_width}. Width of context input bus is \textit{context\_width} + 1.
     \item \textit{ecause\_choice}. Number of LSBs of the ecause input bus that can be filtered using multiple choice.
     \item \textit{ecause\_width}. Width of the ecause input bus is \textit{ecause\_width} + 1.
@@ -431,14 +505,15 @@ encoder.
     \item \textit{filter\_tval}. Filtering on the tval input bus supported when 1.
     \item \textit{iaddress\_lsb}. LSB of iaddress output in trace encoder data messages is \textit{iaddress\_lsb} + 1.
     \item \textit{iaddress\_width}. Width of the iaddress input bus is \textit{iaddress\_width} + 1.
-    \item \textit{nocontext}. Context ignored when 1.
-    \item \textit{notval}. Trap value ignored when 1.
-    \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
-    \item \textit{rv32}. ISA is RV32 when 1.
+    \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus is \textit{ilastsize\_width} + 1.
     \item \textit{itype\_width}. Width of the \textbf{itype} bus is \textit{itype\_width} + 1.
     \item \textit{iretire\_width}. Width of the \textbf{iretire} bus is \textit{iretire\_width} + 1.
+    \item \textit{nocontext}. Context ignored when 1.
+    \item \textit{notval}. Trap value ignored when 1.
     \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus is \textit{ntkn\_width} + 1.
-    \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus is \textit{ilastsize\_width} + 1.
+    \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
+    \item \textit{retires}. Maximum number of instructions that can be retired per block is \textit{retires} + 1.
+    \item \textit{rv32}. ISA is RV32 when 1.
     \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated is \textit{taken\_branches} + 1.
-    \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus is \textit{context\_type\_width} + 1.
+    \item \textit{user\_width}. Width of the \textbf{user} bus is \textit{user\_width} + 1.
 \end{itemize}

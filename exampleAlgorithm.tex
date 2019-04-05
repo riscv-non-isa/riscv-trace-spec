@@ -70,11 +70,8 @@ Note: if the \textbf{halted} or \textbf{reset} sideband signals are asserted (se
 the encoder will behave as if it has received an unqualified instruction (output \textit{te\_inst}
 reporting the address of the last instruction, followed by \textit{te\_support});
 
-\section{Full vs Differential Addresses} \label{addresses}
-In all cases but one, the packet format is determined only by a 'yes' outcome from the 
-associated decision.  The choice between format 0, 1 or 2 for the case in the middle of the 
-diagram needs further explanation.  
 
+\section{Full vs Differential Addresses} \label{addresses}
 Addresses can be output in one of two ways: \textit{full} or \textit{differential}.
 
 \begin{itemize}
@@ -84,27 +81,42 @@ Addresses can be output in one of two ways: \textit{full} or \textit{differentia
     previous packet that contained an address.
 \end{itemize}
 
-Packet formats 0 and 1 include the full or differential address respectively, along with a 
-branch map.  If the branch map is not empty, The choice of which format to use is determined as follows:
+Packet formats 1 and 2 include a differential address, whilst format 3 includes the full address.
 
-\begin{enumerate}
-  \item Calculate the differential address (current address minus previously reported address);
-  \item Count the number of identical most-significant bits for both the full and 
-    differential addresses;
-  \item Choose the address which has the highest number of identical bits.
-\end{enumerate}
+\section{Format selection} \label{format-selection}
 
-For example, suppose the current address is 0xffff1234, and the address of the instruction most
-recently output in a packet is 0xffff1200.  The differential address is 0x00000034.  This has 
-26 identical MSBs.  The full address has ony 16 identical MSBs, so the differential address is
-chosen.
+In all cases but one, the packet format (3) is determined only by a 'yes' outcome from the 
+associated decision.  The choice between formats 1 or 2 for the case in the middle of the 
+diagram needs further explanation.  
 
-If the branch map is empty and does not need to be reported, packet format 2 is used.  This
-always contains a differential address.  The rationale here is that if there are no branches to 
-report then the instruction address is unlikely to differ by much from the previously reported
-address, and so the differential form is much more likely to be optimal.  Offering a choice
-between full and differential would require an extra bit in the packet, which would reduce the
-efficiency.  
+If there are no branches that need to be reported, packet format 2 is used.  
+
+If there are branches to report, format 1 is used.
+
+If there is no address to report, then there are two sub-formats of format 1.  If branch prediction
+is supported and is enabled, then there is a choice of whether to output a full branch map, or a 
+count of correctly predicted branches.  In order to chose the count, the number of correctly
+predicted branches must be at least 31.  If there are 31 unreported branches (i.e. the branch
+map is full), but not all of them were predicted correctly, then the branch map will be output.
+If all 31 unreported branches were correctly predicted, then the encoder starts counting
+subsequent correct predictions, and will output a count under the following conditions:
+
+\begin{itemize}
+  \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
+    minus 31.  \textbf{no\_mispred} will be 0, indicating that the next branch failed its prediction;
+  \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
+    the encoder will output the branch count with \textbf{no\_mispred} set to 1, followed by a format 2
+    packet reporting the address (not yet shown in Figure~\ref{fig:algo}). 
+    \textbf{DISCUSSION POINT:} This is the only scenario so far where the encoder is required to 
+    output 2 packets as a result of a single instruction.  One way to avoid this would
+    be to use format 0 vs 1 to distinguish between branch map and branch count (eliminating the need for
+    the \textbf{branch\_fmt} bit).  However, this uses up the currently free format.  The other far less
+    attractive alternative is to add a \textbf{branch\_fmt} bit to all format 1 packets, which has the 
+    major disadvantage of impacting the efficiency of all format 1 packets;
+  \item The branch count reaches its maximum value (0xffff).  \textbf{no\_mispred} will be set to 1 to
+    indicate that the outcome of the next branch cannot be inferred (it will be explicitly recorded and
+    output later).   
+\end{itemize}
 
 The packet formats are organized so that the address is always the final field.  Minimizing the 
 number of bits required to represent the address reduces the total packet size and significantly
