@@ -28,27 +28,41 @@ detected, to report the next instruction executed (i.e. the
 destination instruction).  Optionally, the encoder will also be able to
 report the current instruction (i.e. the source instruction).
 
-\section{Don't report the addresses of function returns}
-
-In well behaved programs, the return from a function adjusts the PC back to the 
-instruction immediately following the original function call.  As long as the 
-encoder was enabled when the function call occurred (i.e. the call was traced),
-the decoding software will be able to infer the return address of the function.
-As function returns are usually performed using indirect jumps (e.g. \textit{jalr})
-they would normally be treated as uninferable.  This run-time optional mode would
-treat them as inferable, and would typically result in a significant increase in
-trace efficiency.
-
 \section{Inter-instruction cycle counts}
 
 In this mode the encoder will trace where the CPU is stalling by
 reporting the number of cycles between successive instruction
 retirements.
 
-\section{Using branch prediction to further improve efficiency}
+\section{Using a jump target cache to further improve efficiency}
 
-Rather than outputting branch maps detailing the taken/not taken state of every branch,
-the encoder could include a branch predictor.  This would allow the encoder to 
-report "N branches executed that matched the prediction", which would be a lot more
-efficient in some circumstances, for example tight loops.  The decoder would need to 
-model the same branch prediction algorithm in software.
+The encoder could include a small cache of uninferable jump targets, managed using a
+least-recently-used (LRU) algorithm.  When an uninferable PC discontinuity occurs, if 
+the target address is present in the cache, report the index number of the cache
+entry (typically just a few bits) rather than the target address itself.  The decoder 
+would need to model the cache in order to know the target address associated with
+each cache entry.
+
+\textbf{DISCUSSION POINT}:
+
+This mode needs more analysis before we commit.  The primary concern is whether it will 
+result in an overall gain in efficiency.  Packet formats 0 and 2 are used to report 
+differential addresses with and without branch history information respectively.  Format
+0 is currently reserved.  This could be redefined as being equivalent to either format 0, or 
+format 2, but reporting a jump target cache index instead of a differential address.
+However, ideally we would want the ability to output the equivalent of both format 1 and
+format 2 with a jump target cache index.  In order to do that we will need to add an extra bit
+somewhere.  These are the options:
+
+\begin{itemize}
+  \item Define format 0 as jump target cache index without branch information, and add a bit to
+    format 1 to indicate whether it contains an address or a jump target cache index;
+  \item Define format 0 as jump target cache index with branch information, and add a bit to
+    format 2 to indicate whether it contains an address or a jump target cache index;
+  \item Leave format 0 reserved, and add a bit to both formats 0 and 2 to indicate whether
+    they contain an address or a jump target cache index.
+\end{itemize}
+
+For this mode to be useful, the overall efficiency gain achieved as a result of jump target cache indexes
+requiring fewer bits to encode than differential addresses needs to be enough to overcome the efficiency
+loss of adding a bit to every packet. 

@@ -1,21 +1,28 @@
 \chapter{Trace Encoder Output Packets} \label{packets}
 
-Figure \ref{fig:packet-format} gives an example basic structure of the
-packet energing from the encoder. This gives an example of how the
-payload maybe encapsulated.  The header includes the packet length, and
-the index identifies the source of the packet.  Different instantiations or
-implementations may have different encapsulating structures, but must
-provide this information by some means. These
-would typically be dependent upon such things as the trace routing
-infrastructure within the SoC.
+Figure~\ref{fig:packet-format} gives an example of a possible basic structure for 
+packets emerging from the encoder, in network order (1st transmitted byte is on the left).
+This shows how the payload maybe encapsulated.  The header includes the packet length, and 
+the index identifies the source of the packet.  
+Different instantiations or implementations may have different encapsulating structures.  
+This will typically be dependent upon such things as the trace routing infrastructure within the 
+SoC.  In order to support this, the encoder must provide the following information to the encapsulator:
 
-The remainder of this section describes the contents of the Payload
-portion which should be independent of the infrastructure.
+\begin{itemize}
+  \item The packet type;
+  \item The packet length, in bytes;
+  \item The packet payload.
+\end{itemize}
+
+The remainder of this section describes the contents of the payload
+portion which should be independent of the infrastructure.  In each table, the fields are listed in
+transmission order: first field in the table is transmited first, and multi-bit fields are 
+transmitted LSB first.
 
 \begin{figure}[h]
 \begin{center}
   \includegraphics[height=1cm, width=9cm]{newPacket.jpg}
-  \caption{Packet Format}
+  \caption{Example Encapsulated Packet Format}
   \label{fig:packet-format}
 \end{center}
 \end{figure}
@@ -24,10 +31,9 @@ portion which should be independent of the infrastructure.
 This packet payload format is used to output encoded instruction
 trace.  Four different formats are used according to the needs of the
 encoding algorithm. The following tables show the format of the
-payload - i.e. not including the optional timestamp and not including
-encapsulation infomation the index and header.
+payload - i.e. excluding any encapsulation.
 
-In order to achieve best performance, actual packet lengths must be adjusted using 'sign based compression'.
+In order to achieve best performance, actual packet lengths may be adjusted using 'sign based compression'.
 At the very minimum this should be applied to the address field, but ideally will be applied to the whole 
 packet.  This technique eliminates identical bits from the most significant end of the packet, and adjusts
 the length of the packet accordingly.  A decoder receiving this shortened packet can reconstruct the 
@@ -36,16 +42,35 @@ this technique is used to choose between address formats is given in Section~\re
 principal can be applied to the entire packet, and the length (typically given in bytes) adjusted 
 accordingly.
 
+Where the payload length given in the following tables, or after applying sign-based compression, is not a 
+multiple of whole bytes in length, the payload must be sign-extended to the nearest byte boundary.
+
+Whilst offering maximum encoding efficiency, variable length packets can present some challenges,
+specifically in terms of identifying where the boundaries between packets occur either when packed
+packets are written to memory, or when packets are streamed offchip via a communications channel.  Two 
+potential solutions to this are as follows:
+
+\begin{itemize}
+  \item If the maximum packet payload length is 2\textsuperscript{N}-1 (for example, if N is 5, then the maximum length is
+    31 bytes), and the minimum packet payload length is 1, then a sequence of at least 2\textsuperscript{N} zero 
+    bytes cannot occur within a packet payload, and therefore the first non-zero byte seen after a sequence of 
+    at least 2\textsuperscript{N} zero bytes must be the first byte of a packet.  This approach can be used for
+    alignment in either memory or a data stream;
+  \item An alternative approach suitable for packets written to memory is to divide memory into blocks of M bytes
+    (e.g. 1kbyte blocks), and write packets to memory such that the first byte in every block is always the first
+    byte of a packet.  This means packets cannot span block boundaries, and so zero bytes must be used to pad between 
+    the end of the last message in a block and the block boundary.
+\end{itemize}
+
 \begin{table}[htp]
     \centering
-    \caption{Packet Payload Format 0 and 1}
+    \caption{Packet Payload Format 1 - general format}
     \label{tab:te_inst0-1}
     \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
         \hline
         {\bf Field name} & {\bf Bits} & {\bf Description} \\
         \hline
-        \textbf{format}	& 2	& 00 (full-delta): includes branch map and full address \newline
-                        01 (diff-delta): includes branch map and differential address\\
+        \textbf{format}	& 2	& 01 (diff-delta): includes branch map and differential address\\
         \hline
         \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
         0:      31 bits (\textbf{address} is not valid) \newline
@@ -59,9 +84,62 @@ accordingly.
         and this is indicated by setting branches to 0.  The exception to this is when 
         the instruction immediately prior to the final branch causes an unpredictable discontinuity.\\
         \hline
-        \textbf{branch-map} & Number of bits \newline 
+        \textbf{branch\_fmt} & Number of bits is \newline
+                     1 if \textbf{branches} is 0, \newline
+                     or 0 otherwise (i.e. field omitted). &
+                     Next field is \textbf{branch\_map} if 0, or \textbf{branch\_count} if 1. \\
+        \hline
+        \textbf{branch\_map} & Number of bits \newline 
                      determined by \newline 
-                     \textbf {branches} field & 
+                     \textbf{branches} and \textbf{branch\_fmt} fields. & 
+                     An array of bits indicating whether branches are taken or not.\newline
+        Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
+        0: branch taken \newline
+        1: branch not taken \\
+        \hline
+        \textbf{branch\_count} & Number of bits is \newline 
+                     16 if \textbf{branch\_fmt} is present and 1, 0 otherwise. & 
+                     Count of the number of correctly predicted branches, minus 31. \\
+        \hline
+        \textbf{no\_mispred} & Number of bits is \newline 
+                     1 if \textbf{branch\_fmt} is present and 1, 0 otherwise. & 
+                     Set to 0 if next branch failed prediction.  \newline
+                     Set to 1 if packet is output because of an updiscon, 
+                     exception or because \textbf{branch\_count} has reached 0xffff. \\
+        \hline
+        \textbf{address}	& Number of bits \newline 
+                  is \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+                    Differential instruction address.  \newline
+                    When branches is 0, the address is invalid, and is formed by sign extending branch-map.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Packet Payload Format 1 - with address}
+    \label{tab:te_inst0-1-addr}
+    \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+        \hline
+        {\bf Field name} & {\bf Bits} & {\bf Description} \\
+        \hline
+        \textbf{format}	& 2	& 01 (diff-delta): includes branch map and differential address\\
+        \hline
+        \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
+        0:      (cannot occur for this format) \newline
+        1: 	1 bit \newline
+        2-9: 	9 bits \newline
+        10-17: 	17 bits \newline
+        18-25: 	25 bits \newline
+        26-31: 	31 bits \newline
+        For example if branches = 12, the branch-map is 17 bits long, and the 12 LSBs are valid. \newline
+        In most cases when the branch map is full there is no need to report an address,
+        and this is indicated by setting branches to 0.  The exception to this is when 
+        the instruction immediately prior to the final branch causes an unpredictable discontinuity.\\
+        \hline
+        \textbf{branch\_map} & Number of bits \newline 
+                     determined by \newline 
+                     \textbf{branches} field. & 
                      An array of bits indicating whether branches are taken or not.\newline
         Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
         0: branch taken \newline
@@ -69,8 +147,57 @@ accordingly.
         \hline
         \textbf{address}	& Number of bits \newline 
                   is \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
-                    Differential or full instruction address, according to \textbf {format}.  \newline
-                    When branches is 0, the address is invalid, and is formed by sign extending branch-map.\\
+                    Differential instruction address.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Packet Payload Format 1  - no address, branch map}
+    \label{tab:te_inst0-1-noaddr-map}
+    \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+        \hline
+        {\bf Field name} & {\bf Bits} & {\bf Description} \\
+        \hline
+        \textbf{format}	& 2	& 01 (diff-delta): includes branch map and differential address\\
+        \hline
+        \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
+        0:      31 bits (\textbf{address} is not valid) \newline
+        1-31: 	(cannot occur for this format) \\
+        \hline
+        \textbf{branch\_fmt} & 1  & Set to 0, indicating next field is \textbf{branch\_map}. \\
+        \hline
+        \textbf{branch\_map} & 31 & 
+                     An array of bits indicating whether branches are taken or not.\newline
+        Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
+        0: branch taken \newline
+        1: branch not taken \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Packet Payload Format 1 - no address, branch count}
+    \label{tab:te_inst0-1-noaddr-count}
+    \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+        \hline
+        {\bf Field name} & {\bf Bits} & {\bf Description} \\
+        \hline
+        \textbf{format}	& 2	& 01 (diff-delta): includes branch map and differential address\\
+        \hline
+        \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
+        0:      31 bits (\textbf{address} is not valid) \newline
+        31-1: 	(cannot occur for this format) \\
+        \hline
+        \textbf{branch\_fmt} & 1  & Set to 1, indicating next fields are \textbf{branch\_count} and \textbf{no\_mispred}. \\
+        \hline
+        \textbf{branch\_count} & 16 & Count of the number of correctly predicted	 branches, minus 31. \\
+        \hline
+        \textbf{no\_mispred} & 1 & 
+                     Set to 0 if next branch failed prediction.  Set to 1 if packet is output because of an updiscon, 
+                     exception or because \textbf{branch\_count} has reached 0xffff. \\
         \hline
     \end{tabulary}
 \end{table}
@@ -84,12 +211,12 @@ accordingly.
         \hline
         {\bf Field name} & {\bf Bits} & {\bf Description} \\
         \hline
-        \textbf{format}	& 2	& 10 (addr-only): address and no branch map\\
+        \textbf{format}	& 2	& 10 (addr-only): differential address and no branch map\\
         \hline
         \textbf{address} & Total number of bits 
                   for address is
                   \textit {iaddress\_width\_p - iaddress\_lsb\_p}. & 
-                  Address is always differential unless the encoder has been configured to only use full-address\\ 
+                  Differential instruction address.\\ 
         \hline
     \end{tabulary}
 \end{table}
@@ -176,9 +303,10 @@ accordingly.
         \hline
         \textbf{options} & N & Values of all run-time configuration bits\newline
           Number of bits and definitions implementation dependent.  Examples might be\newline
-          - Always output full addresses (SW debug option)\newline
-          - Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
-          - Don't report function return addresses\\
+          - 'full address' Always output full addresses (SW debug option)\newline
+          - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
+          - 'branch prediction' Branch predictor enabled\newline
+          - 'implicit return' Don't report function return addresses\\
           \hline
     \end{tabulary}
 \end{table}
