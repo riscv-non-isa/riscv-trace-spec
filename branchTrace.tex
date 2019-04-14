@@ -101,30 +101,30 @@ The following modes are optional, and if present must be run-time selectable.  T
 active run-time options must be reported in the \textit{te\_support} packet, which is issued by the
 encoder whenever the encoder configuration is changed.
 
-\subsubsection{Full address}
+\subsubsection{Full address} \label{sec:full-address}
 
 All packet formats apart from format 3 output addresses in differential form by default.
 An option to output full addresses for all packet formats is a useful debugging aid for 
 software decoder developers.  It will always result in less efficient trace encoding.
 
-\subsubsection{Implicit exception}
+\subsubsection{Implicit exception} \label{sec:implicit-exception}
 
-The exception handler base address is specified by \textbf{\textit{stvec/mtvec}}, and 
+The exception handler base address is specified by \textbf{\textit{utvec/stvec/mtvec}}, and 
 in some RISC-V implementations the lower address bits can be specified by 
-\textbf{\textit{mcause/scause}}.  
+\textbf{\textit{ucause/scause/mcause}}.  
 By default, both these values are reported when an exception or interrrupt occurs, 
 via the the format 3, subformat 1 packet.  The 'implicit exception' option omits the 
 trap handler address, and will improve efficiency in cases where the decoder can infer 
 the address of the trap handler from just the exception cause.
 
-\subsubsection{Implicit return}
+\subsubsection{Implicit return} \label{sec:implicit-return}
 
 Although a function return is usually an indirect jump, well behaved programs following a 
 calling convention return to the point in the program from which the function was called, 
 and as such it is possible to determine the execution path without being explicitly notified 
 of the destination address of the return.  The 'implicit return' option can result in very 
 significant improvements in trace encoder efficiency.  It utilizes a counter to 
-keeps track of the number of nested calls being traced.  The counter increments on uninferable calls,
+keeps track of the number of nested calls being traced.  The counter increments on calls (but not tail calls),
 and decrements on returns (see Section~\ref{Jump Classes} for definitions).  The counter will not 
 over or underflow, and is reset to 0 whenever a format 3 \textit{te\_inst} packet is sent.  Returns will be 
 treated as inferable and will not generate a trace packet if the count is non-zero (i.e. the associated call 

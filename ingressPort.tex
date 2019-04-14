@@ -8,8 +8,8 @@ The following information is mandatory:
 
 \begin{itemize}
   \item The number of instructions that are being retired;
-  \item Whether there has been an exception or interrupt, and if so the cause (from the \textbf{\textit{mcause/scause}} CSR)
-        and trap value (from the \textbf{\textit{mtval/stval}} CSR);
+  \item Whether there has been an exception or interrupt, and if so the cause (from the \textbf{\textit{ucause/scause/mcause}} CSR)
+        and trap value (from the \textbf{\textit{utval/stval/mtval}} CSR);
   \item The current privilege level of the RISC-V core;
   \item The \textit{instruction\_type} of retired instructions for:
     \begin{itemize}
@@ -63,13 +63,13 @@ The mandatory information is the bare-minimum required to implement the branch t
 The optional information facilitates alternative or improved trace algorithms:
 
 \begin{itemize}
-  \item Significant improvements in trace efficiency can be achieved by not reporting the return addresses of functions where the 
-    associated function call has been traced.  This requires the encoder to keep track of the number of nested function calls,
-    and to do this it must be aware of all calls and returns regardless of whether the target can be inferred or not;
+  \item Implicit return mode (see Section~\ref{sec:implicit-return}) requires the encoder to keep track of the number of nested 
+    function calls, and to do this it must be aware of all calls and returns regardless of whether the target can be inferred or not;
   \item A simpler algorithm useful for basic code profiling would only report function calls and returns, again 
     regardless of whether the target can be inferred or not;
-  \item Branch prediction techniques can be used to further improve the encoder efficiency, particularly for loops.  This
-    requires the encoder to be aware of the address of nontaken branches.
+  \item Branch prediction techniques can be used to further improve the encoder efficiency, particularly for loops 
+    (see Section~ref{sec:branch-prediction}).  This requires the encoder to be aware of the address of all branches, whether
+    they are taken or not.
 \end{itemize}
 
 \subsection {Jump Classification and Target Inference} \label{Jump Classes}
@@ -137,7 +137,7 @@ trace encoder that conveys the information described in the previous section.
         3: Exception return;\newline
         4: Nontaken branch;\newline
         5: Taken branch;\newline
-        6: Uninferable jump;\newline
+        6: reserved;\newline
         7: Co-routine swap;\newline
         8: Uninferable call;\newline
         9: Inferrable call;\newline
@@ -148,12 +148,12 @@ trace encoder that conveys the information described in the previous section.
         14: Other uninferable jump;\newline
         15: Other inferable jump.\\
         \hline
-        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & Exception or interrupt cause (\textbf{\textit{mcause/scause}}), \newline
+        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & Exception or interrupt cause (\textbf{\textit{ucause/scause/mcause}}), \newline
         Ignored unless \textbf {itype}=1 or 2.\\
         \hline
         \textbf{tval}[\textit{iaddress\_width\_p}-1:0]& The associated trap value, e.g. the
     faulting virtual address for address exceptions, as would be
-    written to the \textbf{mtval/stval} CSR. Future optional extensions may define \textbf{tval} to provide ancillary information in cases where it currently supplies zero\newline
+    written to the \textbf{utval/stval/mtval} CSR. Future optional extensions may define \textbf{tval} to provide ancillary information in cases where it currently supplies zero\newline
     Ignored unless \textbf{itype}=1 or 2.\\
         \hline
         \textbf{priv}[\textit{privilege\_width\_p}-1:0] & Privilege level for all instructions in this block.\\

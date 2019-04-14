@@ -16,7 +16,7 @@ In the diagram, the following terms are used:
   \item \textit{max\_resync.}  The resync counter value that schedules a synchronization packet;
   \item \textit{updiscon.}  Uninferable PC disconinuity.  This identifies an instruction that
     causes the program counter to be changed by an amount that cannot be predicted from the
-    source code alone (\textbf{itype} values 6, 7, 8, 10, 12 or 14);
+    source code alone (\textbf{itype} values 8, 10, 12 or 14);
    \item \textit{te\_inst.} The name of the packet type emitted by the encoder (see Chapter~\ref{packets});
    \item \textit{e\_ccd.} An exception has been signalled, or context has changed and
      should be treated as an uninferable PC discontinuity (see Table~\ref{tab:context-type});
@@ -52,17 +52,18 @@ information relating to the current instruction.  The orange diamonds indicate d
 based on the previous (or last) instruction, the green diamond indicates a decision based on the
 next instruction, and all other diamonds are based on the current instruction.
 
-Additionally, the encoder can generate two further packet types, not shown on the diagram for 
-clarity (see Chapter~\ref{packets}):
+Additionally, the encoder can generate one further packet type, not shown on the diagram for 
+clarity.  The \textit{support} packet (format 3, subformat 3 - see Chapter~\ref{packets}) is 
+sent when:
 
 \begin{itemize}
-  \item a \textit{te\_support} packet is sent when the encoder is enabled or disabled, or its
-    configuration is changed, and also after the last qualified instruction has been traced.
-    This informs the decoder of the operating mode of the encoder, and also that tracing has
-    stopped;
-  \item a \textit{packet\_lost} packet is sent if trace packets are lost (for example if the 
-    buffer into which packets are being written fills up.  In this situation, the 1st packet 
-    loaded into the buffer when space next becomes available should be a \textit{packet\_lost} 
+  \item The encoder is enabled or disabled, or its configuration is changed, 
+    to inform the decoder of the operating mode of the encoder
+  \item After the last qualified instruction has been traced, to inform the decoderthat 
+    tracing has stopped;
+  \item If trace packets are lost (for example if the buffer into which packets are being 
+    written fills up.  In this situation, the 1st packet 
+    loaded into the buffer when space next becomes available should be a \textit{support} 
     packet.  Following this, tracing will resume with a sync packet.
 \end{itemize}
 
@@ -105,8 +106,9 @@ subsequent correct predictions, and will output a count under the following cond
   \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
     minus 31.  \textbf{no\_mispred} will be 0, indicating that the next branch failed its prediction;
   \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
-    the encoder will output the branch count with \textbf{no\_mispred} set to 1, followed by a format 2
-    packet reporting the address (not yet shown in Figure~\ref{fig:algo}). 
+    the encoder will output the branch count (number of correctly predicted branches, minus 31) with 
+    \textbf{no\_mispred} set to 1, followed by a format 2 packet reporting the address 
+    (not yet shown in Figure~\ref{fig:algo}). 
     \textbf{DISCUSSION POINT:} This is the only scenario so far where the encoder is required to 
     output 2 packets as a result of a single instruction.  One way to avoid this would
     be to use format 0 vs 1 to distinguish between branch map and branch count (eliminating the need for
@@ -118,6 +120,6 @@ subsequent correct predictions, and will output a count under the following cond
     output later).   
 \end{itemize}
 
-The packet formats are organized so that the address is always the final field.  Minimizing the 
+Packet formats 1 and 2 are organized so that the address is the final field.  Minimizing the 
 number of bits required to represent the address reduces the total packet size and significantly
 improves efficiency.  See Chapter~\ref{packets}.
