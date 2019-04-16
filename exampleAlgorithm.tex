@@ -11,10 +11,10 @@ In the diagram, the following terms are used:
   \item \textit{inst.}  Abbreviation for 'instruction';
   \item \textit{resync count.} A counter used to keep track of when it is necessary to send 
     a synchronization packet (see Section~\ref{synchronization}, final bullet). The exact mechanism for 
-    incrementing this counter are not specified, but options might be to count the number of \textit{te\_inst} packets emitted, 
+    incrementing this counter is not specified, but options might be to count the number of \textit{te\_inst} packets emitted, 
     or the number of clock cycles elapsed since the last synchronization message was sent;
   \item \textit{max\_resync.}  The resync counter value that schedules a synchronization packet;
-  \item \textit{updiscon.}  Uninferable PC disconinuity.  This identifies an instruction that
+  \item \textit{updiscon.}  Uninferable PC discontinuity.  This identifies an instruction that
     causes the program counter to be changed by an amount that cannot be predicted from the
     source code alone (\textbf{itype} values 8, 10, 12 or 14);
    \item \textit{te\_inst.} The name of the packet type emitted by the encoder (see Chapter~\ref{packets});
@@ -28,8 +28,8 @@ In the diagram, the following terms are used:
      the subsequent synchronization packet, which does not report branch map history;
    \item \textit{er\_ccdn.}  Instruction retirement and exception signalled on the same cycle, 
      or context has changed and should be treated as an uninferable PC discontinuity, or
-     context notify (see Table~\ref{tab:context-type});
-   \item \textit{exc\_only.}  Exception signaled without simultaneous retirement;
+     context notification (see Table~\ref{tab:context-type});
+   \item \textit{exc\_only.}  Exception signalled without simultaneous retirement;
    \item \textit{cci.}  context change that can be reported imprecisely (see Table~\ref{tab:context-type}).
 \end{itemize}
 
@@ -59,7 +59,7 @@ sent when:
 \begin{itemize}
   \item The encoder is enabled or disabled, or its configuration is changed, 
     to inform the decoder of the operating mode of the encoder
-  \item After the last qualified instruction has been traced, to inform the decoderthat 
+  \item After the last qualified instruction has been traced, to inform the decoder that 
     tracing has stopped;
   \item If trace packets are lost (for example if the buffer into which packets are being 
     written fills up.  In this situation, the 1st packet 
@@ -96,7 +96,7 @@ If there are branches to report, format 1 is used.
 
 If there is no address to report, then there are two sub-formats of format 1.  If branch prediction
 is supported and is enabled, then there is a choice of whether to output a full branch map, or a 
-count of correctly predicted branches.  In order to chose the count, the number of correctly
+count of correctly predicted branches.  In order to choose the count, the number of correctly
 predicted branches must be at least 31.  If there are 31 unreported branches (i.e. the branch
 map is full), but not all of them were predicted correctly, then the branch map will be output.
 If all 31 unreported branches were correctly predicted, then the encoder starts counting
