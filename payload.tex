@@ -46,7 +46,7 @@ in the last beat of a packet can be used to indicate the number of valid bytes.
 
 The remainder of this section describes the contents of the payload
 portion which should be independent of the infrastructure.  In each table, the fields are listed in
-transmission order: first field in the table is transmited first, and multi-bit fields are 
+transmission order: first field in the table is transmitted first, and multi-bit fields are 
 transmitted LSB first.
 
 This packet payload format is used to output encoded instruction
@@ -151,7 +151,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch map and differential address\\
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch count and differential address\\
     \hline
     \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
     0:      31 bits, no \textbf{address} in packet \newline
@@ -289,7 +289,7 @@ potential solutions to this are as follows:
        00 (no\_change): No change to filter qualification \newline
        01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
        10: (packet\_lost): One or more packets lost.\newline
-       11 : (ended\_ntr): Qualification ended, no unreported instructions (so preceeding \textbf{te\_inst} would have been sent anyway, even if it wasn't the last qualified instruction)\\
+       11 : (ended\_ntr): Qualification ended, no unreported instructions (so preceding \textbf{te\_inst} would have been sent anyway, even if it wasn't the last qualified instruction)\\
      \hline
      \textbf{options} & N & Values of all run-time configuration bits\newline
        Number of bits and definitions implementation dependent.  Examples might be\newline
