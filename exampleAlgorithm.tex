@@ -94,32 +94,27 @@ If there are no branches that need to be reported, packet format 2 is used.
 
 If there are branches to report, format 1 is used.
 
-If there is no address to report, then there are two sub-formats of format 1.  If branch prediction
-is supported and is enabled, then there is a choice of whether to output a full branch map, or a 
-count of correctly predicted branches.  In order to chose the count, the number of correctly
-predicted branches must be at least 31.  If there are 31 unreported branches (i.e. the branch
+If branch prediction is supported and is enabled, then there is a choice of whether to output a 
+full branch map, or a count of correctly predicted branches.  In order to chose the count, the number 
+of correctly predicted branches must be at least 31.  If there are 31 unreported branches (i.e. the branch
 map is full), but not all of them were predicted correctly, then the branch map will be output.
 If all 31 unreported branches were correctly predicted, then the encoder starts counting
 subsequent correct predictions, and will output a count under the following conditions:
 
 \begin{itemize}
   \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
-    minus 31.  \textbf{no\_mispred} will be 0, indicating that the next branch failed its prediction;
+    minus 31.  \textbf{branch\_fmt} will be 01, indicating that the next branch failed its prediction.
+   No address information is provided;
   \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
     the encoder will output the branch count (number of correctly predicted branches, minus 31) with 
-    \textbf{no\_mispred} set to 1, followed by a format 2 packet reporting the address 
-    (not yet shown in Figure~\ref{fig:algo}). 
-    \textbf{DISCUSSION POINT:} This is the only scenario so far where the encoder is required to 
-    output 2 packets as a result of a single instruction.  One way to avoid this would
-    be to use format 0 vs 1 to distinguish between branch map and branch count (eliminating the need for
-    the \textbf{branch\_fmt} bit).  However, this uses up the currently free format.  The other far less
-    attractive alternative is to add a \textbf{branch\_fmt} bit to all format 1 packets, which has the 
-    major disadvantage of impacting the efficiency of all format 1 packets;
-  \item The branch count reaches its maximum value (0xffff).  \textbf{no\_mispred} will be set to 1 to
-    indicate that the outcome of the next branch cannot be inferred (it will be explicitly recorded and
-    output later).   
+    \textbf{branch\_fmt} set to 10.  The packet also contains \textbf{mispred}, indicating whether 
+    prediction of the next branch failed.
+  \item The branch count reaches its maximum value (0xffff).  Again, \textbf{branch\_fmt} will be set to 10.
+    Strictly speaking an address isn't required for this case, but it will occur so rarely that the bandwidth 
+    impact can be ignored
 \end{itemize}
 
-Packet formats 1 and 2 are organized so that the address is the final field.  Minimizing the 
+Packet formats 1 and 2 are organized so that the address is usually the final field.  Minimizing the 
 number of bits required to represent the address reduces the total packet size and significantly
 improves efficiency.  See Chapter~\ref{packets}.
+
