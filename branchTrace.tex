@@ -7,7 +7,7 @@ Instruction delta tracing, also known as branch tracing, works by
 tracking execution from a known start address by sending information
 about the deltas taken by the program. Deltas are typically introduced
 by jump, call, return and branch type instructions, although
-interrupts and exceptions are also types of delta.
+interrupts and exceptions are also types of deltas.
 
 Instruction trace delta modes provide an efficient encoding of an
 instruction sequence by exploiting the deterministic way the processor
@@ -39,7 +39,7 @@ unconditionally or at least their execution can be determined based on
 the program, the instructions between the deltas are assumed to be
 executed sequentially. This characteristic means that there is no need
 to report them via the trace, only whether the branches were taken or not
-and the address of taken indirect jump.
+and the addresses of taken indirect jumps.
 
 \subsection{Uninferable PC Discontinuity} \label{uninfpc}
 
@@ -77,7 +77,7 @@ if it is not.
 
 \subsection{Synchronization} \label{synchronization}
 
-In order to make the trace robust there needs to be regular
+In order to make the trace robust there need to be regular
 synchronization points within the trace. Synchronization is made by
 sending a full valued instruction address (and potentially a context
 identifier). The decoder and debugger may also benefit from sending
@@ -112,7 +112,7 @@ software decoder developers.  It will always result in less efficient trace enco
 The exception handler base address is specified by \textbf{\textit{utvec/stvec/mtvec}}, and 
 in some RISC-V implementations the lower address bits can be specified by 
 \textbf{\textit{ucause/scause/mcause}}.  
-By default, both these values are reported when an exception or interrrupt occurs, 
+By default, both these values are reported when an exception or interrupt occurs, 
 via the the format 3, subformat 1 packet.  The 'implicit exception' option omits the 
 trap handler address, and will improve efficiency in cases where the decoder can infer 
 the address of the trap handler from just the exception cause.
@@ -124,7 +124,7 @@ calling convention return to the point in the program from which the function wa
 and as such it is possible to determine the execution path without being explicitly notified 
 of the destination address of the return.  The 'implicit return' option can result in very 
 significant improvements in trace encoder efficiency.  It utilizes a counter to 
-keeps track of the number of nested calls being traced.  The counter increments on calls (but not tail calls),
+keep track of the number of nested calls being traced.  The counter increments on calls (but not tail calls),
 and decrements on returns (see Section~\ref{Jump Classes} for definitions).  The counter will not 
 over or underflow, and is reset to 0 whenever a format 3 \textit{te\_inst} packet is sent.  Returns will be 
 treated as inferable and will not generate a trace packet if the count is non-zero (i.e. the associated call 
@@ -143,7 +143,7 @@ some cases where this can result in a relatively large volume of trace.  For exa
 \end{itemize}
 
 The prediction scheme implemented in the encoder will need to be modelled in the decoder software.  
-The predictor shall comprise a a lookup table of 2\textsuperscript{N} entries, where N is specified by a parameter.  
+The predictor shall comprise a lookup table of 2\textsuperscript{N} entries, where N is specified by a parameter.  
 Each entry is indexed by bits N:1 of the instruction address (or N+1:2 if compressed instructions aren't supported), 
 and each contains a 2-bit prediction state:
 \begin{itemize}

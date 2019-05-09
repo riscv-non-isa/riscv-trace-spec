@@ -46,7 +46,7 @@ in the last beat of a packet can be used to indicate the number of valid bytes.
 
 The remainder of this section describes the contents of the payload
 portion which should be independent of the infrastructure.  In each table, the fields are listed in
-transmission order: first field in the table is transmited first, and multi-bit fields are 
+transmission order: first field in the table is transmitted first, and multi-bit fields are 
 transmitted LSB first.
 
 This packet payload format is used to output encoded instruction
@@ -60,7 +60,7 @@ be applied to the whole packet, regardless of format.  This technique eliminates
 significant end of the packet, and adjusts the length of the packet accordingly.  A decoder receiving this 
 shortened packet can reconstruct the original full-length packet by sign-extending from the most significant
 received bit.  An example of how this technique is used to choose between address formats is given in 
-Section~\ref{addresses}.  The same principal can be applied to the entire packet, and the length (typically 
+Section~\ref{addresses}.  The same principle can be applied to the entire packet, and the length (typically 
 given in bytes) adjusted accordingly.
 
 Where the payload length given in the following tables, or after applying sign-based compression, is not a 

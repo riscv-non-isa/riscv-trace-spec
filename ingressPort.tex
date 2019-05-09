@@ -68,7 +68,7 @@ The optional information facilitates alternative or improved trace algorithms:
   \item A simpler algorithm useful for basic code profiling would only report function calls and returns, again 
     regardless of whether the target can be inferred or not;
   \item Branch prediction techniques can be used to further improve the encoder efficiency, particularly for loops 
-    (see Section~ref{sec:branch-prediction}).  This requires the encoder to be aware of the address of all branches, whether
+    (see Section~\ref{sec:branch-prediction}).  This requires the encoder to be aware of the address of all branches, whether
     they are taken or not.
 \end{itemize}
 
@@ -161,7 +161,7 @@ trace encoder that conveys the information described in the previous section.
         \textbf{context}[\textit{context\_width\_p}-1:0] & Context and/or Hart ID for all instructions in this block.\\
         \hline
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & The address of the 1st instruction retired in this block.\newline
-        Invalid if \textbf{iretires}=0 \\
+        Invalid if \textbf{iretire}=0 \\
         \hline
         \textbf{context\_type}[\textit{context\_type\_width\_p}-1:0] & Behavior type of \textbf{context}\newline
         0: Context change with discontinuity;\newline
@@ -257,15 +257,15 @@ represents information about the oldest instruction block, and group N-1
 represents the newest instruction block. The interface supports no more
 than one privilege, context, exception or interrupt per cycle and so \textbf{priv}, 
 \textbf{context}, \textbf{context\_type}, \textbf{cause} and
-\textbf{tval} are not replicated. Futhermore, \textbf{itype} can only
+\textbf{tval} are not replicated. Furthermore, \textbf{itype} can only
 take the value 1 or 2 in one of the signal groups, and this must be
-the newest valid group (i.e. \textbf{iretires} and \textbf{itype} must
+the newest valid group (i.e. \textbf{iretire} and \textbf{itype} must
 be zero for higher numbered groups). If fewer than N taken branches
 are retired in a cycle, then lower numbered groups must be used
 first. For example, if there is one taken branch, use only group 0, if
-there are two taken branches, instructions upto the 1st taken branch
-must be reported in group 0 and instructions upto the 2nd taken branch
-must be reported in group 1 and son on.
+there are two taken branches, instructions up to the 1st taken branch
+must be reported in group 0 and instructions up to the 2nd taken branch
+must be reported in group 1 and so on.
 
 The \textbf{context} field can be used to convey any additional information to the decoder.  For example:
 
@@ -408,7 +408,7 @@ will need to be applied to the \textbf{context} value.
 
 The encoder will have some configurable or variable parameters. Some
 of these are related to port widths whilst others may indicate the
-presence or otherwise of various feature, e.g. filter or comparators.
+presence or otherwise of various features, e.g. filter or comparators.
 Table~\ref{tab:parameters} outlines the list of parameters.
 
 How the parameters are input to the encoder is implementation specific. The number range of some of the parameters  may be implementation specific. 
@@ -478,12 +478,12 @@ How the parameters are input to the encoder is implementation specific. The numb
 
 The parameters used by the encoder must be discoverable at
 runtime. Some external entity, for example a debugger or a supervisory
-hart would issue a discovery command to the encoder. The encoder will
+hart, would issue a discovery command to the encoder. The encoder will
 provide the discovery information as encapsulated in the following
 parameters in one or more different formats.  The preferred format
 would be in a packet which is sent over the trace infrastructure.
 
-Another format would may be allowing the external entity to read the
+Another format would be allowing the external entity to read the
 values from some register or memory mapped space maintained by the
 encoder.
 
