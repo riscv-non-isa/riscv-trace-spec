@@ -1,6 +1,6 @@
 SPEC=riscv-trace-spec
 
-INCLUDES_TEX = introduction.tex branchTrace.tex exampleAlgorithm.tex filtering.tex futures.tex ingressPort.tex payload.tex preamble.tex riscv-trace-spec.tex
+INCLUDES_TEX = introduction.tex branchTrace.tex exampleAlgorithm.tex filtering.tex futures.tex ingressPort.tex payload.tex preamble.tex riscv-trace-spec.tex decoder.tex
 
 all:	$(SPEC).pdf
 
