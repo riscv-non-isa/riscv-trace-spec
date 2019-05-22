@@ -17,8 +17,15 @@
 \usepackage{makeidx}
 \makeindex
 
+\usepackage{alltt}
 \usepackage{xspace}
 \usepackage{placeins}
+\usepackage{algorithm}
+\PassOptionsToPackage{noend}{algpseudocode}% comment out if want end's to show
+\usepackage{algpseudocode}
+
+
+
 
 \newcommand{\versionnum}{0.026-DRAFT}
 
@@ -61,6 +68,8 @@ Version \versionnum\\
 \input{exampleAlgorithm.tex}
 \input{payload.tex}
 \input{futures.tex}
+\input{decoder.tex}
+
 \newpage
 
 
