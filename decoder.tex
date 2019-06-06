@@ -3,7 +3,6 @@
 \section{Decoder pseudo code}
 
 \begin{alltt}
-
 # global variables
 global       pc                          # Reconstructed program counter
 global       last_pc                     # PC of previous instruction
@@ -14,44 +13,52 @@ global bool  stop_at_last_branch = FALSE # Flag to indicate reconstruction is to
                                          #   the final branch
 global bool  inferred_address = FALSE    # Flag to indicate that reported address from
                                          #   format 0/1/2 was not following an uninferrable
-                                         #     jump (and is therefore inferred)
-global bool  start_of_trace = TRUE       # Flag indicating 1st trace message still
+                                         #   jump (and is therefore inferred)
+global bool  start_of_trace = TRUE       # Flag indicating 1st trace packet still
                                          #   to be processed
+global       address                     # Reconstructed address from te_inst messages
+global       options                     # Operating mode flags
 global       call_counter = 0            # Count of number of nested calls being traced
 global array return_stack                # Array holding return address stack
-
 \end{alltt}
 
 \pagebreak
 
 \begin{alltt}
-# Process te_inst message.  Call each time a message is received #
+# Process te_inst packet.  Call each time a te_inst packet is received #
 function process_te_inst (te_inst)
-  local address
   if (te_inst.format == 3)
     inferred_address = FALSE
     address       = (te_inst.address << discovery_response.iaddress_lsb)
-    pc            = address
-    call_counter  = 0
+    if (te_inst.subformat == 3) # Support packet
+      process_support(te_inst)
+      return
+
+    if (te_inst.subformat == 1 or start_of_trace)
+      branches    = 0
+      branch_map  = 0
+    if (is_branch(get_instr(address))) # 1 unprocessed branch if this instruction is a branch
+      branch_map = branch_map | (te_inst.branch << branches)
+      branches++
     if (te_inst.subformat == 0 and !start_of_trace)
       follow_execution_path(address, te_inst)
-      start_of_trace = FALSE
-
-    if (is_branch(get_instr(address))) # 1 unprocessed branch if this instruction is a branch
-      branches      = 1
-      branch_map[0] = te_inst.branch
     else
-      branches      = 0
-      branch_map[0] = 0
+      pc           = address
+      last_pc      = pc # previous pc not known but ensures correct
+                        #  operation for is_sequential_jump()
+    start_of_trace = FALSE
+    call_counter   = 0
+
   else
-    if (start_of_trace)
-      # This should not be possible!
+    if (start_of_trace) # This should not be possible!
       ERROR: Expecting trace to start with format 3
       return
     if (te_inst.format == 2 or te_inst.branches != 0)
       stop_at_last_branch = FALSE
-      address += (te_inst.address << discovery_response.iaddress_lsb)
-
+      if (options.full_address)
+        address  = (te_inst.address << discovery_response.iaddress_lsb)
+      else
+        address += (te_inst.address << discovery_response.iaddress_lsb)
     if (te_inst.format == 1)
       stop_at_last_branch = (te_inst.branches == 0)
       # Branch map will contain <= 1 branch (1 if last reported instruction was a branch)
@@ -63,6 +70,7 @@ function process_te_inst (te_inst)
 
     follow_execution_path(address, te_inst)
 \end{alltt}
+
 \pagebreak
 
 \begin{alltt}
@@ -71,8 +79,8 @@ function follow_execution_path(address, te_inst)
 
   local previous_address = pc
   while (TRUE)
-  if (inferred_address) # iterate again from previously reported address to find
-                        #   second occurrence
+    if (inferred_address) # iterate again from previously reported address to
+                          #   find second occurrence
       next_pc(previous_address)
       if (pc == previous_address)
         inferred_address = FALSE
@@ -88,7 +96,8 @@ function follow_execution_path(address, te_inst)
           # Check all branches processed (except 1 if this instruction is a branch)
           ERROR: unprocessed branches
         return
-      if (pc == address and (te_inst.updiscon == te_inst.address[MSB]) and
+      if (te_inst.format != 3 and pc == address and
+        (te_inst.updiscon == te_inst.address[MSB]) and
           (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
             # All branches processed, and reached reported address, but not as an
             #   uninferrable jump target
@@ -96,8 +105,12 @@ function follow_execution_path(address, te_inst)
             #  final retired instruction
         inferred_address = TRUE
         return
-
+      if (te_inst.format == 3 and pc == address and
+        (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
+        # All branches processed, and reached reported address
+        return
 \end{alltt}
+
 \pagebreak
 
 \begin{alltt}
@@ -110,7 +123,7 @@ function next_pc (address)
   if (is_inferrable_jump(instr))
     pc += instr.imm
   else if (is_sequential_jump(instr, last_pc)) # lui/auipc followed by
-                                               #  jump using same register   
+                                               #  jump using same register
     pc = sequential_jump_target(pc, last_pc)
   else if (is_implicit_return(instr))
     pc = pop_return_stack()
@@ -129,7 +142,26 @@ function next_pc (address)
 
   last_pc = this_pc
 
+# Process support packet #
+function process_support (te_inst)
 
+  options = te_inst.options
+    if (te_inst.qual_status == ended_ntr or te_inst.qual_status == ended_rep)
+      start_of_trace = TRUE # Trace ended, so get ready to start again
+    if (te_inst.qual_status == ended_ntr and inferred_address)
+      local previous_address = pc
+      inferred_address       = FALSE
+      while (TRUE)
+        next_pc(previous_address)
+        if (pc == previous_address)
+          return
+    return
+
+\end{alltt}
+
+\pagebreak
+
+\begin{alltt}
 # Determine if instruction is a branch, adjust branch count/map,
 #   and return taken status #
 function is_taken_branch (instr)
@@ -147,10 +179,6 @@ function is_taken_branch (instr)
 
   return taken
 
-\end{alltt}
-\pagebreak
-
-\begin{alltt}
 # Determine if instruction is a branch #
 function is_branch (instr)
 
@@ -169,28 +197,28 @@ function is_branch (instr)
 # Determine if instruction is an inferrable jump #
 function is_inferrable_jump (instr)
 
-  if ((instr.opcode == JAL)    or
-      (instr.opcode == C.JAL)  or
-      (instr.opcode == C.J)    or
+  if ((instr.opcode == JAL)   or
+      (instr.opcode == C.JAL) or
+      (instr.opcode == C.J)   or
       (instr.opcode == JALR and instr.rs1 == 0))
     return TRUE
 
   return FALSE
+\end{alltt}
 
+\pagebreak
+
+\begin{alltt}
 # Determine if instruction is an uninferrable jump #
 function is_uninferrable_jump (instr)
 
-  if ((instr.opcode == JALR and instr.rs1 != 0)   or
-      (instr.opcode == C.JALR) or
+  if ((instr.opcode == JALR and instr.rs1 != 0) or
+      (instr.opcode == C.JALR)                  or
       (instr.opcode == C.JR))
     return TRUE
 
   return FALSE
 
-\end{alltt}
-\pagebreak
-
-\begin{alltt}
 # Determine if instruction is an uninferrable discontinuity #
 function is_uninferrable_discon (instr)
 
@@ -220,7 +248,11 @@ function is_sequential_jump (instr, prev_addr)
     return (instr.rs1 == prev_instr.rd)
 
   return FALSE
+\end{alltt}
 
+\pagebreak
+
+\begin{alltt}
 # Find the target of a sequentially inferrable jump #
 function sequential_jump_target (addr, prev_addr)
 
@@ -236,10 +268,6 @@ function sequential_jump_target (addr, prev_addr)
 
   return target
 
-\end{alltt}
-\pagebreak
-
-\begin{alltt}
 # Determine if instruction is a call #
 # - excludes tail calls as they do not push an address onto the return stack
 function is_call (instr)
@@ -255,7 +283,7 @@ function is_call (instr)
 # Determine if instruction return address can be implicitly inferred #
 function is_implicit_return (instr)
 
-  if (te_support.implicit_return == 0) # Implicit return mode disabled
+  if (options.implicit_return == 0) # Implicit return mode disabled
     return FALSE
 
   if ((instr.opcode == JALR and instr.rs1 == 1 and instr.rd == 0) or
@@ -263,8 +291,8 @@ function is_implicit_return (instr)
     return (call_counter > 0)
 
   return FALSE
-
 \end{alltt}
+
 \pagebreak
 
 \begin{alltt}
