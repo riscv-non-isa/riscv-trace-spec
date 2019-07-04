@@ -1,0 +1,218 @@
+\chapter{Discovery}
+
+\section{Example ipxact description}
+
+A particular encoder may have various features it supports and it is
+useful for the decoder/debugger to be able to determine these. This
+section provides an example of discovery information represented in
+the ipxact form.
+
+\begin{alltt}
+<?xml version="1.0" encoding="UTF-8"?>
+<ipxact:component 
+   xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+   <ipxact:vendor>UltraSoC</ipxact:vendor>
+   <ipxact:library>TraceEncoder</ipxact:library>
+   <ipxact:name>TraceEncoder</ipxact:name>
+   <ipxact:version>0.8</ipxact:version>
+   <ipxact:memoryMaps>
+      <ipxact:memoryMap>
+         <ipxact:name>Trace Encoder Register Map</ipxact:name>
+         <ipxact:addressBlock>
+            <ipxact:name>>Trace Encoder Register Address Block</ipxact:name>
+            <ipxact:baseAddress>0</ipxact:baseAddress>
+            <ipxact:range>128</ipxact:range>
+            <ipxact:width>64</ipxact:width>
+
+            <ipxact:register>
+               <ipxact:name>discovery_info_0</ipxact:name>
+               <ipxact:addressOffset>'h0</ipxact:addressOffset>
+               <ipxact:size>64</ipxact:size>
+               <ipxact:access>read-only</ipxact:access>
+               <ipxact:field>
+                  <ipxact:name>minor_version</ipxact:name>
+                  <ipxact:description>text here</ipxact:description>
+                  <ipxact:bitOffset>0</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>version</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>4</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>comparators</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>8</ipxact:bitOffset>
+                  <ipxact:bitWidth>3</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filters</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>11</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>bpred_size</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>15</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>call_counter_size</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>19</ipxact:bitOffset>
+                  <ipxact:bitWidth>3</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>context_type_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>22</ipxact:bitOffset>
+                  <ipxact:bitWidth>5</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>context_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>27</ipxact:bitOffset>
+                  <ipxact:bitWidth>5</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>ecause_choice</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>32</ipxact:bitOffset>
+                  <ipxact:bitWidth>3</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>ecause_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>35</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_context</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>39</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_ecause</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>40</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_interrupt</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>44</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_privilege</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>45</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_tval</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>46</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>iaddress_lsb</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>47</ipxact:bitOffset>
+                  <ipxact:bitWidth>2</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>iaddress_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>49</ipxact:bitOffset>
+                  <ipxact:bitWidth>7</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>ilastsize_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>56</ipxact:bitOffset>
+                  <ipxact:bitWidth>7</ipxact:bitWidth>
+               </ipxact:field>
+            </ipxact:register>
+
+
+            <ipxact:register>
+               <ipxact:name>discovery_info_1</ipxact:name>
+               <ipxact:addressOffset>'h4</ipxact:addressOffset>
+               <ipxact:size>64</ipxact:size>
+               <ipxact:access>read-only</ipxact:access>
+               <ipxact:field>
+                  <ipxact:name>itype_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>0</ipxact:bitOffset>
+                  <ipxact:bitWidth>7</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>iretire_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>7</ipxact:bitOffset>
+                  <ipxact:bitWidth>7</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>nocontext</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>14</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>notval</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>15</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>ntkn_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>16</ipxact:bitOffset>
+                  <ipxact:bitWidth>2</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>privilege_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>18</ipxact:bitOffset>
+                  <ipxact:bitWidth>2</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>retires</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>20</ipxact:bitOffset>
+                  <ipxact:bitWidth>3</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>rv32</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>23</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>taken_branches</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>24</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>user_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>28</ipxact:bitOffset>
+                  <ipxact:bitWidth>5</ipxact:bitWidth>
+               </ipxact:field>
+            </ipxact:register>
+
+         </ipxact:addressBlock>
+         <ipxact:addressUnitBits>8</ipxact:addressUnitBits>
+      </ipxact:memoryMap>
+   </ipxact:memoryMaps>
+</ipxact:component>
+
+\end{alltt}

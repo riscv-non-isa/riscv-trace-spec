@@ -47,7 +47,6 @@ exception type.  When an interrupt or exception occurs, or the
 processor is halted, the final instruction executed beforehand must be
 traced.
 
-
 This document serves to specify the ingress port (the signals between
 the RISC-V core and the encoder), compressed branch trace algorithm and
 the packet format used to encapsulate the compressed branch trace
@@ -64,3 +63,20 @@ hardware or configurable hardware values.
 A decoder is a piece of software that takes the packets emitted by the
 encoder and is able to reconstruct the execution flow of the code
 executed in the RISC-V core.
+
+RISC-V has the following definitions:
+\begin{itemize}
+  \item
+    \textbf{Exception}: "an unusual condition occurring at run time associated with an instruction in the current RISC-V hart"
+  \item
+    \textbf{Interrupt}: "an external asynchronous event that may cause a RISC-V hart to experience an unexpected transfer of control"
+  \item
+    \textbf{Trap}: "the transfer of control to a trap handler caused by either an exception or an interrupt"
+\end{itemize}
+So, not all exceptions and interrupts cause traps. Most notably, floating point exceptions and disabled interrupts do not trap.
+
+If an exception or interrupt doesn't trap, the program counter does not
+change. So, there is no need to trace all exceptions/interrupts, just
+traps.
+
+In this document interrupts and exceptions traced are only those that cause traps to be taken.
