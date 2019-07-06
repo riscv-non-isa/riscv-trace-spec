@@ -1,5 +1,8 @@
 \chapter{Example code and packets}
 
+  In the following examples \textbf{\textit{ret}} is referred to as
+  uninferable, this is only true if implicit-return mode is off
+
 \begin{enumerate}
 \item
   \textbf{Call to debug\_printf(), from 80001a84, in main():}
@@ -176,7 +179,7 @@
   \begin{frame}
 
   PC: 80001254 -\textgreater 80001100\\
-  The target of the \textbf{\textit{jal}} is inferrable, thus no \textbf{\textit{te\_inst}} packet need be sent.\\
+  The target of the \textbf{\textit{jal}} is inferrable, thus no \textbf{\textit{te\_inst}} packet needs be sent.\\
   \end{frame}
   
 
@@ -195,7 +198,7 @@
   \begin{frame}
 
   PC: 8000110c -\textgreater 800010f8\\
-  The target of the \textbf{\textit{jal}} is inferrable, thus no \textbf{\textit{te\_inst}} packet need be sent.
+  The target of the \textbf{\textit{jal}} is inferrable, thus no \textbf{\textit{te\_inst}} packet needs to be sent.
   \end{frame}
   
 
