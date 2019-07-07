@@ -1,0 +1,235 @@
+\chapter{Example code and packets}
+
+  In the following examples \textbf{\textit{ret}} is referred to as
+  uninferable, this is only true if implicit-return mode is off
+
+\begin{enumerate}
+\item
+  \textbf{Call to debug\_printf(), from 80001a84, in main():}
+  \begin {alltt}
+00000000800019e8 <main>:
+    ........:	...
+    80001a80:	f6d42423          	 \textbf{\textit{sw	a3,-152(s0)}}
+    80001a84:	ef4ff0ef          	 \textbf{\textit{jal	x1,80001178}} <debug\_printf>
+  \end{alltt}
+
+  \begin{frame}
+
+    PC: 80001a84 -\textgreater 80001178 \\
+    The target of the \textbf{\textit{jal}} is inferable, thus NO te\_inst packet is sent.\\
+  \end{frame}
+\begin {alltt}
+
+0000000080001178 <debug\_printf>:
+    80001178:	7139                	\textbf{\textit{addi	sp,sp,-64}}
+    8000117a:	...
+  \end{alltt}
+
+\item
+  \textbf{Return from debug\_printf():}
+  \begin{alltt}
+    80001186:	...
+    80001188:	6121                	\textbf{\textit{addi	sp,sp,64}}
+    8000118a:	8082                	\textbf{\textit{ret}}
+  \end{alltt}
+
+  \begin{frame}
+
+    PC: 8000118a -\textgreater 80001a88 \\
+    The target of the  \textbf{\textit{ret}} is uninferable, thus a \textbf{\textit{te\_inst}} packet IS sent:\\
+    \textbf{\textit{te\_inst}}[format=2 (ADDR\_ONLY): address=0x80001a88, updiscon=0]
+  \end{frame}
+
+  \begin{alltt}
+    80001a88:	00000597          	\textbf{\textit{auipc	a1,0x0}}
+    80001a8c:	65058593          	\textbf{\textit{addi	a1,a1,1616}} # 800020d8 <main+0x6f0>
+  \end{alltt}
+
+
+\item
+  \textbf{exiting from Func\_2(), with a final taken branch, followed by a \textit{ret}}
+  \begin {alltt}
+00000000800010b6 <Func\_2>:
+    ........:   ....
+    800010da:	4781                    \textbf{\textit{li	a5,0}}
+    800010dc:	00a05863                \textbf{\textit{blez	a0,800010ec}} <Func\_2+0x36>
+  \end{alltt}
+
+  \begin{frame}
+
+    PC: 800010dc -\textgreater 800010ec, add branch TAKEN to branch\_map, but no packet sent yet.\\
+    branches = 0; branch\_map = 0;\\
+    branch\_map \textbar= 0 \textless\textless branches++;
+  \end{frame}
+
+  \begin {alltt}
+    800010ec:   60e2                    \textbf{\textit{ld      ra,24(sp)}}
+    800010ee:   6442                    \textbf{\textit{ld      s0,16(sp)}}
+    800010f0:   64a2                    \textbf{\textit{ld      s1,8(sp)}}
+    800010f2:   853e                    \textbf{\textit{mv      a0,a5}}
+    800010f4:   6105                    \textbf{\textit{addi    sp,sp,32}}
+    800010f6:   8082                    \textbf{\textit{ret}}
+    \end{alltt}
+
+  \begin{frame}
+
+    PC: 800010f6 -\textgreater 80001b8a\\
+    The target of the \textbf{\textit{ret}} is uninferrable, thus a \textbf{\textit{te\_inst}} packet is sent, with ONE branch in the branch\_map\\
+    \textbf{\textit{te\_inst}}[ format=1 (DIFF\_DELTA): branches=1, branch\_map=0x0, address=0x80001b8a ($\Delta$=0xab0) updiscon=0 ]
+  \end {frame}
+  
+  \begin {alltt}
+00000000800019e8 <main>:
+    ........:   ....
+    80001b8a:	f4442603                \textbf{\textit{lw      a2,-188(s0)}}
+    80001b8e:	....
+  \end{alltt}
+  
+\item
+  \textbf{3 branches, then a function return back to Proc\_1()}
+
+  \begin {alltt}
+0000000080001100 <Proc\_6>:
+    ........:   ....
+    80001112:	c080                    \textbf{\textit{sw	s0,0(s1)}}
+    80001114:	4785                    \textbf{\textit{li	a5,1}}
+    80001116:	02f40463                \textbf{\textit{beq	s0,a5,8000113e <Proc_6+0x3e>}}
+  \end{alltt}
+  
+  \begin {frame}
+
+    PC: 80001116 -\textgreater 8000111a, add branch NOT taken to branch\_map, but no packet sent yet.
+    branches = 0; branch\_map = 0;
+    branch\_map \textbar= 1 \textless\textless branches++;
+  \end{frame}
+  
+
+  \begin {alltt}
+    8000111a:	c81d                    \textbf{\textit{beqz	s0,80001150 <Proc\_6+0x50>}}
+  \end{alltt}
+  
+  \begin {frame}
+
+  PC: 8000111a -\textgreater 8000111c, add branch NOT taken to branch\_map, but no packet sent yet.\\
+  branch\_map \textbar= 1 \textless\textless branches++;
+  \end{frame}
+  
+
+  \begin {alltt}
+    8000111c:   4709                    \textbf{\textit{li      a4,2}}
+    8000111e:   04e40063                \textbf{\textit{beq     s0,a4,8000115e <Proc\_6+0x5e>}}
+  \end{alltt}
+  
+  \begin {frame}
+
+  PC: 8000111e -\textgreater 8000115e, add branch TAKEN to branch\_map, but no packet sent yet.\\
+  branch\_map \textbar= 0 \textless\textless branches++;
+  \end{frame}
+  
+
+  \begin {alltt}
+    8000115e:	60e2                	\textbf{\textit{ld	ra,24(sp)}}
+    80001160:	6442                	\textbf{\textit{ld	s0,16(sp)}}
+    80001162:	c09c                	\textbf{\textit{sw	a5,0(s1)}}
+    80001164:	64a2                	\textbf{\textit{ld	s1,8(sp)}}
+    80001166:	6105                	\textbf{\textit{addi	sp,sp,32}}
+    80001168:	8082                	\textbf{\textit{ret}}
+  
+00000000800011d6 <Proc\_1>:
+    ........:   ....
+    80001258:	00093783          	\textbf{\textit{ld	a5,0(s2)}}
+    8000125c:	....
+  \end{alltt}
+
+
+  \begin {frame}
+
+  PC: 80001168 -\textgreater 80001258\\
+  The target of the \textbf{\textit{ret}} is uninferrable, thus a \textbf{\textit{te\_inst}} packet is sent, with THREE branches in the branch\_map\\
+  \textbf{\textit{te\_inst}}[ format=1 (DIFF\_DELTA): branches=3, branch\_map=0x3, address=0x80001258 ($\Delta$=0x148), updiscon=0 ]
+  \end{frame}
+  
+\item
+
+   \textbf{A complex example with 2 branches, 2 jal, and a ret}
+
+  \begin {alltt}
+00000000800011d6 <Proc\_1>:
+    ........:   ....
+    8000121c:	441c                	\textbf{\textit{lw	a5,8(s0)}}
+    8000121e:	c795                	\textbf{\textit{beqz	a5,8000124a}} <Proc\_1+0x74>
+  \end{alltt}
+  
+  \begin{frame}
+
+  PC: 8000121e -\textgreater 8000124a, add branch TAKEN to branch\_map, but no packet sent yet.\\
+  branches = 0; branch\_map = 0;\\
+  branch\_map \textbar= 0 \textless\textless branches++;
+  \end{frame}
+  
+\begin{alltt}
+    
+    8000124a:	44c8                	\textbf{\textit{lw	a0,12(s1)}}
+    8000124c:	4799                	\textbf{\textit{li	a5,6}}
+    8000124e:	00c40593          	\textbf{\textit{addi	a1,s0,12}}
+    80001252:	c81c                	\textbf{\textit{sw	a5,16(s0)}}
+    80001254:	eadff0ef          	\textbf{\textit{jal	x1,80001100}} <Proc\_6>
+\end{alltt}
+
+  \begin{frame}
+
+  PC: 80001254 -\textgreater 80001100\\
+  The target of the \textbf{\textit{jal}} is inferrable, thus no \textbf{\textit{te\_inst}} packet needs be sent.\\
+  \end{frame}
+  
+
+\begin{alltt}
+  
+    0000000080001100 <Proc\_6>:
+    80001100:	1101                    \textbf{\textit{addi	sp,sp,-32}}
+    80001102:	e822                    \textbf{\textit{sd	s0,16(sp)}}
+    80001104:	e426                    \textbf{\textit{sd	s1,8(sp)}}
+    80001106:	ec06                    \textbf{\textit{sd	ra,24(sp)}}
+    80001108:	842a                    \textbf{\textit{mv	s0,a0}}
+    8000110a:	84ae                    \textbf{\textit{mv	s1,a1}}
+    8000110c:	fedff0ef                \textbf{\textit{jal	x1,800010f8}} <Func\_3>
+\end{alltt}
+
+  \begin{frame}
+
+  PC: 8000110c -\textgreater 800010f8\\
+  The target of the \textbf{\textit{jal}} is inferrable, thus no \textbf{\textit{te\_inst}} packet needs to be sent.
+  \end{frame}
+  
+
+\begin {alltt}
+00000000800010f8 <Func\_3>:
+    800010f8:	1579                    \textbf{\textit{addi	a0,a0,-2}}
+    800010fa:	00153513                \textbf{\textit{seqz	a0,a0}}
+    800010fe:	8082                    \textbf{\textit{ret}}
+\end{alltt}
+
+  \begin{frame}
+
+  PC: 800010fe -\textgreater 80001110\\
+  The target of the \textbf{\textit{ret}} is uninferrable, thus a \textbf{\textit{te\_inst}} packet will be sent shortly.
+  \end{frame}
+  
+\begin{alltt}
+  
+0000000080001100 <Proc\_6>:
+    ........:   ....
+    80001110:	c115                	\textbf{\textit{beqz	a0,80001134}} <Proc\_6+0x34>
+    80001112:	....
+\end{alltt}
+
+  \begin{frame}
+
+  PC: 80001110 -\textgreater 80001112, add branch NOT TAKEN to branch\_map.\\
+  branch\_map \textbar= 1 \textless\textless branches++;\\
+  \textbf{\textit{te\_inst}}[ format=1 (DIFF\_DELTA): branches=2, branch\_map=0x2, address=0x80001110 ($\Delta$=0xfffffffffffffef4), updiscon=1 ]
+  \end{frame}
+  
+  
+\end{enumerate}
+
