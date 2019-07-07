@@ -89,9 +89,10 @@ function follow_execution_path(address, te_inst)
       if (branches == 1 and is_branch(get_instr(pc)) and stop_at_last_branch)
         # Reached final branch - stop here (do not follow to next instruction as
         #  we do not yet know whether it retires)
+        stop_at_last_branch = FALSE
         return
-      if (pc == address and is_uninferrable_jump(get_instr(last_pc)))
-        # Reached reported address following an uninferrable jump - stop here
+      if (pc == address and is_uninferrable_discon(get_instr(last_pc)))
+        # Reached reported address following an uninferrable discontinuity - stop here
         if (branches > (is_branch(get_instr(pc)) ? 1 : 0))
           # Check all branches processed (except 1 if this instruction is a branch)
           ERROR: unprocessed branches
@@ -138,7 +139,7 @@ function next_pc (address)
     pc += instruction_size(instr)
 
   if (is_call(instr))
-    push_return_stack(pc)
+    push_return_stack(this_pc)
 
   last_pc = this_pc
 
