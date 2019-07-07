@@ -117,9 +117,20 @@ potential solutions to this are as follows:
     \hline
     \textbf{updiscon}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
-                packet is reporting the instruction following an uninferable iscontinuity and is also the 
+                packet is reporting the instruction following an uninferable discontinuity and is also the 
                 instruction before an exception, privilege change or resync 
                 (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{updiscon}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {call\_counter\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
+                will also be the same value as \textbf{updiscon}. \\
     \hline
   \end{tabulary}
 \end{table}
@@ -197,7 +208,24 @@ potential solutions to this are as follows:
      address (e.g. following an updiscon, or if the next instruction is an exception), or because \textbf{branch\_count} 
      has reached 0xffff).\\
     \hline
-    \textbf{mispred} & 1 & Set to 1 if next branch failed prediction. \\
+    \textbf{bpsuccess} & 1 & This bit will be 1 if the most recent branch was predicted correctly. \\
+    \hline
+    \textbf{updiscon}	& 1 & 
+                If the value of this bit is different from \textbf{bpfail}, it indicates that this 
+                packet is reporting the instruction following an uninferable discontinuity and is also the 
+                instruction before an exception, privilege change or resync 
+                (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{updiscon}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {call\_counter\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
+                will also be the same value as \textbf{updiscon}. \\
     \hline
     \textbf{address (MSBs)}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p - 15} & 
                 MSBs of the differential instruction address.\\
@@ -224,6 +252,17 @@ potential solutions to this are as follows:
                 packet is reporting the instruction following an uninferable discontinuity and is also the 
                 instruction before an exception, privilege change or resync 
                 (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{updiscon}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {call\_counter\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
+                will also be the same value as \textbf{updiscon}. \\
     \hline
   \end{tabulary}
 \end{table}
@@ -429,6 +468,32 @@ This example uses an exception at looplabel + 4, but anything that could cause a
 the same behavior: a privilege change, or the expiry of the resync timer.  It could also occur if looplabel was the last
 traced instruction (because tracing was disabled for some reason).  See next section for further discussion of this point.
 
+\subsection{Format 1 \textbf{branch\_fmt} field}
+
+This is encoded so that it will take the same value as the MSB of the \textbf{branch\_map} field, so that extra bits are
+only required when reporting predicted branch counts, and reporting a branch map is unaffected.  Although there are 15
+unused bits when reporting a branch count without address, branch counts will by their nature be reported much less 
+frequently, so this is not a significant cost.  Furthermore, even for the most pathological case (32 correctly predicted 
+branches followed by a misprediction), the total number of bits used is still fewer than if using just the branch map
+format.
+
+\subsection{Format 1 \textbf{bpsuccess} field}
+This bit is encoded so that most of the time it will take the same value as the MSB of the \textbf{branch\_fmt} field,
+and will therefore compress away, having no impact on the encoding efficiency.  When a branch count is reported without 
+an address it is because a branch has failed the prediction.  However, when an address is reported along with
+a branch count, it will be because the packet was initiated by an uninferable discontinuity, an exception, or because a
+branch has been encountered when the number of correctly predicted branches is 0xffff.  For the latter case, the 
+reported address will always be for a branch, and in the former cases it may be.  If it is a branch, it is necessary to 
+be explicit about whether or not the prediction was met or not.
+
+\subsection{Format 1/2 \textbf{irfail} and \textbf{irdepth} fields}
+These bit are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
+and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, and
+the encoder maintains a stack of predicted return addresses that are compared with the actual return addresses, then
+a \textit{te\_inst} packet will be generated if a misprediction occurs.  In order to correctly reconstruct the 
+execution path of the program, the decoder will need to know which return it was that failed.  If a return is reported
+because the return address stack is empty, these fields will take the same value as the \textbf{updiscon} field.
+
 \subsection{Format 3 subformat 3 \textbf{qual\_status} field}
 
 When tracing ends, the encoder reports the address of the last traced instruction, and follows this with a format 3, 
@@ -453,12 +518,3 @@ by having two codes to indicate that tracing has ended:
 If the encoder implementation does have early access to the filtering results, and the designer chooses to use the
 \textbf{updiscon} when thet last qualified instruction is also the instruction following an uninferable PC discontinuity,
 loss of qualification shoujld always be indicated using \textbf{ended\_ntr}.
-
-\subsection{Format 1 \textbf{branch\_fmt} field}
-
-This is encoded so that it will take the same value as the MSB of the \textbf{branch\_map} field, so that extra bits are
-only required when reporting predicted branch counts, and reporting a branch map is unaffected.  Although there are 15
-unused bits when reporting a branch count without address, branch counts will by their nature be reported much less 
-frequently, so this is not a significant cost.  Furthermore, even for the most pathological case (32 correctly predicted 
-branches followed by a misprediction), the total number of bits used is still fewer than if using just the branch map
-format.
