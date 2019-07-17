@@ -4,33 +4,30 @@ An example algorithm for compressed branch trace is given in figure~\ref{fig:alg
 In the diagram, the following terms are used:
 
 \begin{itemize}
+  \item \textit{te\_inst.} The name of the packet type emitted by the encoder (see Chapter~\ref{packets});
+  \item \textit{inst.}  Abbreviation for 'instruction';
+  \item \textit{updiscon.}  Uninferable PC discontinuity.  This identifies an instruction that
+    causes the program counter to be changed by an amount that cannot be predicted from the
+    source code alone (\textbf{itype} values 8, 10, 12 or 14);
   \item \textit{Qualified?}  An instruction that meets the filtering criteria is qualified, and will be traced;
   \item \textit{Branch?} Is the instruction a branch or not (\textbf{itype} values 4 or 5, or a non-zero \textbf{ntkn});
   \item \textit{branch map.}  A vector where each bit represents the outcome of a branch.  A 0 indicates the
     branch was taken, a 1 indicates that it was not;
-  \item \textit{inst.}  Abbreviation for 'instruction';
+  \item \textit{e\_ccd.} An exception has been signalled, or context has changed and
+    should be treated as an uninferable PC discontinuity (see Table~\ref{tab:context-type});
+  \item \textit{ppch.} Privilege has changed, or context has changed and needs to be 
+    reported precisely (see Table~\ref{tab:context-type});
+  \item \textit{ppch\_br.} As above, but branch map not empty;
+  \item \textit{er\_ccdn.}  Instruction retirement and exception signalled on the same cycle, 
+    or context has changed and should be treated as an uninferable PC discontinuity, or
+    context notification (see Table~\ref{tab:context-type});
+  \item \textit{exc\_only.}  Exception signalled without simultaneous retirement;
+  \item \textit{cci.}  context change that can be reported imprecisely (see Table~\ref{tab:context-type});
   \item \textit{resync count.} A counter used to keep track of when it is necessary to send 
-    a synchronization packet (see Section~\ref{synchronization}, final bullet). The exact mechanism for 
-    incrementing this counter is not specified, but options might be to count the number of \textit{te\_inst} packets emitted, 
-    or the number of clock cycles elapsed since the last synchronization message was sent;
-  \item \textit{max\_resync.}  The resync counter value that schedules a synchronization packet;
-  \item \textit{updiscon.}  Uninferable PC discontinuity.  This identifies an instruction that
-    causes the program counter to be changed by an amount that cannot be predicted from the
-    source code alone (\textbf{itype} values 8, 10, 12 or 14);
-   \item \textit{te\_inst.} The name of the packet type emitted by the encoder (see Chapter~\ref{packets});
-   \item \textit{e\_ccd.} An exception has been signalled, or context has changed and
-     should be treated as an uninferable PC discontinuity (see Table~\ref{tab:context-type});
-   \item \textit{ppch.} Privilege has changed, or context has changed and needs to be 
-     reported precisely (see Table~\ref{tab:context-type});
-   \item \textit{ppch\_br.} As above, but branch map not empty;
-   \item \textit{resync\_br.} The resync counter has reached the maximum value and there are
-     entries in the branch map that have not yet been output.  These must be output before
-     the subsequent synchronization packet, which does not report branch map history;
-   \item \textit{er\_ccdn.}  Instruction retirement and exception signalled on the same cycle, 
-     or context has changed and should be treated as an uninferable PC discontinuity, or
-     context notification (see Table~\ref{tab:context-type});
-   \item \textit{exc\_only.}  Exception signalled without simultaneous retirement;
-   \item \textit{cci.}  context change that can be reported imprecisely (see Table~\ref{tab:context-type}).
+    a synchronization packet (see Section~\ref{sec:resync});
+  \item \textit{max\_resync.}  The resync counter value that schedules a synchronization packet (see Section~\ref{sec:resync});
+  \item \textit{resync\_br.} The resync counter has reached the maximum value and there are
+    entries in the branch map that have not yet been output (see Section~\ref{sec:resync}).
 \end{itemize}
 
 \begin{figure}[l]
@@ -84,6 +81,9 @@ Addresses can be output in one of two ways: \textit{full} or \textit{differentia
 
 Packet formats 1 and 2 include a differential address, whilst format 3 includes the full address.
 
+If the optional full address mode is enabled (see Section~\ref{sec:full-address}), all packet formats
+will include a full address.
+
 \section{Format selection} \label{format-selection}
 
 In all cases but one, the packet format (3) is determined only by a 'yes' outcome from the 
@@ -118,3 +118,17 @@ Packet formats 1 and 2 are organized so that the address is usually the final fi
 number of bits required to represent the address reduces the total packet size and significantly
 improves efficiency.  See Chapter~\ref{packets}.
 
+\section{Resynchronisation} \label{sec:resync}
+
+Per Section~\ref{synchronization}, a format 3 synchronisation packet must be output after "a prolonged
+period of time". The exact mechanism for
+determining this is not specified, but options might be to count the number of \textit{te\_inst} packets emitted, 
+or the number of clock cycles elapsed, since the last synchronization message was sent.
+
+When the resync is required, the primary objective is to output a format 3 packet, so that the decoder can 
+start tracing from that point without needing any of the history.  However, if the decoder is already synced, 
+then it is also required that it can continue to follow the execution path up to and through the format 3 packet 
+seamlessly.  As such, before outputting a format 3 packet, it is necessary to output a format 1 packet for the 
+preceding instruction if there are any unreported branches (because format 3 does not contain a branch map).  
+The format 3 will be sent if the resync timer has been exceeded.  On the cycle before this (when the resync timer 
+value has been exactly reached), a format 1 will be generated if the branch map is not empty.

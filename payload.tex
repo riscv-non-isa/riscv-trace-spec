@@ -91,7 +91,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch map and may include differential address\\
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
     \hline
     \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
     0:      (cannot occur for this format) \newline
@@ -100,10 +100,7 @@ potential solutions to this are as follows:
     10-17: 	17 bits \newline
     18-25: 	25 bits \newline
     26-31: 	31 bits \newline
-    For example if branches = 12, the branch-map is 17 bits long, and the 12 LSBs are valid. \newline
-    In most cases when the branch map is full there is no need to report an address,
-    and this is indicated by setting branches to 0.  The exception to this is when 
-    the instruction immediately prior to the final branch causes an uninferable discontinuity.\\
+    For example if branches = 12, the branch-map is 17 bits long, and the 12 LSBs are valid. \\
     \hline
     \textbf{branch\_map} & Determined by \newline 
                  \textbf{branches} field. & 
@@ -126,7 +123,7 @@ potential solutions to this are as follows:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {call\_counter\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
@@ -143,7 +140,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch map and may include differential address\\
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
     \hline
     \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
     0:      31 bits, no \textbf{address} in packet \newline
@@ -169,7 +166,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch map and may include differential address\\
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
     \hline
     \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
     0:      31 bits, no \textbf{address} in packet \newline
@@ -193,7 +190,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch map and may include differential address\\
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
     \hline
     \textbf{branches} & 5 & Number of valid bits in branch-map. The length of branch-map is determined as follows: \newline
     0:      31 bits, no \textbf{address} in packet \newline
@@ -221,7 +218,7 @@ potential solutions to this are as follows:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {call\_counter\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
@@ -242,7 +239,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 10 (addr-only): differential address and no branch map\\
+    \textbf{format}	& 2	& 10 (addr-only): differential address and no branch information\\
     \hline
     \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Differential instruction address.\\ 
@@ -258,7 +255,7 @@ potential solutions to this are as follows:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {call\_counter\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
@@ -467,6 +464,11 @@ next packet in order to determine whether it has reached the final retired instr
 This example uses an exception at looplabel + 4, but anything that could cause a format 3 for looplabel + 4 would result in 
 the same behavior: a privilege change, or the expiry of the resync timer.  It could also occur if looplabel was the last
 traced instruction (because tracing was disabled for some reason).  See next section for further discussion of this point.
+
+\subsection{Format 1 \textbf{branch\_map} field}
+When the branch map becomes full it must be reported, but in most cases there is no need to report an address.
+This is indicated by setting \textbf{branches} to 0.  The exception to this is when the instruction immediately prior to 
+the final branch causes an uninferable discontinuity, in which case \textbf{branches} is set to 31.
 
 \subsection{Format 1 \textbf{branch\_fmt} field}
 

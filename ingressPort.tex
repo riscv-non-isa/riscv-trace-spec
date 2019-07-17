@@ -466,6 +466,9 @@ How the parameters are input to the encoder is implementation specific. The numb
         \hline
         \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
         \hline
+        \textit{return\_stack\_size\_p} &  & Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size\_p}}.
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return stack implemented.\\
+        \hline
         \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
         \hline
         \textit{user\_width\_p} & & Width of user-defined filter qualifier input bus \\
@@ -513,6 +516,7 @@ encoder.
     \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus is \textit{ntkn\_width} + 1.
     \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
     \item \textit{retires}. Maximum number of instructions that can be retired per block is \textit{retires} + 1.
+    \item \textit{return\_stack\_size}. Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size}}. No stack if 0.
     \item \textit{rv32}. ISA is RV32 when 1.
     \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated is \textit{taken\_branches} + 1.
     \item \textit{user\_width}. Width of the \textbf{user} bus is \textit{user\_width} + 1.

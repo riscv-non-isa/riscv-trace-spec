@@ -101,13 +101,20 @@ The following modes are optional, and if present must be run-time selectable.  T
 active run-time options must be reported in the \textit{te\_support} packet, which is issued by the
 encoder whenever the encoder configuration is changed.
 
+Each optional mode lists the associated parameters; see Table~\ref{tab:parameters} for further 
+details.
+
 \subsubsection{Full address} \label{sec:full-address}
+
+Related parameters: None
 
 All packet formats apart from format 3 output addresses in differential form by default.
 An option to output full addresses for all packet formats is a useful debugging aid for 
 software decoder developers.  It will always result in less efficient trace encoding.
 
 \subsubsection{Implicit exception} \label{sec:implicit-exception}
+
+Related parameters: None
 
 The exception handler base address is specified by \textbf{\textit{utvec/stvec/mtvec}}, and 
 in some RISC-V implementations the lower address bits can be specified by 
@@ -118,6 +125,8 @@ trap handler address, and will improve efficiency in cases where the decoder can
 the address of the trap handler from just the exception cause.
 
 \subsubsection{Implicit return} \label{sec:implicit-return}
+
+Related parameters: \textit{call\_counter\_size\_p}, \textit{return\_stack\_size\_p}.
 
 Although a function return is usually an indirect jump, well behaved programs following a 
 calling convention return to the point in the program from which the function was called, 
@@ -144,6 +153,8 @@ it must be reported explicitly via a \textit{te\_inst} packet, along with the nu
 currently on the stack.  This ensures that the decoder can determine which return is being reported. 
 
 \subsubsection{Branch prediction} \label{sec:branch-prediction}
+
+Related parameters: \textit{bpred\_size\_p}.
 
 Whilst recording the taken/not-taken status of each branch in a branch map is efficient, there are 
 some cases where this can result in a relatively large volume of trace.  For example:
