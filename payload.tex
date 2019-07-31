@@ -368,7 +368,7 @@ potential solutions to this are as follows:
        00 (no\_change): No change to filter qualification \newline
        01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
        10: (packet\_lost): One or more packets lost.\newline
-       11 : (ended\_ntr): Qualification ended, no unreported instructions (so preceeding \textbf{te\_inst} would have been sent anyway, even if it wasn't the last qualified instruction)\\
+       11 : (ended\_upd): Qualification ended, preceding \textbf{te\_inst} would have been sent anyway due to an updiscon, even if it wasn't the last qualified instruction)\\
      \hline
      \textbf{options} & N & Values of all run-time configuration bits\newline
        Number of bits and definitions implementation dependent.  Examples might be\newline
@@ -500,7 +500,7 @@ because the return address stack is empty, these fields will take the same value
 
 When tracing ends, the encoder reports the address of the last traced instruction, and follows this with a format 3, 
 subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
-\textbf{ended\_rep} and \textbf{ended\_ntr}.  This relates to exactly the same ambiguous case described in the previous
+\textbf{ended\_rep} and \textbf{ended\_upd}.  This relates to exactly the same ambiguous case described in the previous
 section, and in principle, the mechanism described in that section can be used to disambiguate when the last traced
 instruction is at looplabel + 4.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
 a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
@@ -513,10 +513,10 @@ by having two codes to indicate that tracing has ended:
 \begin{itemize}
   \item \textbf{ended\_rep} indicates that the preceding packet would not have been issued if tracing hadn't ended, 
     which means that tracing stopped after executing looplabel in the 1st loop iteration;
-  \item \textbf{ended\_ntr} indicates that the preceding packet would have been issued anyway, 
-    which means that tracing stopped after executing looplabel in the 2nd loop iteration;
+  \item \textbf{ended\_upd} indicates that the preceding packet would have been issued anyway because of an uninferable
+    PC discontinuity, which means that tracing stopped after executing looplabel in the 2nd loop iteration;
 \end{itemize}
 
 If the encoder implementation does have early access to the filtering results, and the designer chooses to use the
-\textbf{updiscon} when thet last qualified instruction is also the instruction following an uninferable PC discontinuity,
-loss of qualification shoujld always be indicated using \textbf{ended\_ntr}.
+\textbf{updiscon} bit when the last qualified instruction is also the instruction following an uninferable PC discontinuity,
+loss of qualification should always be indicated using \textbf{ended\_rep}.
