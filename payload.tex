@@ -505,7 +505,7 @@ section, and in principle, the mechanism described in that section can be used t
 instruction is at looplabel + 4.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
 a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
 a 3-stage pipe with access to the previous, current and next instructions.  However, decoding that the next instruction
-is a priviledge change or exception is straightforward, but determining whether the next instruction meets the filtering
+is a privilege change or exception is straightforward, but determining whether the next instruction meets the filtering
 criteria is much more involved, and this information won't typically be available, at least not without adding an
 additional pipeline stage, which is expensive.  This means a different mechanism is required, and that is provided
 by having two codes to indicate that tracing has ended:
@@ -518,5 +518,5 @@ by having two codes to indicate that tracing has ended:
 \end{itemize}
 
 If the encoder implementation does have early access to the filtering results, and the designer chooses to use the
-\textbf{updiscon} when thet last qualified instruction is also the instruction following an uninferable PC discontinuity,
-loss of qualification shoujld always be indicated using \textbf{ended\_ntr}.
+\textbf{updiscon} when the last qualified instruction is also the instruction following an uninferable PC discontinuity,
+loss of qualification should always be indicated using \textbf{ended\_ntr}.
