@@ -83,9 +83,11 @@ attributes within a packet.
 Items in \textit {italics} refer to parameters either built into the
 hardware or configurable hardware values.
 
-A decoder is a piece of software that takes the packets emitted by the
-encoder and is able to reconstruct the execution flow of the code
-executed in the RISC-V core.
+An encoder is a piece of hardware that takes in RISC-V instruction data
+on its ingress port and transforms it into trace packets.
+
+A decoder is a piece of software that takes the trace packets emitted by the
+encoder and reconstructs the execution flow of the code executed in the RISC-V core.
 
 RISC-V has the following definitions:
 \begin{itemize}
@@ -102,4 +104,4 @@ If an exception or interrupt doesn't trap, the program counter does not
 change. So, there is no need to trace all exceptions/interrupts, just
 traps.
 
-In this document interrupts and exceptions traced are only those that cause traps to be taken.
+In this document, interrupts and exceptions are only traced when they cause traps to be taken.
