@@ -32,8 +32,7 @@ Conceptually, the system has one or more of the following fundamental components
     A hardware encoder that takes in the CPU instruction trace and compresses
     it into lower bandwidth trace packets.
   \item
-    A transmission channel that to transmit or a memory to store
-    these trace packets.
+    A transmission channel to transmit or a memory to store these trace packets.
   \item
     A decoder, usually software on an external PC, that takes in the trace
     packets and, with knowledge of the program binary that's running the
@@ -42,7 +41,7 @@ Conceptually, the system has one or more of the following fundamental components
 \end{itemize}
 
 In RISC-V, all instructions are executed unconditionally or at least
-their execution can be determined based on the execution binary. The
+their execution can be determined based on the program binary. The
 instructions between the deltas can all assumed to be executed
 sequentially. Because of this, there is no need to report sequential 
 instructions in the trace, only whether the branches were taken or not
