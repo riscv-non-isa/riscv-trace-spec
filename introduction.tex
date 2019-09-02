@@ -65,14 +65,10 @@ exception type.  When an interrupt or exception occurs, or the
 processor is halted, the final instruction executed beforehand must be
 included in the trace.
 
-The primary goal of this document is to specify the ingress interface, the
-instruction trace interface between a RISC-V CPU and an encoder. It
-establishes a standard for CPU designers to follow such that they can interface
-with encoders from various IP providers.
-
-In addition, this document also details an example of a compressed branch trace
-algorithm and a packet format to encapsulate the compressed branch trace
-information.  However, this is not a normative part of the specficiation.
+This document serves to specify the ingress port (the signals between
+the RISC-V core and the encoder), compressed branch trace algorithm and
+the packet format used to encapsulate the compressed branch trace
+information.
 
 \subsection{Nomenclature}
 
