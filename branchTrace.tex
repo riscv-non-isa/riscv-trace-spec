@@ -181,12 +181,12 @@ of the destination address of the return.  The implicit return mode can result i
 significant improvements in trace encoder efficiency.
 
 Returns can only be treated as inferable if the associated call has already been reported in
-an earlier \textit{te\_inst} packet.  The encoder must ensure that this is the case.  This can be accomplished
+an earlier packet.  The encoder must ensure that this is the case.  This can be accomplished
 by utilizing a counter to keep track of the number of nested calls being traced.  The counter
 increments on calls (but not tail calls), and decrements on returns (see Section~\ref{Jump Classes}
-for definitions).  The counter will not over or underflow, and is reset to 0 whenever a format 3 
-\textit{te\_inst} synchronization packet is sent.  Returns will be treated as inferable and will not generate a trace
-packet if the count is non-zero (i.e. the associated call was already reported in an earlier \textit{te\_inst} packet).
+for definitions).  The counter will not over or underflow, and is reset to 0 whenever a
+synchronization packet is sent.  Returns will be treated as inferable and will not generate a trace
+packet if the count is non-zero (i.e. the associated call was already reported in an earlier packet).
 
 Such a scheme is low cost, and will work as long as programs are "well behaved".  The encoder does not check that the
 return address is actually that of the instruction following the associated call.  As such, any program that
@@ -195,7 +195,7 @@ modifies return addresses cannot be traced using this mode with this minimal imp
 Alternatively, the encoder can maintain a stack of expected return addresses, and only treat the 
 return as inferable if the actual return address matches the prediction.  This is fully robust for all
 programs, but is more expensive to implement.  In this case, if a return address does not match the prediction, 
-it must be reported explicitly via a \textit{te\_inst} packet, along with the number of return addresses 
+it must be reported explicitly via a packet, along with the number of return addresses
 currently on the stack.  This ensures that the decoder can determine which return is being reported. 
 
 \subsection{Branch prediction mode} \label{sec:branch-prediction}
