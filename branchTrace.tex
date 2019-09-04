@@ -36,12 +36,13 @@ operations using either trace or stop-mode debugging.
 
 \subsection{Sequential Instructions} \label{Sequential Instructions}
 
-For instruction set architectures where all instructions are executed
+For instruction set architectures such as RISC-V where all instructions are executed
 unconditionally or at least their execution can be determined based on
-the program, the instructions between the deltas are assumed to be
-executed sequentially. This characteristic means that there is no need
-to report them via the trace, only whether the branches were taken or not
-and the addresses of taken indirect jumps.
+the program binary, the instructions between the deltas are assumed to be
+executed sequentially. Consequently, there is no need
+to report them in the trace. The trace only needs to contain whether
+branches were taken or not, the addresses of taken indirect jumps, or
+other program counter discontinuities.
 
 \subsection{Uninferable PC Discontinuities} \label{uninfpc}
 
