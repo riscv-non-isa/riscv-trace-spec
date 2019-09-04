@@ -12,12 +12,14 @@ interrupts and exceptions are also types of deltas.
 Instruction trace delta modes provide an efficient encoding of an
 instruction sequence by exploiting the deterministic way the processor
 behaves based on the program it is executing. The approach relies on
-an offline copy of the program being available to the decoder, so it
+an offline copy of the program binary being available to the decoder, so it
 is generally unsuitable for either dynamic (self-modifying) programs
-or those where access to the program binary is prohibited. There is no
-need for either assembly or high-level source code to be available,
-although such source code will aid the debugger in presenting the
-decoded trace.
+or those where access to the program binary is prohibited.
+
+While the program binary is sufficient, access to the assembly or
+higher-level source code will improve the ability of the decoder to present
+the decoded trace in the debugger by annotating the traced instructions with
+source code line numbers and labels, variable names etc.
 
 This approach can be extended to cope with small sections of
 deterministically dynamic code by arranging for the decoder to request
