@@ -177,18 +177,18 @@ Related parameters: \textit{call\_counter\_size\_p}, \textit{return\_stack\_size
 Although a function return is usually an indirect jump, well behaved programs following a 
 calling convention return to the point in the program from which the function was called, 
 and as such it is possible to determine the execution path without being explicitly notified 
-of the destination address of the return.  The 'implicit return' option can result in very 
-significant improvements in trace encoder efficiency.  
+of the destination address of the return.  The implicit return mode can result in very
+significant improvements in trace encoder efficiency.
 
-Returns can only be treated as inferable if the associated call has already been reported in 
-a \textit{te\_inst} packet.  The encoder must ensure that this is the case.  This can be accomplished 
-by utilizing a counter to keep track of the number of nested calls being traced.  The counter 
-increments on calls (but not tail calls), and decrements on returns (see Section~\ref{Jump Classes} 
+Returns can only be treated as inferable if the associated call has already been reported in
+an earlier \textit{te\_inst} packet.  The encoder must ensure that this is the case.  This can be accomplished
+by utilizing a counter to keep track of the number of nested calls being traced.  The counter
+increments on calls (but not tail calls), and decrements on returns (see Section~\ref{Jump Classes}
 for definitions).  The counter will not over or underflow, and is reset to 0 whenever a format 3 
-\textit{te\_inst} packet is sent.  Returns will be treated as inferable and will not generate a trace 
-packet if the count is non-zero (i.e. the associated call was already reported in a \textit{te\_inst} packet).
+\textit{te\_inst} synchronization packet is sent.  Returns will be treated as inferable and will not generate a trace
+packet if the count is non-zero (i.e. the associated call was already reported in an earlier \textit{te\_inst} packet).
 
-Such a scheme is low cost, and will work as long as programs are "well behaved".  It does not check that the 
+Such a scheme is low cost, and will work as long as programs are "well behaved".  The encoder does not check that the
 return address is actually that of the instruction following the associated call.  As such, any program that
 modifies return addresses cannot be traced using this mode with this minimal implementation.
 
