@@ -32,6 +32,8 @@ space, often mapping directly to physical memory. Dynamically linked
 programs require the debugger to keep track of memory allocation
 operations using either trace or stop-mode debugging.
 
+\section{Contents of an Instruction Delta Trace} \label{Trace Contents}
+
 \subsection{Sequential Instructions} \label{Sequential Instructions}
 
 For instruction set architectures where all instructions are executed
@@ -41,7 +43,7 @@ executed sequentially. This characteristic means that there is no need
 to report them via the trace, only whether the branches were taken or not
 and the addresses of taken indirect jumps.
 
-\subsection{Uninferable PC Discontinuity} \label{uninfpc}
+\subsection{Uninferable PC Discontinuities} \label{uninfpc}
 
 If the program counter is changed by an amount that cannot be
 inferred from the execution binary, the trace decoder needs to be
@@ -95,7 +97,7 @@ exception handler (hardware context change).
 \item After a prolonged period of time.
 \end{itemize}
 
-\subsection{Optional and run-time configurable modes} \label{optional}
+\section{Optional and run-time configurable modes} \label{optional}
 
 The following modes are optional, and if present must be run-time selectable.  The 
 active run-time options must be reported in the \textit{te\_support} packet, which is issued by the
@@ -104,7 +106,7 @@ encoder whenever the encoder configuration is changed.
 Each optional mode lists the associated parameters; see Table~\ref{tab:parameters} for further 
 details.
 
-\subsubsection{Full address} \label{sec:full-address}
+\subsection{Full address mode} \label{sec:full-address}
 
 Related parameters: None
 
@@ -112,7 +114,7 @@ All packet formats apart from format 3 output addresses in differential form by 
 An option to output full addresses for all packet formats is a useful debugging aid for 
 software decoder developers.  It will always result in less efficient trace encoding.
 
-\subsubsection{Implicit exception} \label{sec:implicit-exception}
+\subsection{Implicit exception mode} \label{sec:implicit-exception}
 
 Related parameters: None
 
@@ -124,7 +126,7 @@ via the the format 3, subformat 1 packet.  The 'implicit exception' option omits
 trap handler address, and will improve efficiency in cases where the decoder can infer 
 the address of the trap handler from just the exception cause.
 
-\subsubsection{Implicit return} \label{sec:implicit-return}
+\subsection{Implicit return mode} \label{sec:implicit-return}
 
 Related parameters: \textit{call\_counter\_size\_p}, \textit{return\_stack\_size\_p}.
 
@@ -152,7 +154,7 @@ programs, but is more expensive to implement.  In this case, if a return address
 it must be reported explicitly via a \textit{te\_inst} packet, along with the number of return addresses 
 currently on the stack.  This ensures that the decoder can determine which return is being reported. 
 
-\subsubsection{Branch prediction} \label{sec:branch-prediction}
+\subsection{Branch prediction mode} \label{sec:branch-prediction}
 
 Related parameters: \textit{bpred\_size\_p}.
 
