@@ -68,12 +68,14 @@ RISC-V ISA.
 
 \subsection{Interrupts and Exceptions} \label{interruptsexceptions}
 
-Interrupts are a different type of delta, they generally occur
+Interrupts are a different type of delta that generally occur
 asynchronously to the program's execution rather than intentionally as
 a result of a specific instruction or event. Exceptions can be thought
 of in the same way, even though they can be typically linked back to a
-specific instruction address.  The decoder generally does not know
-where an interrupt occurs in the instruction sequence, so the trace
+specific instruction address.
+
+The decoder generally does not know
+where an interrupt occured in the instruction sequence, so the trace
 must report the address where normal program flow ceased, as well as
 give an indication of the asynchronous destination which may be as
 simple as reporting the exception type.  When an interrupt or
