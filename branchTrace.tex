@@ -157,13 +157,19 @@ debugging aid for software decoder developers.
 
 Related parameters: None
 
-The exception handler base address is specified by \textbf{\textit{utvec/stvec/mtvec}}, and 
-in some RISC-V implementations the lower address bits can be specified by 
-\textbf{\textit{ucause/scause/mcause}}.  
-By default, both these values are reported when an exception or interrupt occurs, 
-via the the format 3, subformat 1 packet.  The 'implicit exception' option omits the 
-trap handler address, and will improve efficiency in cases where the decoder can infer 
-the address of the trap handler from just the exception cause.
+The RISC-V Privileged ISA specification stores exception handler base
+addresses in the \textbf{\textit{utvec/stvec/mvec}} CSR registers.
+In some RISC-V implementations, the lower address bits are stored in
+the \textbf{\textit{ucause/scause/mcause}} CSR registers.
+
+By default, both the vec and cause values are reported when an exception or interrupt occurs,
+via the the format 3, subformat 1 packet.
+
+The implicit exception mode omits vec, the trap handler address, from the trace and
+thus improves efficiency.
+
+This mode can only be used if the decoder can infer the address of the trap handler
+from just the exception cause.
 
 \subsection{Implicit return mode} \label{sec:implicit-return}
 
