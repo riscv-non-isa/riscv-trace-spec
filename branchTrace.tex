@@ -162,8 +162,7 @@ addresses in the \textbf{\textit{utvec/stvec/mvec}} CSR registers.
 In some RISC-V implementations, the lower address bits are stored in
 the \textbf{\textit{ucause/scause/mcause}} CSR registers.
 
-By default, both the vec and cause values are reported when an exception or interrupt occurs,
-via the the format 3, subformat 1 packet.
+By default, both the vec and cause values are reported when an exception or interrupt occurs.
 
 The implicit exception mode omits vec, the trap handler address, from the trace and
 thus improves efficiency.
