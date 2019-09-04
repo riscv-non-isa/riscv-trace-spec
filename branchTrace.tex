@@ -57,10 +57,14 @@ register rather than a constant embedded in the program binary.
 
 \subsection{Branches} \label{branches}
 
-When a branch occurs, the decoder must be informed of whether it was
-taken or not.  For a direct branch, this is sufficient.  There are no
-indirect branches in RISC-V; an indirect jump is an uninferable PC
-discontinuity.
+A branch is an instruction where a jump is conditional on the
+value of a register or a flag. For a decoder to able to follow program flow,
+the trace must include whether a branch was taken or not.
+
+For a direct branch, where the destination address is a constant that
+is encoded in the program binary, no further information is required.
+Direct branches are the only type of branch that is supported by the
+RISC-V ISA.
 
 \subsection{Interrupts and Exceptions} \label{interruptsexceptions}
 
