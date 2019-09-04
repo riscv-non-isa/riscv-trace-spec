@@ -202,8 +202,12 @@ currently on the stack.  This ensures that the decoder can determine which retur
 
 Related parameters: \textit{bpred\_size\_p}.
 
-Whilst recording the taken/not-taken status of each branch in a branch map is efficient, there are 
-some cases where this can result in a relatively large volume of trace.  For example:
+In a straightforward encoder, the outcome of each executed branch is stored in
+a branch map: a bit vector in which the taken/non-taken status of each branch is stored in
+chronological order.
+
+While this encoding is efficient, at 1 bit per branch, there are some cases where this
+can still result in a relatively large volume of trace packets.  For example:
 
 \begin{itemize}
   \item Executing tight loops of straight-line code.  Each iteration of the loop will add a bit to the branch map;
