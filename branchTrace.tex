@@ -216,7 +216,10 @@ can still result in a relatively large volume of trace packets.  For example:
   \item Breakpoints, which in some implementations also spin in an idle loop.
 \end{itemize}
 
-The prediction scheme implemented in the encoder will need to be modelled in the decoder software.  
+A significant coding efficiency can be obtained by the addition of a branch predictor in the encoder. To keep
+the encoder and decoder synchronized, a predictor with identical behavior will need to be modelled in the decoder
+software.
+
 The predictor shall comprise a lookup table of 2\textsuperscript{N} entries, where N is specified by a parameter.  
 Each entry is indexed by bits N:1 of the instruction address (or N+1:2 if compressed instructions aren't supported), 
 and each contains a 2-bit prediction state:
@@ -227,8 +230,8 @@ and each contains a 2-bit prediction state:
   \item 10: predict 1, transition to 11 if prediction succeeds, else 00.
 \end{itemize}
 
-We could also consider the gShare predictor (see Hennessy \& Patterson).  Some further experimentation is needed
-to determine the benefits of different lookup table sizes and predictor algorithms.
+Other predictors, such as the gShare predictor (see Hennessy \& Patterson), should be considered.  Some further
+experimentation is needed to determine the benefits of different lookup table sizes and predictor algorithms.
 
-The lookup table entries are initialized to 00 when a format 3 \textit{te\_inst} packet is sent.
+The lookup table entries are initialized to 00 when a format 3 \textit{te\_inst} synchronization packet is sent.
 
