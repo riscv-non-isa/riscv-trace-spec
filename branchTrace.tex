@@ -149,9 +149,9 @@ This is the default encoding mode.
 
 Related parameters: None
 
-All packet formats apart from format 3 output addresses in differential form by default.
-An option to output full addresses for all packet formats is a useful debugging aid for 
-software decoder developers.  It will always result in less efficient trace encoding.
+In full address mode, all addresses in the trace are encoded as absolute addresses instead
+of in differential form. This kind of encoding is always less efficient, but it can be a useful 
+debugging aid for software decoder developers.
 
 \subsection{Implicit exception mode} \label{sec:implicit-exception}
 
