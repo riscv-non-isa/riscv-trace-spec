@@ -132,8 +132,18 @@ Here are common examples of such modes:
     are not encoded as taken/non-taken, but as a more efficient branch count number.
 \end{itemize}
 
-Each optional mode lists the associated parameters; see Table~\ref{tab:parameters} for further 
-details.
+Modes may have associated parameters; see Table~\ref{tab:parameters} for further details.
+
+\subsection{Delta address mode} \label{sec:delta-address}
+
+Related parameters: None
+
+In delta address mode, non-sequential program counter changes
+are encoded as the difference between the previous and the current
+address. This kind of encoding require less bits than encoding the
+full address, and thus results in higher compression ratios.
+
+This is the default encoding mode.
 
 \subsection{Full address mode} \label{sec:full-address}
 
