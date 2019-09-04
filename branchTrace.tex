@@ -174,9 +174,9 @@ from just the exception cause.
 
 Related parameters: \textit{call\_counter\_size\_p}, \textit{return\_stack\_size\_p}.
 
-Although a function return is usually an indirect jump, well behaved programs following a 
-calling convention return to the point in the program from which the function was called, 
-and as such it is possible to determine the execution path without being explicitly notified 
+Although a function return is usually an indirect jump, well behaved programs return to the
+point in the program from which the function was called using a standard calling convention.
+For those programs, it is possible to determine the execution path without being explicitly notified
 of the destination address of the return.  The implicit return mode can result in very
 significant improvements in trace encoder efficiency.
 
@@ -192,7 +192,7 @@ Such a scheme is low cost, and will work as long as programs are "well behaved".
 return address is actually that of the instruction following the associated call.  As such, any program that
 modifies return addresses cannot be traced using this mode with this minimal implementation.
 
-Alternatively, the encoder can maintain a stack of expected return addresses, and only treat the 
+Alternatively, the encoder can maintain a stack of expected return addresses, and only treat a
 return as inferable if the actual return address matches the prediction.  This is fully robust for all
 programs, but is more expensive to implement.  In this case, if a return address does not match the prediction, 
 it must be reported explicitly via a packet, along with the number of return addresses
