@@ -108,6 +108,31 @@ exception handler (hardware context change).
 
 \section{Optional and run-time configurable modes} \label{optional}
 
+An instruction trace encoder may support multiple tracing modes.
+To ensure that the decoder treats the incoming packets
+correctly, it needs to be informed of the current active configuration.
+The configuration is reported by a packet that is issued by the encoder
+whenever the encoder configuration is changed.
+
+Here are common examples of such modes:
+
+\begin{itemize}
+  \item delta address mode:
+    program counter discontinuities are encoded as differences instead of absolute address values.
+  \item full address mode:
+    program counter discontinuities are encoded as absolute address values.
+  \item implicit exception mode:
+    destination addresses of CPU exceptions are assumed to be known by the decoder, and thus not encoded
+    in the trace.
+  \item implicit return mode:
+    the destination address of function call returns is derived from a call stack, and thus not encoded
+    in the trace.
+  \item branch prediction mode:
+    branches that are predicted correctly by an encoder branch predictor (and an identical copy in the decoder)
+    are not encoded as taken/non-taken, but as a more efficient branch count number.
+\end{itemize}
+
+
 The following modes are optional, and if present must be run-time selectable.  The 
 active run-time options must be reported in the \textit{te\_support} packet, which is issued by the
 encoder whenever the encoder configuration is changed.
