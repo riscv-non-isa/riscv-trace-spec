@@ -320,12 +320,11 @@ potential solutions to this are as follows:
     \textbf{interrupt} & 1 & 
                 Interrupt \\
     \hline
-    \textbf{tval} & \textit {iaddress\_width\_p}, 
-           or 0 if \textit {notval\_p} is 1 & 
-           Trap value \\
+    \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
+           Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 1 (illegal instruction exception), or trap value otherwise.\\
     \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tval}. 
-    Set to the same value as the MSB of \textbf{tval} if the branch is taken or the instruction is not a branch. \\
+    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tvalepc}. 
+    Set to the same value as the MSB of \textbf{tvalepc} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
@@ -382,7 +381,17 @@ potential solutions to this are as follows:
 
 \section {Further notes on packet format details}
 
+Throughout this document, the term "synchronization packet" is used.  This refers specifically to format 3, 
+subformat 0 and subformat 1 packets.
+
 Some of the packet fields warrant further explanation.
+
+\subsection{Format 3 \textbf{tvalepc} field}
+
+This field reports the address of illegal instructions, or the trap value otherwise.  This ensures that
+the address of the faulting instruction is reported for all required cases.  The trap value 
+is set to the address of the faulting instruction for hardware breakpoints, access or page faults and 
+instructions, loads or stores that are mis-aligned, but not for illegal instructions (for which it is set to the opcode).
 
 \subsection{Format 3 \textbf{branch} field}
 

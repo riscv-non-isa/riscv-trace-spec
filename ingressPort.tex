@@ -23,6 +23,7 @@ The following information is mandatory:
       \item Taken branches;
       \item The instruction executed immediately after a jump or taken branch (also referred to as the target or destination of the jump or taken branch);
       \item The last instruction executed before an exception or interrupt;
+      \item Exceptions;
       \item The first instruction executed following an exception or interrupt;
       \item The last instruction executed before a privilege change;
       \item The first instruction executed following a privilege change;
@@ -210,7 +211,6 @@ trace encoder that conveys the information described in the previous section.
         \textbf {Signal} & \textbf {Function} \\
         \hline
         \textbf{iretire}[0:0] & Number of instructions retired in this block (0 or 1).\\
-        \hline
         \hline
     \end{tabulary}
 \end{table}
@@ -458,8 +458,6 @@ How the parameters are input to the encoder is implementation specific. The numb
         \hline
         \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
         \hline
-        \textit{notval\_p} & 0 or 1 & Exclude trap value from \textit{te\_inst} packets if 1 \\
-        \hline
         \textit{ntkn\_width\_p} & & Width of the \textbf{ntkn} bus\\
         \hline
         \textit{privilege\_width\_p} & & Width of privilege bus \\
@@ -512,7 +510,6 @@ encoder.
     \item \textit{itype\_width}. Width of the \textbf{itype} bus is \textit{itype\_width} + 1.
     \item \textit{iretire\_width}. Width of the \textbf{iretire} bus is \textit{iretire\_width} + 1.
     \item \textit{nocontext}. Context ignored when 1.
-    \item \textit{notval}. Trap value ignored when 1.
     \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus is \textit{ntkn\_width} + 1.
     \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
     \item \textit{retires}. Maximum number of instructions that can be retired per block is \textit{retires} + 1.
