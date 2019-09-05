@@ -7,6 +7,10 @@ about the deltas taken by the program. Deltas are typically introduced
 by jump, call, return and branch type instructions, although
 interrupts and exceptions are also types of deltas.
 
+Instruction delta tracing provides an efficient encoding of an
+instruction sequence by exploiting the deterministic way the processor
+behaves based on the program it is executing.
+
 The approach relies on
 an offline copy of the program binary being available to the decoder, so it
 is generally unsuitable for either dynamic (self-modifying) programs
