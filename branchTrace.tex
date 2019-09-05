@@ -120,8 +120,8 @@ Here are common examples of such modes:
   \item full address mode:
     program counter discontinuities are encoded as absolute address values.
   \item implicit exception mode:
-    destination addresses of CPU exceptions are assumed to be known by the decoder, and thus not encoded
-    in the trace.
+    the destination address of an exception (i.e. the address of the exception trap) is assumed to 
+    be known by the decoder, and thus not encoded in the trace.
   \item implicit return mode:
     the destination address of function call returns is derived from a call stack, and thus not encoded
     in the trace.
