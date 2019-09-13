@@ -56,6 +56,27 @@ extern "C" {
 
 
 /*
+ * on MinGW, a different format attribute is needed for printf checking.
+ */
+#if defined(__USE_MINGW_ANSI_STDIO)
+#   define TE_PRINTF_FORMAT __MINGW_PRINTF_FORMAT   /* for MinGW */
+#else
+#   define TE_PRINTF_FORMAT printf      /* for non-MinGW systems */
+#endif  /* __USE_MINGW_ANSI_STDIO */
+
+
+/*
+ * Define some debug flags to control which types of debug we wish to enable.
+ * These should be OR-ed together, and stored in the "debug_flags" field.
+ * Note: if debug_stream == NULL then all enabled flags are ignored.
+ */
+#define TE_DEBUG_PC_TRANSITIONS     (1u << 0)
+#define TE_DEBUG_CALL_STACK         (1u << 1)
+#define TE_DEBUG_FOLLOW_PATH        (1u << 2)
+#define TE_DEBUG_PACKETS            (1u << 3)
+
+
+/*
  * Define the maximum size of the "return-stack" (must be a power of 2),
  * which is only used when "implicit_return" is true.
  * If not defined elsewhere, define TE_MAX_CALL_DEPTH here.
@@ -80,7 +101,7 @@ extern "C" {
  * cache, which does not map on to the trace encoder hardware at all.
  *
  * We create a simple (direct-mapped) cache of recent instruction decodes,
- * using the array decoded_cache[] in the te_decoder_state_s structure.
+ * using the array decoded_cache[] in the te_decoder_state_t structure.
  * This will hold 100% of the slots with 16-bit instructions, but only
  * 50% of the slots with 32-bit instructions, etcetera. As the "index"
  * is the bottom n-bits of the address (after shifting it right by one).
@@ -95,8 +116,43 @@ extern "C" {
 #define TE_SLOT_NUMBER(address)     (((address)>>1)&(TE_DECODED_CACHE_SIZE-1u))
 
 
+/*
+ * Define a value to initialize the PC, which is a known "bad address".
+ * Detect if we ever try and use this address!
+ */
+#define TE_SENTINEL_BAD_ADDRESS     0xbadaddu
+
+
 /* variables that need to hold a target's address should use te_address_t */
 typedef uint64_t te_address_t;
+
+
+/* enumerate the 2-bit te_inst format types */
+typedef enum
+{
+    TE_INST_FORMAT_0_RESERVED = 0,  /* 00 (not used) */
+    TE_INST_FORMAT_1_DIFF = 1,      /* 01 (diff-delta) */
+    TE_INST_FORMAT_2_ADDR = 2,      /* 10 (addr-only) */
+    TE_INST_FORMAT_3_SYNC = 3       /* 11 (sync) */
+} te_inst_format_t;
+
+/* enumerate the 2-bit te_inst subformat types */
+typedef enum
+{
+    TE_INST_SUBFORMAT_START = 0,    /* 00 (start) */
+    TE_INST_SUBFORMAT_EXCEPTION = 1,/* 01 (exception) */
+    TE_INST_SUBFORMAT_CONTEXT = 2,  /* 10 (context) */
+    TE_INST_SUBFORMAT_SUPPORT = 3   /* 11 (support) */
+} te_inst_subformat_t;
+
+/* enumerate the 2-bit qualification status */
+typedef enum
+{
+    TE_QUAL_STATUS_NO_CHANGE = 0,   /* 00 (no_change) */
+    TE_QUAL_STATUS_ENDED_REP = 1,   /* 01 (reported) */
+    TE_QUAL_STATUS_LOST = 2,        /* 10 (packet_lost) */
+    TE_QUAL_STATUS_ENDED_UPD = 3    /* 11 (updiscon) */
+} te_qual_status_t;
 
 
 /*
@@ -112,13 +168,51 @@ typedef struct
 
 
 /*
+ * The following is used to cache a sub-set of the fields in the
+ * discovery_response packet for this Trace-Encoder IP block.
+ */
+typedef struct
+{
+    unsigned int version;               /* 9-bits */
+    unsigned int call_counter_width;    /* 3-bits */
+    unsigned int iaddress_lsb;          /* 2-bits */
+} te_discovery_response_t;
+
+
+/*
+ * The following is used to hold the values of all the
+ * run-time configuration bits.  The number of bits and
+ * definitions are implementation dependent.
+ */
+typedef struct
+{
+    bool        implicit_return;        /* 1-bit */
+    bool        full_address;           /* 1-bit */
+} te_options_t;
+
+
+/*
+ * cut-down list of fields from a te_inst
+ * synchronization support packet.
+ * This is the subset of fields actually used by the
+ * pseudo-code, with the same names and semantics.
+ */
+typedef struct
+{
+    unsigned int        support_type;   /* 4-bits */
+    te_qual_status_t    qual_status;    /* 2-bits */
+    te_options_t        options;        /* run-time configuration bits */
+} te_support_t;
+
+
+/*
  * The following structure is used to hold all the state
  * for a single instance of a trace-decoder ... this allows
  * a plurality of trace-decoders to be running simultaneously,
  * with each core being traced having its own unique instance
  * of this structure (and hence state)
  */
-typedef struct te_decoder_state_s
+typedef struct
 {
     /* Reconstructed program counter */
     te_address_t pc;
@@ -133,18 +227,27 @@ typedef struct te_decoder_state_s
     /* Flag to indicate that reported address from format != 3 was
      * not following an uninferrable jump (and is therefore inferred) */
     bool inferred_address;
-    /* true if 1st trace message still to be processed */
+    /* true if 1st trace packet still to be processed */
     bool start_of_trace;
     /* top of stack, zero == call stack is empty */
     size_t call_counter;
     /* memory for the "call-stack" (only when "implicit_return" is 1) */
     te_address_t return_stack[TE_MAX_CALL_DEPTH];
     /*
-     * Reconstructed address from te_inst messages.
+     * Reconstructed address from te_inst packets.
      * Only used in process_te_inst(), logically "static" therein
      * Note: pseudo-code has this at global scope (for persistence)
      */
     te_address_t address;
+
+    /* fields from the discovery_response packets */
+    te_discovery_response_t discovery_response;
+
+    /*
+     * set of run-time configuration "option" bits from the most
+     * recently received te_inst synchronization support packet
+     */
+    te_options_t options;
 
     /* pointer to user-data, whatever was passed to te_open_trace_decoder() */
     void * user_data;
@@ -162,47 +265,40 @@ typedef struct te_decoder_state_s
     unsigned long num_gets;
     unsigned long num_same;
     unsigned long num_hits;
+
+    /* the FILE I/O stream to which to write all debug info */
+    FILE * debug_stream;
+
+    /* the set of active debug flags (OR-ed together) */
+    unsigned int debug_flags;
 } te_decoder_state_t;
 
 
+
 /*
- * cut-down list of fields from a te_inst message.
- * This is the subset of fields actually used by the
- * pseudo-code, with the same names and semantics.
+ * list of fields used in a te_inst packet.
  */
 typedef struct
 {
-    te_address_t address;
-    unsigned format;        /* 2-bits */
-    unsigned subformat;     /* 2-bits */
+    /* following used by all formats */
+    te_inst_format_t format;/* 2-bits */
+    te_address_t address;   /* width of instruction address bus */
+
+    /* following not used by TE_INST_FORMAT_3_SYNC */
     unsigned branches;      /* 5-bits */
-    unsigned branch_map;    /* up to 31-bits */
-    bool branch;            /* 1-bit */
+    uint32_t branch_map;    /* up to 31-bits */
     bool updiscon;          /* 1-bit */
+
+    /* following only used by TE_INST_FORMAT_3_SYNC */
+    te_inst_subformat_t subformat;  /* 2-bits */
+    uint32_t context;       /* up to 32-bits */
+    unsigned privilege;     /* up to 4-bits */
+    bool branch;            /* 1-bit */
+    uint16_t ecause;        /* up to 16-bits */
+    bool interrupt;         /* up to 1-bit */
+    te_address_t tval;      /* width of instruction address bus */
+    te_support_t support;   /* for a synchronization support packet */
 } te_inst_t;
-
-
-typedef enum
-{
-    QUAL_STATUS_NO_CHANGE = 0,
-    QUAL_STATUS_ENDED_REP = 1,
-    QUAL_STATUS_RESERVED  = 2,
-    QUAL_STATUS_ENDED_NTR = 3
-} te_qual_status_t;
-
-
-/*
- * cut-down list of fields from a te_support message.
- * This is the subset of fields actually used by the
- * pseudo-code, with the same names and semantics.
- */
-typedef struct
-{
-    bool                implicit_return;/* 1-bit */
-    bool                full_address;   /* 1-bit */
-    unsigned int        support_type;   /* 4-bits */
-    te_qual_status_t    qual_status;    /* 2-bits */
-} te_support_t;
 
 
 /*
@@ -212,10 +308,6 @@ typedef struct
 extern void te_process_te_inst(
     te_decoder_state_t * const decoder,
     const te_inst_t * const te_inst);
-
-extern void te_process_te_support(
-    te_decoder_state_t * const decoder,
-    const te_support_t * const te_support);
 
 extern te_decoder_state_t * te_open_trace_decoder(
     te_decoder_state_t * decoder,
@@ -229,12 +321,10 @@ extern void te_print_decoded_cache_statistics(
 /*
  * The following are external functions USED by this code to:
  *
- *  1) print some trace-decoding diagnostics
- *
- *  2) retrieve the raw binary instruction value,
+ *  1) retrieve the raw binary instruction value,
  *     and its length, at a given address
  *
- *  3) notify the user that the PC has been updated
+ *  2) notify the user that the PC has been updated
  *
  * Users of this code are expected to implement each of
  * these functions as appropriate, as they will be called
@@ -243,10 +333,6 @@ extern void te_print_decoded_cache_statistics(
  * Some of these functions are passed a "user_data" void pointer,
  * which is whatever was passed to te_open_trace_decoder().
  */
-extern void te_log_printf(
-    const char * const format, ...)
-    __attribute__ ((format (printf, 1, 2)));
-
 extern unsigned te_get_instruction(
     void * const user_data,
     const te_address_t address,
