@@ -126,12 +126,17 @@ Here are common examples of such modes:
   \item implicit exception mode:
     the destination address of an exception (i.e. the address of the exception trap) is assumed to 
     be known by the decoder, and thus not encoded in the trace.
+  \item Sequentially inferable jump mode:
+    The target of an indirect jump can be infered by considering the combined effect of two instructions. 
   \item implicit return mode:
     the destination address of function call returns is derived from a call stack, and thus not encoded
     in the trace.
   \item branch prediction mode:
     branches that are predicted correctly by an encoder branch predictor (and an identical copy in the decoder)
     are not encoded as taken/non-taken, but as a more efficient branch count number.
+  \item Jump target cache mode:
+    Rather than reporting the address of an uninferable jump target, efficiency can be improved by caching
+    recent jump targets, and reporting the cache entry index instead.
 \end{itemize}
 
 Modes may have associated parameters; see Table~\ref{tab:parameters} for further details.
@@ -171,6 +176,18 @@ thus improves efficiency.
 
 This mode can only be used if the decoder can infer the address of the trap handler
 from just the exception cause.
+
+\subsection{Sequentially inferable jump mode} \label{sec:si-jump}
+
+Related parameters: \textit{sijump\_p}.
+
+By default, the target of an indirect jump is always considered an uninferable PC discontinuity.  
+However, if the register that specifies the jump target was loaded with a constant then it
+can be considered inferable under some circumstances.  The core must identify jumps with 
+sequentially inferable targets and provide this information separately to the encoder.  The
+final decision as to whether to treat the jump as inferable or not must be made by the encoder.
+Both the constant load and the jump must be traced in order for the decoder to be able to
+infer the jump target.
 
 \subsection{Implicit return mode} \label{sec:implicit-return}
 
@@ -222,7 +239,7 @@ A significant coding efficiency can be obtained by the addition of a branch pred
 the encoder and decoder synchronized, a predictor with identical behavior will need to be modelled in the decoder
 software.
 
-The predictor shall comprise a lookup table of 2\textsuperscript{N} entries, where N is specified by a parameter.  
+The predictor shall comprise a lookup table of 2\textsuperscript{\textit{bpred\_size\_p}} entries.  
 Each entry is indexed by bits N:1 of the instruction address (or N+1:2 if compressed instructions aren't supported), 
 and each contains a 2-bit prediction state:
 \begin{itemize}
@@ -236,4 +253,25 @@ Other predictors, such as the gShare predictor (see Hennessy \& Patterson), shou
 experimentation is needed to determine the benefits of different lookup table sizes and predictor algorithms.
 
 The lookup table entries are initialized to 00 when a synchronization packet is sent.
+
+\subsection{Jump target cache mode} \label{sec:jump-cache}
+
+Related parameters: \textit{cache\_size\_p}.
+
+By default, the target address of an uninferable jump is output in the trace, usually in differential
+form.  If the same function is called repeatedly, (for example, in a loop), the same address will be output 
+repeatedly.  
+
+An efficiency gain can be obtained by the addition of a jump target cache to the encoder.  To keep
+the encoder and decoder synchronized, a cache with identical behavior will need to be modelled in the 
+decoder software.  Even a small cache can provide significant improvement.
+
+The cache shall comprise 2\textsuperscript{\textit{cache\_size\_p}} entries.  It will be one-way set 
+associative, with each entry indexed by bits N:1 of the instruction address (or N+1:2 if compressed 
+instructions aren't supported), and operate a simply least recently used eviction policy.  
+
+Each uninferable jump target is first compared with the entries in the cache.  If it is found in the cache,
+the index number is traced rather than the target address.  If it is not found in the cache, the 
+least recently hit entry is discarded and replaced.
+
 

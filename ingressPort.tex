@@ -58,6 +58,7 @@ The following information is optional:
       \item The last instruction executed before a context change;
       \item The first instruction executed following a context change.
     \end{itemize}
+  \item Whether jump targets are sequentially inferable or not.
 \end{itemize}
 
 The mandatory information is the bare-minimum required to implement the branch trace algorithm outlined in Chapter~\ref{Algorithm}.  
@@ -71,20 +72,32 @@ The optional information facilitates alternative or improved trace algorithms:
   \item Branch prediction techniques can be used to further improve the encoder efficiency, particularly for loops 
     (see Section~\ref{sec:branch-prediction}).  This requires the encoder to be aware of the address of all branches, whether
     they are taken or not.
+  \item Uninferable jumps can be treated as inferable (which don't need to be reported in the trace output) if both the jump 
+    and the preceding instruction which loads the target into a register have been traced.
 \end{itemize}
 
 \subsection {Jump Classification and Target Inference} \label{Jump Classes}
 
 Jumps are classified as \textit{inferable}, or \textit{uninferable}.  An \textit{inferable} jump has a target which can be
-deduced from the binary executable or representation thereof (e.g. ELF).  This means the target of the jump is supplied via
+deduced from the binary executable or representation thereof (e.g. ELF).  For the purposes of this specification, the following 
+strict definition applies:
+
+If the target of a jump is supplied via a constant embedded within the jump opcode, it is classified as \textit{inferable}.
+Jumps which are not \textit{inferable} are by definition \textit{uninferable}.
+
+However, there are some jump targets which can still be deduced from the binary executable by considering pairs of instructions
+even though by the above definition they are classified as uninferable.  Specifically, jump targets that are supplied via
 
 \begin{itemize}
-  \item a constant;
-  \item a register which contains a constant (e.g. the destination of an \textbf{\textit{lui}} or \textbf{\textit{c.lui}});
-  \item a register which contains a constant offset from the PC (e.g. the destination of an \textbf{\textit{auipc}}).
+  \item an \textbf{\textit{lui}} or \textbf{\textit{c.lui}} (a register which contains a constant), or
+  \item an \textbf{\textit{auipc}} (a register which contains a constant offset from the PC).
 \end{itemize}
 
-Jumps which are not \textit{inferable} are by definition \textit{uninferable}.
+Such jump targets are classified as \textit{sequentially inferable} if the pair of instructions are executed consecutively 
+(i.e. the \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} immediately precedes the jump).  Note:
+the restriction that the instructions are executed consecutively is necessary in order to minimize the additional signalling
+needed between the core and the encoder, and should have a minimal impact on trace efficiency as it is anticipated that
+consecutive execution will be the norm. Support for sequentially inferable jumps is optional.
 
 Jumps may optionally be further classified according to the recommended calling convention:
 
@@ -201,6 +214,22 @@ trace encoder that conveys the information described in the previous section.
     \end{tabulary}
 \end{table}
 
+\begin{table}[htp]
+    \centering
+    \caption{Core-Encoder signals - sequentially inferable jumps}
+    \label{tab:sij-ingress}
+    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+        \hline
+        \textbf {Signal} & \textbf {Function} \\
+        \hline
+        \textbf{sijump} & If \textbf{itype} indicates that this block ends with an uninferable discontinuity, setting this signal to 1 
+        indicates that it is sequentially inferable and may be treated as inferable by the encoder if the preceding 
+        \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} has been traced.  
+        Must be zero for \textbf{itype} codes other than 8, 10, 12 or 14.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
 
 \begin{table}[htp]
     \centering
@@ -243,7 +272,7 @@ narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
 
 Cores can retire multiple non-taken branches per clock cycle, indicated via \textbf{ntkn}.
 However, a consequence of this is that the encoder will be unaware of the addresses of some non-taken branches, 
-which will prevent the use of a branch predictor to improve compression (see Section~\ref{sec:branch-prediction}.
+which will prevent the use of a branch predictor to improve compression (see Section~\ref{sec:branch-prediction}).
 For cores that can only retire a maximum of one non-taken branch per clock cycle,
 \textbf{ntkn} can be omitted, provided all non-taken branches are indicated via \textbf{itype}.  
 The number of non-taken branches is \textbf{ntkn} if \textbf{ntkn} is non-zero, or 1 if \textbf{itype} = 4 and \textbf{ntkn} is zero.
@@ -266,6 +295,9 @@ first. For example, if there is one taken branch, use only group 0, if
 there are two taken branches, instructions up to the 1st taken branch
 must be reported in group 0 and instructions up to the 2nd taken branch
 must be reported in group 1 and so on.
+
+\textbf{sijump} is optional and may be omitted if the core does not implement the logic to detect
+sequentially inferable jumps. 
 
 The \textbf{context} field can be used to convey any additional information to the decoder.  For example:
 
@@ -425,6 +457,9 @@ How the parameters are input to the encoder is implementation specific. The numb
         \textit{bpred\_size\_p} & & Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size\_p}}. 
                                     Minimum number of entries is 2, so a value of 0 indicates that there is no branch predictor implemented.\\
         \hline
+        \textit{cache\_size\_p} & & Number of entries in the jump target cache is 2\textsuperscript{\textbf{cache\_size\_p}}. 
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no jump target cache implemented.\\
+        \hline
         \textit{call\_counter\_size\_p} &  & Number of bits in the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size\_p}}.
                                     Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return call counter implemented.\\
         \hline
@@ -467,6 +502,8 @@ How the parameters are input to the encoder is implementation specific. The numb
         \textit{return\_stack\_size\_p} &  & Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size\_p}}.
                                     Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return stack implemented.\\
         \hline
+        \textit{sijump\_p} & & \textbf{sijump} is used to identify sequentially inferable jumps\\
+        \hline
         \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
         \hline
         \textit{user\_width\_p} & & Width of user-defined filter qualifier input bus \\
@@ -475,7 +512,7 @@ How the parameters are input to the encoder is implementation specific. The numb
 \end{table}
 \FloatBarrier
 
-\subsection {Discovery of parameter values}
+\subsection {Discovery of parameter values} \label{sec:disco}
 
 The parameters used by the encoder must be discoverable at
 runtime. Some external entity, for example a debugger or a supervisory
@@ -494,6 +531,7 @@ encoder.
     \item \textit{comparators}. The number of comparators is \textit{comparators} + 1.
     \item \textit{filters}. Number of filters is \textit{filters} + 1.
     \item \textit{bpred\_size}. Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size}}.  No predictor if 0.
+    \item \textit{cache\_size}. Number of entries in the jump target cache is 2\textsuperscript{\textbf{cache\_size}}.  No cache if 0.
     \item \textit{call\_counter\_size}. Width of the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size}}.  No counter if 0.
     \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus is \textit{context\_type\_width} + 1.
     \item \textit{context\_width}. Width of context input bus is \textit{context\_width} + 1.
@@ -504,6 +542,7 @@ encoder.
     \item \textit{filter\_interrupt}. Filtering on the interrupt input signal supported when 1.
     \item \textit{filter\_privilege}. Filtering on the privilege input bus supported when 1.
     \item \textit{filter\_tval}. Filtering on the tval input bus supported when 1.
+    \item \textit{f0s\_width}. Width of the \textbf{subformat} field in format 0 \textit{te\_inst} packets (see section~\ref{sec:f0s}).
     \item \textit{iaddress\_lsb}. LSB of iaddress output in trace encoder data messages is \textit{iaddress\_lsb} + 1.
     \item \textit{iaddress\_width}. Width of the iaddress input bus is \textit{iaddress\_width} + 1.
     \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus is \textit{ilastsize\_width} + 1.
@@ -515,6 +554,7 @@ encoder.
     \item \textit{retires}. Maximum number of instructions that can be retired per block is \textit{retires} + 1.
     \item \textit{return\_stack\_size}. Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size}}. No stack if 0.
     \item \textit{rv32}. ISA is RV32 when 1.
+    \item \textit{sijump}. Sequentially inferable jumps supported when 1.
     \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated is \textit{taken\_branches} + 1.
     \item \textit{user\_width}. Width of the \textbf{user} bus is \textit{user\_width} + 1.
 \end{itemize}

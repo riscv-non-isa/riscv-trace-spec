@@ -34,7 +34,7 @@ the ipxact form.
                <ipxact:access>read-only</ipxact:access>
                <ipxact:field>
                   <ipxact:name>minor_version</ipxact:name>
-                  <ipxact:description>text here</ipxact:description>
+                  <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>0</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
@@ -63,81 +63,87 @@ the ipxact form.
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>call_counter_size</ipxact:name>
+                  <ipxact:name>cache_size</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>19</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>call_counter_size</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>23</ipxact:bitOffset>
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>context_type_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>22</ipxact:bitOffset>
+                  <ipxact:bitOffset>26</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>context_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>27</ipxact:bitOffset>
+                  <ipxact:bitOffset>31</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>ecause_choice</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>32</ipxact:bitOffset>
+                  <ipxact:bitOffset>36</ipxact:bitOffset>
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>ecause_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>35</ipxact:bitOffset>
+                  <ipxact:bitOffset>39</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_context</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>39</ipxact:bitOffset>
+                  <ipxact:bitOffset>43</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_ecause</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>40</ipxact:bitOffset>
+                  <ipxact:bitOffset>44</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_interrupt</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>44</ipxact:bitOffset>
+                  <ipxact:bitOffset>48</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_privilege</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>45</ipxact:bitOffset>
+                  <ipxact:bitOffset>49</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_tval</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>46</ipxact:bitOffset>
+                  <ipxact:bitOffset>50</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>f0s_width</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>51</ipxact:bitOffset>
+                  <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>iaddress_lsb</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>47</ipxact:bitOffset>
+                  <ipxact:bitOffset>53</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>iaddress_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>49</ipxact:bitOffset>
-                  <ipxact:bitWidth>7</ipxact:bitWidth>
-               </ipxact:field>
-               <ipxact:field>
-                  <ipxact:name>ilastsize_width</ipxact:name>
-                  <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>56</ipxact:bitOffset>
+                  <ipxact:bitOffset>55</ipxact:bitOffset>
                   <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
             </ipxact:register>
@@ -149,69 +155,75 @@ the ipxact form.
                <ipxact:size>64</ipxact:size>
                <ipxact:access>read-only</ipxact:access>
                <ipxact:field>
-                  <ipxact:name>itype_width</ipxact:name>
+                  <ipxact:name>ilastsize_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>0</ipxact:bitOffset>
                   <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>iretire_width</ipxact:name>
+                  <ipxact:name>itype_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>7</ipxact:bitOffset>
                   <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>nocontext</ipxact:name>
+                  <ipxact:name>iretire_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>14</ipxact:bitOffset>
-                  <ipxact:bitWidth>1</ipxact:bitWidth>
+                  <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>notval</ipxact:name>
+                  <ipxact:name>nocontext</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>15</ipxact:bitOffset>
+                  <ipxact:bitOffset>21</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>ntkn_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>16</ipxact:bitOffset>
+                  <ipxact:bitOffset>22</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>privilege_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>18</ipxact:bitOffset>
+                  <ipxact:bitOffset>24</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>retires</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>20</ipxact:bitOffset>
+                  <ipxact:bitOffset>26</ipxact:bitOffset>
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>return_stack_size</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>23</ipxact:bitOffset>
-                  <ipxact:bitWidth>3</ipxact:bitWidth>
+                  <ipxact:bitOffset>29</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>rv32</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>26</ipxact:bitOffset>
+                  <ipxact:bitOffset>33</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>sijump</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>34</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>taken_branches</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>27</ipxact:bitOffset>
+                  <ipxact:bitOffset>35</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>user_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>31</ipxact:bitOffset>
+                  <ipxact:bitOffset>39</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>
                </ipxact:field>
             </ipxact:register>

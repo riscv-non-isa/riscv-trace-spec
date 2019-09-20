@@ -34,47 +34,6 @@ In this mode the encoder will trace where the CPU is stalling by
 reporting the number of cycles between successive instruction
 retirements.
 
-\section{Using a jump target cache to further improve efficiency}
-
-The encoder could include a small cache of uninferable jump targets, managed using a
-least-recently-used (LRU) algorithm.  When an uninferable PC discontinuity occurs, if 
-the target address is present in the cache, report the index number of the cache
-entry (typically just a few bits) rather than the target address itself.  The decoder 
-would need to model the cache in order to know the target address associated with
-each cache entry.
-
-\textbf{DISCUSSION POINT}:
-
-This could be reported by using format 0 packets with a payload as follows:
-
-\begin{itemize}
-  \item Jump target index number
-  \item \textbf{branches} (0 - 31, 0 means no branch map)
-  \item \textbf{branch\_map} (if branch count is non-zero)
-  \item \textbf{irfail} 
-  \item \textbf{irdepth}
-\end{itemize}
-
-The last 2 fields allows return addresses that fail the implicit return prediction but 
-which reside in the jump target cache to be reported using this format.  An implementation
-could omit these if all implicit return failures are reported using format 1.
-
-\section{Branch-map partitioning}
-
-\textbf{DISCUSSION POINT}:
-
-The choice of lengths for the \textbf{branch\_map} field in format 1 packets is currently defined as
-1, 9, 17, 25, 31.  We should consider an alternative 'tapered' approach, where the choice is 1, 3, 7, 15, 31.
-This should result in improved efficiency, and adds zero hardware cost.
-
-The reasoning here is that on average there will be some 'wasted' bits in a format 1 \textit{te\_inst}
-because the number of branches to report is less than the selected size of the \textbf{branch\_map} field.
-Using a tapered set of sizes means that the number of wasted bits will on average be less for shorter packets.
-If the number of branches between updiscons is randomly distributed then the probabilty of generating packets with large
-branch counts will be lower, in which case increased waste for longer packets will have less overall impact.
-Furthermore, the rate at which packets are generated can be higher for lower branch counts, and so reducing
-waste for this case will improve overall bandwidth at times where it is most important.
-
 \section{Transport}
 
 After the current charter has been satisfied the transport mechanism
