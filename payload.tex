@@ -561,7 +561,7 @@ the final branch causes an uninferable discontinuity, in which case \textbf{bran
 The choice of sizes (1, 3, 7, 15, 31) is designed to minimize efficiency loss.  On average there will be some 'wasted' bits 
 because the number of branches to report is less than the selected size of the \textbf{branch\_map} field.
 Using a tapered set of sizes means that the number of wasted bits will on average be less for shorter packets.
-If the number of branches between updiscons is randomly distributed then the probabilty of generating packets with large
+If the number of branches between updiscons is randomly distributed then the probability of generating packets with large
 branch counts will be lower, in which case increased waste for longer packets will have less overall impact.
 Furthermore, the rate at which packets are generated can be higher for lower branch counts, and so reducing
 waste for this case will improve overall bandwidth at times where it is most important.
