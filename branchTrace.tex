@@ -266,12 +266,12 @@ An efficiency gain can be obtained by the addition of a jump target cache to the
 the encoder and decoder synchronized, a cache with identical behavior will need to be modelled in the 
 decoder software.  Even a small cache can provide significant improvement.
 
-The cache shall comprise 2\textsuperscript{\textit{cache\_size\_p}} entries.  It will be one-way set 
-associative, with each entry indexed by bits N:1 of the instruction address (or N+1:2 if compressed 
-instructions aren't supported), and operate a simply least recently used eviction policy.  
+The cache shall comprise 2\textsuperscript{\textit{cache\_size\_p}} entries.  It will be direct mapped, 
+with each entry indexed by bits N:1 of the instruction address (or N+1:2 if compressed 
+instructions aren't supported).  
 
-Each uninferable jump target is first compared with the entries in the cache.  If it is found in the cache,
-the index number is traced rather than the target address.  If it is not found in the cache, the 
-least recently hit entry is discarded and replaced.
+Each uninferable jump target is first compared with the entry at its index in the cache.  If it is 
+found in the cache, the index number is traced rather than the target address.  If it is not found in 
+the cache, the entry at that index is replaced.
 
 

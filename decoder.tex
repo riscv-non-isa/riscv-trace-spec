@@ -241,7 +241,7 @@ function is_uninferrable_discon (instr)
 # Determine if instruction is a sequentially inferrable jump #
 function is_sequential_jump (instr, prev_addr)
 
-  if (not is_uninferrable_jump(instr))
+  if (not (is_uninferrable_jump(instr) and options.sijump))
     return FALSE
 
   local prev_instr = get_instr(prev_addr)

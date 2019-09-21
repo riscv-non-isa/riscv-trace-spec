@@ -371,9 +371,11 @@ potential solutions to this are as follows:
      \hline
      \textbf{options} & N & Values of all run-time configuration bits\newline
        Number of bits and definitions implementation dependent.  Examples might be\newline
+       - 'sequentially infered jumps' Don't report the targets of sequentially inferable jumps\newline
        - 'implicit return' Don't report function return addresses \newline
        - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
        - 'branch prediction' Branch predictor enabled\newline
+       - 'jump target cache' Jump target cache enabled\newline
        - 'full address' Always output full addresses (SW debug option)\\
        \hline
   \end{tabulary}
@@ -387,7 +389,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 00 (optional): formats for optional efficiency improvements\\
+    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
     \hline
      \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
      \hline
@@ -432,7 +434,7 @@ potential solutions to this are as follows:
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 00 (optional): formats for optional efficiency improvements\\
+    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
     \hline
      \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
      \hline
@@ -561,7 +563,7 @@ the final branch causes an uninferable discontinuity, in which case \textbf{bran
 The choice of sizes (1, 3, 7, 15, 31) is designed to minimize efficiency loss.  On average there will be some 'wasted' bits 
 because the number of branches to report is less than the selected size of the \textbf{branch\_map} field.
 Using a tapered set of sizes means that the number of wasted bits will on average be less for shorter packets.
-If the number of branches between updiscons is randomly distributed then the probabilty of generating packets with large
+If the number of branches between updiscons is randomly distributed then the probability of generating packets with large
 branch counts will be lower, in which case increased waste for longer packets will have less overall impact.
 Furthermore, the rate at which packets are generated can be higher for lower branch counts, and so reducing
 waste for this case will improve overall bandwidth at times where it is most important.
@@ -585,7 +587,7 @@ reported address will always be for a branch, and in the former cases it may be.
 be explicit about whether or not the prediction was met or not.
 
 \subsection{Format 1/2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
-These bit are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
+These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
 and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, and
 the encoder maintains a stack of predicted return addresses that are compared with the actual return addresses, then
 a \textit{te\_inst} packet will be generated if a misprediction occurs.  In order to correctly reconstruct the 
@@ -625,7 +627,7 @@ specified by the \textit{f0s\_width} discovery field (see section~\ref{sec:disco
 allows additional formats to be added in future without reducing the efficiency of the existing formats.
 
 \subsection{Format 0 \textbf{irfail} and \textbf{irdepth} fields}
-These bit are encoded so that most of the time they will take the same value as the \textbf{branch\_map[MSB]} 
+These bits are encoded so that most of the time they will take the same value as the \textbf{branch\_map[MSB]} 
 or \textbf{branches[MSB]} field.  Purpose and behaviour is as described in section~\ref{sec:irxx}.
 They are included to allow return addresses that fail the implicit return prediction but 
 which reside in the jump target cache to be reported using this format.  An implementation
