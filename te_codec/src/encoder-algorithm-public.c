@@ -76,8 +76,8 @@ static const te_discovery_response_t default_discovery_response =
  */
 static const te_options_t default_support_options =
 {
-    .full_address = 0,      /* use differential addresses */
-    .implicit_return = 0,   /* disable using return_stack[] */
+    .full_address = false,      /* use differential addresses */
+    .implicit_return = false,   /* disable using return_stack[] */
 };
 
 
@@ -186,9 +186,46 @@ static void send_te_inst(
 {
     assert(encoder);
     assert(te_inst);
-    assert(TE_SENTINEL_BAD_ADDRESS != te_inst->address);
+    assert( (TE_SENTINEL_BAD_ADDRESS != te_inst->address) ||
+            ( (TE_INST_FORMAT_3_SYNC == te_inst->format) &&
+              (TE_INST_SUBFORMAT_SUPPORT == te_inst->subformat) ) );
 
     const te_address_t address = te_inst->address;
+
+    /*
+     * adjust the "address", if it will be sent as a
+     * differential-address, and not as a full-address.
+     */
+    if ( (encoder->options.full_address)            ||
+         (TE_INST_FORMAT_3_SYNC==te_inst->format) )
+    {
+        /* use full-address ... no need to adjust it */
+    }
+    else
+    {
+        /* use differential-address ... calculate the delta */
+        te_inst->address = address - encoder->last_sent_addr;
+    }
+
+    /*
+     * The bottom few bits of an instruction address will be
+     * zero, and are compressible, by right-shifting them out.
+     *
+     * However, for the compression to work, the most significant
+     * instruction address bit must be retained, i.e. we need
+     * to ensure that we use sign-extended shift operations.
+     *
+     * Trick! First cast the unsigned address to be signed,
+     * and then right-shift the signed representation, finally
+     * cast it back to an unsigned address.
+     * Note: we "cast", not convert ... the binary representation
+     * should not change during the two assignments.
+     */
+    int64_t signed_address;             /* signed */
+    signed_address = te_inst->address;  /* unsigned to signed */
+                /* signed right-shift, replicating the sign-bit */
+    signed_address >>= encoder->discovery_response.iaddress_lsb;
+    te_inst->address = signed_address;  /* signed to unsigned */
 
     /*
      * Keep a note of the most recently sent address.
@@ -221,16 +258,21 @@ static void send_te_inst(
     encoder->branch_map = 0;
 
     /*
-     * update the PC to which the peer decoder should have advanced
+     * update the PC to which the peer trace-decoder state-machine
+     * should advance, on receipt of the current te_inst packet.
      */
     encoder->decoders_pc = address;
 
     /*
-     * TO DO: implement an appropriate function to emit the te_inst packet
-     * to the receiving trace-decoder, or append it to some buffer.
+     * Finally, send the filled-in "te_inst" packet data structure
+     * downstream, typically to be consumed by a RISC-V trace-decoder.
      *
-     * NOTE: this is to be implemented by users of this code!
+     * Note: The called function is to be implemented by users,
+     * as the encapsulation of the fields to be transmitted is
+     * outwith the scope of this reference code, which codifies
+     * the heart of the trace-encoder algorithm.
      */
+    te_send_te_inst(encoder->user_data, te_inst);
 }
 
 
@@ -242,65 +284,89 @@ static void send_te_inst_sync(
     te_inst_t te_inst = {0};
 
     assert(encoder);
+
+    /*
+     * Note: take care ... irecord might be NULL here!
+     * e.g. after enabling the trace-encoder, before any instructions records have
+     * been added to the instruction pipeline, a support packet should be sent.
+     */
     const te_instruction_record_t * const irecord = encoder->second;
-    assert(irecord);
+
     /* a maximum of one branch in the branch-map is permissible here */
     assert(encoder->branches <= 1);
 
-    /* QQQ: following may be deleted ... it is just paranoia! */
-    if (encoder->branches)
-    {
-        assert(1 == encoder->branches);
-        assert(irecord->is_branch);
-        assert(encoder->branch_map == irecord->cond_code_fail);
-    }
-    else
-    {
-        assert(!irecord->is_branch);
-        assert(!encoder->branch_map);
-    }
-
     /*
-     * fill in the fields for a single te_inst packet
+     * fill in the common fields for a single te_inst packet
      * ... specifically for a format 3 SYNC te_packet.
      */
     te_inst.format = TE_INST_FORMAT_3_SYNC;
     te_inst.subformat = subformat;
-    te_inst.context = irecord->context;
-    te_inst.privilege = irecord->priv;
-        /*
-         * Set to 0 if the address points to a branch
-         * instruction, and the branch was taken.
-         * Set to 1 if not a branch, or branch not taken.
-         */
-    te_inst.branch = !irecord->is_branch || irecord->cond_code_fail;
-    te_inst.address = irecord->pc;
-    te_inst.ecause = irecord->exception_cause;
-    te_inst.interrupt = irecord->is_interrupt;
-    te_inst.tval = irecord->tval;
 
     /*
-     * fill in the qualification status for instruction trace
-     * te_inst synchronization support packets.
-     * also copy the current set of run-time "options" bits.
+     * Some of the sub-formats omit the "address" field, hence it is
+     * strictly optional, and it should really be assigned in the following
+     * switch statement, but only for the sub-formats that actually use it.
+     * However, it is generally helpful for debugging purposes ...
+     * thus we will unconditionally copy an address here.
+     *
+     * Warning: there may not be an irecord (for a support packet).
      */
-    if (TE_INST_SUBFORMAT_SUPPORT == subformat)
+    te_inst.address = irecord ?
+        irecord->pc :               /* a valid PC */
+        TE_SENTINEL_BAD_ADDRESS;    /* no valid PC */
+
+    /*
+     * now fill in the subformat-specific fields
+     */
+    switch(subformat)
     {
-        te_inst.support.options = encoder->options;
-        te_inst.support.qual_status = qual_status;
+        case TE_INST_SUBFORMAT_EXCEPTION:
+            assert(irecord);
+            te_inst.ecause = irecord->exception_cause;
+            te_inst.interrupt = irecord->is_interrupt;
+            te_inst.tval = irecord->tval;
+            /*lint -fallthrough */ /* no break */
+        case TE_INST_SUBFORMAT_START:
+            assert(irecord);
+            /*
+             * Set to 0 if the address points to a branch
+             * instruction, and the branch was taken.
+             * Set to 1 if not a branch, or branch not taken.
+             */
+            te_inst.branch = !irecord->is_branch || irecord->cond_code_fail;
+            /*lint -fallthrough */ /* no break */
+        case TE_INST_SUBFORMAT_CONTEXT:
+            assert(irecord);
+            te_inst.context = irecord->context;
+            te_inst.privilege = irecord->priv;
+            break;
+
+        case TE_INST_SUBFORMAT_SUPPORT:
+            /*
+             * fill in the qualification status for instruction trace
+             * te_inst synchronization support packets.
+             * also copy the current set of run-time "options" bits.
+             */
+            te_inst.support.options = encoder->options;
+            te_inst.support.qual_status = qual_status;
+            break;
+
+        default:
+            assert(0);  /* should never get here! */
     }
 
+    /* send the completed te_inst packet downstream */
+    send_te_inst(encoder, &te_inst);
+
     /*
-     * most te_inst synchronization packet includes the context,
-     * so the "pending" flag can typically be de-asserted at this juncture.
+     * most te_inst synchronization packets includes the context,
+     * so the "pending" flag can typically be de-asserted
+     * after sending most te_inst synchronization packets.
      */
     if (TE_INST_SUBFORMAT_SUPPORT != subformat)
     {
         encoder->context_pending = false;
     }
-
-    /* finally, send the completed te_inst packet downstream */
-    send_te_inst(encoder, &te_inst);
 
     /*
      * for "start" and "exception" synchronization te_inst packets,
@@ -325,7 +391,7 @@ static void send_te_inst_sync(
  *
  *  3) the tracing ends (e.g. unqualified, halted)
  */
-static void send_te_inst_sync_support(
+void te_send_te_inst_sync_support(
     te_encoder_state_t * const encoder,
     const te_qual_status_t qual_status)
 {
@@ -640,8 +706,10 @@ static void clock_the_encoder(
              (next->is_halted) )
         {
             const te_qual_status_t qual_status =
-                (next->is_updiscon) ? TE_QUAL_STATUS_ENDED_UPD : TE_QUAL_STATUS_ENDED_REP;
-            send_te_inst_sync_support(encoder, qual_status);
+                (next->is_updiscon) ?
+                    TE_QUAL_STATUS_ENDED_UPD :
+                    TE_QUAL_STATUS_ENDED_REP;
+            te_send_te_inst_sync_support(encoder, qual_status);
         }
 
         /* end of cycle ... all done */
