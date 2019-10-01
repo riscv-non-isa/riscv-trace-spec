@@ -78,7 +78,7 @@ diagram needs further explanation.
 If there are no branches that need to be reported, packet format 2 is used.  
 
 If there are branches to report, format 1 is used.  If branch prediction is supported and is enabled, 
-then there is a choice of whether to output a full branch map, or a count of correctly predicted branches.  
+then the encoder may choose whether to output a full branch map, or a count of correctly predicted branches.  
 
 Packet formats 1 and 2 are organized so that the address is usually the final field.  Minimizing the 
 number of bits required to represent the address reduces the total packet size and significantly
