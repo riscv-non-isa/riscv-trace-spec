@@ -1,7 +1,7 @@
 \chapter{Ingress Port} \label{Interface}
 
-\section{Interface Requirements}
-This section describes in general terms the information which must be passed from the RISC-V core to the trace encoder,
+\section{Interface requirements}
+This section describes in general terms the information which must be passed from the RISC-V hart to the trace encoder,
 and distinguishes between what is mandatory, and what is optional.
 
 The following information is mandatory:
@@ -10,7 +10,7 @@ The following information is mandatory:
   \item The number of instructions that are being retired;
   \item Whether there has been an exception or interrupt, and if so the cause (from the \textbf{\textit{ucause/scause/mcause}} CSR)
         and trap value (from the \textbf{\textit{utval/stval/mtval}} CSR);
-  \item The current privilege level of the RISC-V core;
+  \item The current privilege level of the RISC-V hart;
   \item The \textit{instruction\_type} of retired instructions for:
     \begin{itemize}
       \item Jumps with a target that cannot be inferred from the source code;
@@ -37,7 +37,7 @@ The following information is optional:
 \begin{itemize}
   \item Context information:
     \begin{itemize}
-      \item The context and/or Hart ID;
+      \item The context and/or hart ID;
       \item The type of action to take when context changes.
     \end{itemize}
   \item The \textit{instruction\_type} of instructions for:
@@ -76,7 +76,7 @@ The optional information facilitates alternative or improved trace algorithms:
     and the preceding instruction which loads the target into a register have been traced.
 \end{itemize}
 
-\subsection {Jump Classification and Target Inference} \label{Jump Classes}
+\subsection{Jump classification and target inference} \label{Jump Classes}
 
 Jumps are classified as \textit{inferable}, or \textit{uninferable}.  An \textit{inferable} jump has a target which can be
 deduced from the binary executable or representation thereof (e.g. ELF).  For the purposes of this specification, the following 
@@ -96,7 +96,7 @@ even though by the above definition they are classified as uninferable.  Specifi
 Such jump targets are classified as \textit{sequentially inferable} if the pair of instructions are executed consecutively 
 (i.e. the \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} immediately precedes the jump).  Note:
 the restriction that the instructions are executed consecutively is necessary in order to minimize the additional signalling
-needed between the core and the encoder, and should have a minimal impact on trace efficiency as it is anticipated that
+needed between the hart and the encoder, and should have a minimal impact on trace efficiency as it is anticipated that
 consecutive execution will be the norm. Support for sequentially inferable jumps is optional.
 
 Jumps may optionally be further classified according to the recommended calling convention:
@@ -132,13 +132,13 @@ Jumps may optionally be further classified according to the recommended calling 
     \end{itemize}
 \end{itemize}
 
-\section{Instruction Interface}
-This section describes the interface between a RISC-V core and the
+\section{Instruction interface}
+This section describes the interface between a RISC-V hart and the
 trace encoder that conveys the information described in the previous section.  
 
 \begin{table}[htp]
     \centering
-    \caption{Core-Encoder signals - common}
+    \caption{Instruction interface signals - common}
     \label{tab:common-ingress}
     \begin{tabulary}{\textwidth}{|l|p{80mm}|}
         \hline
@@ -172,7 +172,7 @@ trace encoder that conveys the information described in the previous section.
         \hline
         \textbf{priv}[\textit{privilege\_width\_p}-1:0] & Privilege level for all instructions in this block.\\
         \hline
-        \textbf{context}[\textit{context\_width\_p}-1:0] & Context and/or Hart ID for all instructions in this block.\\
+        \textbf{context}[\textit{context\_width\_p}-1:0] & Context and/or hart ID for all instructions in this block.\\
         \hline
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & The address of the 1st instruction retired in this block.\newline
         Invalid if \textbf{iretire}=0 \\
@@ -188,7 +188,7 @@ trace encoder that conveys the information described in the previous section.
 
 \begin{table}[htp]
     \centering
-    \caption{Core-Encoder signals - multiple retirement}
+    \caption{Instruction interface signals - multiple retirement}
     \label{tab:multi-ingress}
     \begin{tabulary}{\textwidth}{|l|p{80mm}|}
         \hline
@@ -203,9 +203,9 @@ trace encoder that conveys the information described in the previous section.
 
 \begin{table}[htp]
     \centering
-    \caption{Core-Encoder signals - multiple non-taken branches}
+    \caption{Instruction interface signals - multiple non-taken branches}
     \label{tab:multintb-ingress}
-    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+    \begin{tabulary}{\textwidth}{|l|p{90mm}|}
         \hline
         \textbf {Signal} & \textbf {Function} \\
         \hline
@@ -216,9 +216,9 @@ trace encoder that conveys the information described in the previous section.
 
 \begin{table}[htp]
     \centering
-    \caption{Core-Encoder signals - sequentially inferable jumps}
+    \caption{Instruction interface signals - sequentially inferable jumps}
     \label{tab:sij-ingress}
-    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+    \begin{tabulary}{\textwidth}{|l|p{120mm}|}
         \hline
         \textbf {Signal} & \textbf {Function} \\
         \hline
@@ -233,9 +233,9 @@ trace encoder that conveys the information described in the previous section.
 
 \begin{table}[htp]
     \centering
-    \caption{Core-Encoder signals - single retirement}
+    \caption{Instruction interface signals - single retirement}
     \label{tab:single-ingress}
-    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
+    \begin{tabulary}{\textwidth}{|l|p{110mm}|}
         \hline
         \textbf {Signal} & \textbf {Function} \\
         \hline
@@ -247,7 +247,7 @@ trace encoder that conveys the information described in the previous section.
 Tables~\ref{tab:common-ingress}, ~\ref{tab:multi-ingress} and ~\ref{tab:multintb-ingress}
 list the signals in the interface designed to efficiently support retirement of multiple 
 instructions per cycle.  The following discussion describes the multiple-retirement behavior.  
-However, for cores that can only retire one instruction at a time, the signalling can be 
+However, for harts that can only retire one instruction at a time, the signalling can be 
 simplified, and this is discussed subsequently in Section~\ref{sec:single-retire}.  
 
 The information presented on the ingress port represents a contiguous
@@ -273,13 +273,13 @@ narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
 Cores can retire multiple non-taken branches per clock cycle, indicated via \textbf{ntkn}.
 However, a consequence of this is that the encoder will be unaware of the addresses of some non-taken branches, 
 which will prevent the use of a branch predictor to improve compression (see Section~\ref{sec:branch-prediction}).
-For cores that can only retire a maximum of one non-taken branch per clock cycle,
+For harts that can only retire a maximum of one non-taken branch per clock cycle,
 \textbf{ntkn} can be omitted, provided all non-taken branches are indicated via \textbf{itype}.  
 The number of non-taken branches is \textbf{ntkn} if \textbf{ntkn} is non-zero, or 1 if \textbf{itype} = 4 and \textbf{ntkn} is zero.
 In other words, if for example \textbf{ntkn} is 2 and \textbf{itype} = 4, the encoder will interpret this as 2 non-taken branches,
 not 3.
 
-For cores that can retire a maximum of N taken branches per clock
+For harts that can retire a maximum of N taken branches per clock
 cycle, the signal group (\textbf{iretire}, \textbf{itype},
 \textbf{ntkn} (if present), \textbf{ilastsize}, \textbf{iaddr}) must be replicated N times. Signal group 0
 represents information about the oldest instruction block, and group N-1
@@ -296,13 +296,17 @@ there are two taken branches, instructions up to the 1st taken branch
 must be reported in group 0 and instructions up to the 2nd taken branch
 must be reported in group 1 and so on.
 
-\textbf{sijump} is optional and may be omitted if the core does not implement the logic to detect
-sequentially inferable jumps. 
+\textbf{sijump} is optional and may be omitted if the hart does not implement the logic to detect
+sequentially inferable jumps.  If the encoder offers an \textbf{sijump} input it should also provide a
+parameter to indicate whether the input is connected to a hart that implements this capability, or
+tied off.  This is to ensure the decoder can be made aware of the hart's capability.  Enabling 
+sequentially inferable jump mode in the encoder and decoder when the hart does not support it will
+prevent correct reconstruction by the decoder. 
 
 The \textbf{context} field can be used to convey any additional information to the decoder.  For example:
 
 \begin{itemize}
-  \item The Hart ID;
+  \item The hart ID;
   \item The software thread ID;
   \item It could be used to convey the values of CSRs to the decoder by setting \textbf{context} to the 
     CSR number and value when a CSR is written.
@@ -318,7 +322,7 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         \hline
         \textbf {Type} & \textbf {Value} & \textbf {Actions} \\
         \hline
-        Context change with discontinuity & 0 &  An example would be a change of Hart.\newline
+        Context change with discontinuity & 0 &  An example would be a change of hart.\newline
         Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
         Treated the same as an exception.\\
         \hline
@@ -330,16 +334,16 @@ Table~\ref{tab:context-type} specifies the actions for the various \textbf{conte
         Report the new context value at the earliest convenient opportunity.\newline
         It is reported without any address information, and the assumption is that the precise point of context change can be deduced from the source code (e.g. a CSR write). \\
         \hline
-        Notification & 3 & An example would be a watchpoint.\newline
-        Need to output the address of the watchpoint instruction.\newline
+        Notification & 3 & An example would be a \textit{Trace-Notify} from the hart's trigger unit (see section~\ref{sec:trigger}).\newline
+        Need to output the address of the last instruction in the block.\newline
         The context itself is not output.\\
         \hline
     \end{tabulary}
 \end{table}
 
-\subsection {Simplifications for single-retirement} \label{sec:single-retire}
+\subsection{Simplifications for single-retirement} \label{sec:single-retire}
 
-For cores that can only retire one instruction at a time, the interface can be simplified to
+For harts that can only retire one instruction at a time, the interface can be simplified to
 the signals listed in tables~\ref{tab:common-ingress} and ~\ref{tab:single-ingress}.  The 
 simplifications can be summarized as follows:
  
@@ -357,19 +361,101 @@ The parameter \textit{retires\_p} which indicates to the encoder the maximum num
 instructions that can be retired per cycle can be used by an encoder capable of supporting single or 
 multiple retirement to select the appropriate interpretation of \textbf{iretire}.  
 \textbf{ilastsize} and \textbf{ntkn} encoder inputs must be tied low when attached to a single-retirement
-core that does not provide these outputs.
+hart that does not provide these outputs.
 
 
-\subsection {Alternative Multiple-retirement interface configurations}
+\subsection{Alternative multiple-retirement interface configurations}
 
-For a core that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
+For a hart that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
 solution is to use one of each of the signals from tables~\ref{tab:common-ingress}, ~\ref{tab:multi-ingress} and 
 optionally ~\ref{tab:multintb-ingress}.  However, an alternative approach would be to provide explicit details of every 
 instruction retired by using N sets of the signal group (\textbf{iretire}, \textbf{itype}) from 
 tables~\ref{tab:common-ingress} and ~\ref{tab:single-ingress} with the groups detailing one instruction each 
 (replicating the single retirement example N times).  
 
-\subsection {Example Retirement Sequences}
+\subsection{Optional sideband signals}
+
+Optional sideband signals may be included to provide additional functionality, as described in
+tables \ref{tab:ingress-side-band} and \ref{tab:egress-side-band}.
+
+Note, any user defined information that needs to be output by the encoder
+will need to be applied via the \textbf{context} input.
+
+\begin{table}[htp]
+    \centering
+    \caption{Optional sideband encoder ingress signals}
+    \label{tab:ingress-side-band}
+    \begin{tabulary}{\textwidth}{|l|p{100mm}|}
+        \hline
+        \textbf{Signal} & \textbf{Function} \\
+        \hline
+        \textbf{impdef}[\textit{impdef\_width\_p}-1:0] &  Implementation defined sideband signals.  A typical use for
+        these would be for filtering (see Chapter~\ref{ch:filtering}.\\
+        \hline
+        \textbf{trigger}[1:0] & A pulse on bit 0 will cause the encoder to start tracing, and continue until further 
+        notice, subject to other filtering criteria also being met.\newline
+        A pulse on bit 1 will cause the encoder to stop tracing until further notice.  See section~\ref{sec:trigger}).\\
+        \hline
+        \textbf{halted}& Core is halted.  Upon assertion, the encoder will output a packet to report the address 
+        of the last instruction retired before halting, followed by a support packet to indicate that tracing has stopped. 
+        Upon deassertion, the encoder will start tracing again, commencing with a synchronisation packet.\\
+        \hline
+        \textbf{reset}& Core is in reset.  Provided the encoder is in a different reset domain to the hart, this
+        allows the encoder to indicate that tracing has ended on entry to reset, and restarted on exit.  
+        Behavior is as described above for halt.\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Optional sideband encoder egress signals}
+    \label{tab:egress-side-band}
+    \begin{tabulary}{\textwidth}{|l|p{130mm}|}
+        \hline
+        \textbf{Signal} & \textbf{Function} \\
+        \hline
+        \textbf{stall}& Stall request to hart.  Some applications may require lossless trace, which can be achieved by
+        using this signal to stall the hart if the trace encoder is unable to output a trace packet (for example due to 
+        back-pressure from the packet transport infrastructure).\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\FloatBarrier
+\subsection{Using trigger outputs from the Debug Module} \label{sec:trigger}
+
+The debug module of the RISC-V hart may have a trigger unit. This defines a match control register
+(\textbf{\textit{mcontrol}}) containing a 4-bit \textbf{action} field, and reserves codes 2 - 5 
+of this field for trace use.  
+These action codes are hereby defined as shown in table \ref{tab:debugModuleTriggerSupport}.
+The table also includes details of how these actions should be comunicated to the trace encoder.
+
+\begin{table}[!h]
+    \centering
+    \caption{Debug Module trigger support (\textbf{\textit{mcontrol}} \textbf{action})}
+    \label{tab:debugModuleTriggerSupport}
+    \begin{tabulary}{\textwidth}{|l|p{120mm}|}
+        \hline
+        \textbf {Value} & \textbf {Description} \\
+        \hline
+        2 & \textit{Trace-on}.  Generate a pulse on an output from the hart.  This should be connected to 
+        \textbf{trigger[0]} if the encoder provides it. \\ 
+        \hline
+        3 & \textit{Trace-off}.  Generate a pulse on an output from the hart.  This should be connected to 
+        \textbf{trigger[1]} if the encoder provides it. \\
+        \hline
+        4 & \textit{Trace-notify}.  Set the \textbf{context\_type} encoder input to 'Notification' for the
+        block of instructions that ends with the instruction that caused the triggered the notification. \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+Trace-on and Trace-off actions provide a means for the hart to control when tracing occurs.  
+Trace-notify provides  means to ensure that a specified instruction is explicitly reported.  
+This capability is sometimes known as a watchpoint.
+
+\subsection{Example retirement sequences}
 
 \begin{table}[htp]
     \centering
@@ -394,167 +480,3 @@ tables~\ref{tab:common-ingress} and ~\ref{tab:single-ingress} with the groups de
     \end{tabulary}
 \end{table}
 
-
-\subsection {Sideband signals}
-
-In some circumstances there will be some sideband signals which may
-affect the encoder's behavior, for example to start and/or stop
-encoding.
-There will sometimes be cases where the encoder may be
-required to affect the behaviour of the core, for example stalling.
-
-Note, any user defined information that needs to be output by the encoder
-will need to be applied to the \textbf{context} value.
-
-\begin{table}[htp]
-    \centering
-    \caption{User Sideband Encoder Ingress signals}
-    \label{tab:ingress-side-band}
-    \begin{tabulary}{\textwidth}{|l|l|}
-        \hline
-        \textbf{Signal} & \textbf{Function} \\
-       \hline
-        \textbf{user} [\textit{user\_width\_p}-1:0] &  Filtering sideband signals (see Chapter~\ref{ch:filtering})\\
-        \hline
-        \textbf{halted}& Core is stalled or halted \\
-        \hline
-        \textbf{reset}& Core in reset \\
-        \hline
-    \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-    \centering
-    \caption{User Sideband Encoder Egress signals}
-    \label{tab:engress-side-band}
-    \begin{tabulary}{\textwidth}{|l|l|}
-        \hline
-        \textbf{Signal} & \textbf{Function} \\
-        \hline
-        \textbf{stall}& Stall request to core \\
-        \hline
-    \end{tabulary}
-\end{table}
-
-\subsection {Parameters}
-
-The encoder will have some configurable or variable parameters. Some
-of these are related to port widths whilst others may indicate the
-presence or otherwise of various features, e.g. filter or comparators.
-Table~\ref{tab:parameters} outlines the list of parameters.
-
-How the parameters are input to the encoder is implementation specific. The number range of some of the parameters  may be implementation specific. 
-
-\FloatBarrier
-\begin{table}[h]
-    \centering
-    \caption{Parameters to the encoder}
-    \label{tab:parameters}
-    \begin{tabulary}{\textwidth}{|l|p{25mm}|p{80mm}|}
-        \hline
-        \textbf{Parameter name} & \textbf{Range} & \textbf{Description} \\
-        \hline
-        \textit{bpred\_size\_p} & & Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size\_p}}. 
-                                    Minimum number of entries is 2, so a value of 0 indicates that there is no branch predictor implemented.\\
-        \hline
-        \textit{cache\_size\_p} & & Number of entries in the jump target cache is 2\textsuperscript{\textbf{cache\_size\_p}}. 
-                                    Minimum number of entries is 2, so a value of 0 indicates that there is no jump target cache implemented.\\
-        \hline
-        \textit{call\_counter\_size\_p} &  & Number of bits in the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size\_p}}.
-                                    Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return call counter implemented.\\
-        \hline
-        \textit{context\_type\_width\_p} & 2 & Width of the \textbf{context\_type} bus\\
-        \hline
-        \textit{context\_width\_p} &  & Width of context bus \\
-        \hline
-        \textit{ecause\_width\_p} &  & Width of exception cause bus \\
-        \hline
-        \textit{ecause\_choice\_p} & & Number of bits of exception cause to match using multiple choice \\
-        \hline
-        \textit{filter\_context\_p} & 0 or 1 & Filtering on context supported when 1 \\
-        \hline
-        \textit{filter\_ecause\_p} & & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter\_ecause\_p} \\
-        \hline
-        \textit{filter\_interrupt\_p} & 0 or 1 & Filtering on interrupt supported when 1 \\
-        \hline
-        \textit{filter\_privilege\_p} & 0 or 1 & Filtering on privilege supported when 1 \\
-        \hline
-        \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 \\
-        \hline
-        \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
-        \hline
-        \textit{iaddress\_width\_p} & & Width of instruction address bus. This is the same as \textit{XLEN}\\
-        \hline
-        \textit{iretire\_width\_p} & & Width of the \textbf{iretire} bus\\
-        \hline
-        \textit{ilastsize\_width\_p} & & Width of the \textbf{ilastsize} bus\\
-        \hline
-        \textit{itype\_width\_p} & & Width of the \textbf{itype} bus\\
-        \hline
-        \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
-        \hline
-        \textit{ntkn\_width\_p} & & Width of the \textbf{ntkn} bus\\
-        \hline
-        \textit{privilege\_width\_p} & & Width of privilege bus \\
-        \hline
-        \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
-        \hline
-        \textit{return\_stack\_size\_p} &  & Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size\_p}}.
-                                    Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return stack implemented.\\
-        \hline
-        \textit{sijump\_p} & & \textbf{sijump} is used to identify sequentially inferable jumps\\
-        \hline
-        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
-        \hline
-        \textit{user\_width\_p} & & Width of user-defined filter qualifier input bus \\
-        \hline
-    \end{tabulary}
-\end{table}
-\FloatBarrier
-
-\subsection {Discovery of parameter values} \label{sec:disco}
-
-The parameters used by the encoder must be discoverable at
-runtime. Some external entity, for example a debugger or a supervisory
-hart, would issue a discovery command to the encoder. The encoder will
-provide the discovery information as encapsulated in the following
-parameters in one or more different formats.  The preferred format
-would be in a packet which is sent over the trace infrastructure.
-
-Another format would be allowing the external entity to read the
-values from some register or memory mapped space maintained by the
-encoder.
-
-\begin{itemize}
-    \item \textit{minor\_revision}. Identifies the minor revision.
-    \item \textit{version}. Identifies the module version.
-    \item \textit{comparators}. The number of comparators is \textit{comparators} + 1.
-    \item \textit{filters}. Number of filters is \textit{filters} + 1.
-    \item \textit{bpred\_size}. Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size}}.  No predictor if 0.
-    \item \textit{cache\_size}. Number of entries in the jump target cache is 2\textsuperscript{\textbf{cache\_size}}.  No cache if 0.
-    \item \textit{call\_counter\_size}. Width of the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size}}.  No counter if 0.
-    \item \textit{context\_type\_width}. Width of the \textbf{context\_type} bus is \textit{context\_type\_width} + 1.
-    \item \textit{context\_width}. Width of context input bus is \textit{context\_width} + 1.
-    \item \textit{ecause\_choice}. Number of LSBs of the ecause input bus that can be filtered using multiple choice.
-    \item \textit{ecause\_width}. Width of the ecause input bus is \textit{ecause\_width} + 1.
-    \item \textit{filter\_context}. Filtering on the \textit{context} input bus supported when 1.
-    \item \textit{filter\_ecause}. Filtering on the ecause input bus supported when non-zero.  Number of nested exceptions supported is $2^\frac{\textit {filter\_ecause}}{}$.
-    \item \textit{filter\_interrupt}. Filtering on the interrupt input signal supported when 1.
-    \item \textit{filter\_privilege}. Filtering on the privilege input bus supported when 1.
-    \item \textit{filter\_tval}. Filtering on the tval input bus supported when 1.
-    \item \textit{f0s\_width}. Width of the \textbf{subformat} field in format 0 \textit{te\_inst} packets (see section~\ref{sec:f0s}).
-    \item \textit{iaddress\_lsb}. LSB of iaddress output in trace encoder data messages is \textit{iaddress\_lsb} + 1.
-    \item \textit{iaddress\_width}. Width of the iaddress input bus is \textit{iaddress\_width} + 1.
-    \item \textit{ilastsize\_width}. Width of the \textbf{ilastsize} bus is \textit{ilastsize\_width} + 1.
-    \item \textit{itype\_width}. Width of the \textbf{itype} bus is \textit{itype\_width} + 1.
-    \item \textit{iretire\_width}. Width of the \textbf{iretire} bus is \textit{iretire\_width} + 1.
-    \item \textit{nocontext}. Context ignored when 1.
-    \item \textit{ntkn\_width}. Width of the \textbf{ntkn} bus is \textit{ntkn\_width} + 1.
-    \item \textit{privilege\_width}. Width of the privilege input bus is \textit{privilege\_width} + 1.
-    \item \textit{retires}. Maximum number of instructions that can be retired per block is \textit{retires} + 1.
-    \item \textit{return\_stack\_size}. Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size}}. No stack if 0.
-    \item \textit{rv32}. ISA is RV32 when 1.
-    \item \textit{sijump}. Sequentially inferable jumps supported when 1.
-    \item \textit{taken\_branches}. Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated is \textit{taken\_branches} + 1.
-    \item \textit{user\_width}. Width of the \textbf{user} bus is \textit{user\_width} + 1.
-\end{itemize}

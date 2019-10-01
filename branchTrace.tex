@@ -34,9 +34,9 @@ space, often mapping directly to physical memory. Dynamically linked
 programs require the debugger to keep track of memory allocation
 operations using either trace or stop-mode debugging.
 
-\section{Instruction Delta Trace Concepts} \label{Trace Concepts}
+\section{Instruction delta trace concepts} \label{Trace Concepts}
 
-\subsection{Sequential Instructions} \label{Sequential Instructions}
+\subsection{Sequential instructions} \label{Sequential Instructions}
 
 For instruction set architectures such as RISC-V where all instructions are executed
 unconditionally or at least their execution can be determined based on
@@ -46,7 +46,7 @@ to report them in the trace. The trace only needs to contain whether
 branches were taken or not, the addresses of taken indirect jumps, or
 other program counter discontinuities.
 
-\subsection{Uninferable PC Discontinuities} \label{uninfpc}
+\subsection{Uninferable PC discontinuities} \label{uninfpc}
 
 An uninferable program counter discontinuity is a program counter change
 that can not be inferred from the program binary alone. For these cases,
@@ -68,7 +68,7 @@ is encoded in the program binary, no further information is required.
 Direct branches are the only type of branch that is supported by the
 RISC-V ISA.
 
-\subsection{Interrupts and Exceptions} \label{interruptsexceptions}
+\subsection{Interrupts and exceptions} \label{interruptsexceptions}
 
 Interrupts are a different type of delta that generally occur
 asynchronously to the program's execution rather than intentionally as
@@ -90,11 +90,11 @@ if it is not.
 
 \subsection{Synchronization} \label{synchronization}
 
-In order to make the trace robust there need to be regular
-synchronization points within the trace. Synchronization is made by
+In order to make the trace robust there must be regular
+synchronization points within the trace. Synchronization is accomplished by
 sending a full valued instruction address (and potentially a context
 identifier). The decoder and debugger may also benefit from sending
-the reason for synchronising. The frequency of synchronization is a
+the reason for synchronizing. The frequency of synchronization is a
 trade-off between robustness and trace bandwidth.
 
 The instruction trace encoder needs to synchronise fully:
@@ -141,16 +141,16 @@ Here are common examples of such modes:
 
 Modes may have associated parameters; see Table~\ref{tab:parameters} for further details.
 
+All modes are optional apart from delta address mode, which must be supported.
+
 \subsection{Delta address mode} \label{sec:delta-address}
 
 Related parameters: None
 
-In delta address mode, non-sequential program counter changes
-are encoded as the difference between the previous and the current
-address. This kind of encoding require less bits than encoding the
-full address, and thus results in higher compression ratios.
-
-This is the default encoding mode.
+In delta address mode, addresses are encoded as the difference between the actual address of 
+the current instruction and the actual address of the instruction reported in the 
+previous packet that contained an address.  This differential encoding requires fewer bits than 
+the full address, and thus results in more efficient trace compression.
 
 \subsection{Full address mode} \label{sec:full-address}
 
@@ -169,10 +169,11 @@ addresses in the \textbf{\textit{utvec/stvec/mvec}} CSR registers.
 In some RISC-V implementations, the lower address bits are stored in
 the \textbf{\textit{ucause/scause/mcause}} CSR registers.
 
-By default, both the vec and cause values are reported when an exception or interrupt occurs.
+By default, both the \textbf{\textit{*vec}} and \textbf{\textit{*cause}} 
+values are reported when an exception or interrupt occurs.
 
-The implicit exception mode omits vec, the trap handler address, from the trace and
-thus improves efficiency.
+The implicit exception mode omits \textbf{\textit{*vec}} (the trap handler address), 
+from the trace and thus improves efficiency.
 
 This mode can only be used if the decoder can infer the address of the trap handler
 from just the exception cause.
@@ -183,7 +184,7 @@ Related parameters: \textit{sijump\_p}.
 
 By default, the target of an indirect jump is always considered an uninferable PC discontinuity.  
 However, if the register that specifies the jump target was loaded with a constant then it
-can be considered inferable under some circumstances.  The core must identify jumps with 
+can be considered inferable under some circumstances.  The hart must identify jumps with 
 sequentially inferable targets and provide this information separately to the encoder.  The
 final decision as to whether to treat the jump as inferable or not must be made by the encoder.
 Both the constant load and the jump must be traced in order for the decoder to be able to
@@ -229,30 +230,35 @@ While this encoding is efficient, at 1 bit per branch, there are some cases wher
 can still result in a relatively large volume of trace packets.  For example:
 
 \begin{itemize}
-  \item Executing tight loops of straight-line code.  Each iteration of the loop will add a bit to the branch map;
+  \item Executing tight loops of code containing no uninferable jumps.  Each iteration of the loop will add a bit 
+  to the branch map;
   \item Sitting in an idle loop waiting for an interrupt.  This produces large amounts of trace when nothing of 
   any interest is actually happening!  
   \item Breakpoints, which in some implementations also spin in an idle loop.
 \end{itemize}
 
 A significant coding efficiency can be obtained by the addition of a branch predictor in the encoder. To keep
-the encoder and decoder synchronized, a predictor with identical behavior will need to be modelled in the decoder
+the encoder and decoder synchronized, a predictor with identical behavior will need to be implemented in the decoder
 software.
 
 The predictor shall comprise a lookup table of 2\textsuperscript{\textit{bpred\_size\_p}} entries.  
 Each entry is indexed by bits N:1 of the instruction address (or N+1:2 if compressed instructions aren't supported), 
 and each contains a 2-bit prediction state:
 \begin{itemize}
-  \item 00: predict 0, transition to 01 if prediction fails;
-  \item 01: predict 0, transition to 00 if prediction succeeds, else 11;
-  \item 11: predict 1, transition to 10 if prediction fails;
-  \item 10: predict 1, transition to 11 if prediction succeeds, else 00.
+  \item 00: predict not taken, transition to 01 if prediction fails;
+  \item 01: predict not taken, transition to 00 if prediction succeeds, else 11;
+  \item 11: predict taken, transition to 10 if prediction fails;
+  \item 10: predict taken, transition to 11 if prediction succeeds, else 00.
 \end{itemize}
+
+The MSB represents the predicted outcome, the LSB the most recent actual outcome.  The prediction must fail twice
+for the predicted value to change.
+
+The lookup table entries are initialized to 01 when a synchronization packet is sent.
 
 Other predictors, such as the gShare predictor (see Hennessy \& Patterson), should be considered.  Some further
 experimentation is needed to determine the benefits of different lookup table sizes and predictor algorithms.
 
-The lookup table entries are initialized to 00 when a synchronization packet is sent.
 
 \subsection{Jump target cache mode} \label{sec:jump-cache}
 
@@ -263,7 +269,7 @@ form.  If the same function is called repeatedly, (for example, in a loop), the 
 repeatedly.  
 
 An efficiency gain can be obtained by the addition of a jump target cache to the encoder.  To keep
-the encoder and decoder synchronized, a cache with identical behavior will need to be modelled in the 
+the encoder and decoder synchronized, a cache with identical behavior will need to be implemented in the 
 decoder software.  Even a small cache can provide significant improvement.
 
 The cache shall comprise 2\textsuperscript{\textit{cache\_size\_p}} entries.  It will be direct mapped, 

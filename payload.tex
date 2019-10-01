@@ -27,7 +27,7 @@ Figure~\ref{fig:packet-format} shows the encapsulation used for the UltraSoC inf
 \begin{figure}[h]
   \begin{center}
     \includegraphics[height=1cm, width=9cm]{newPacket.jpg}
-    \caption{Example Encapsulated Packet Format}
+    \caption{Example encapsulated packet format}
     \label{fig:packet-format}
   \end{center}
 \end{figure}
@@ -59,9 +59,7 @@ At the very minimum this should be applied to the address field of format 1 and 
 be applied to the whole packet, regardless of format.  This technique eliminates identical bits from the most 
 significant end of the packet, and adjusts the length of the packet accordingly.  A decoder receiving this 
 shortened packet can reconstruct the original full-length packet by sign-extending from the most significant
-received bit.  An example of how this technique is used to choose between address formats is given in 
-Section~\ref{addresses}.  The same principle can be applied to the entire packet, and the length (typically 
-given in bytes) adjusted accordingly.
+received bit.  
 
 Where the payload length given in the following tables, or after applying sign-based compression, is not a 
 multiple of whole bytes in length, the payload must be sign-extended to the nearest byte boundary.
@@ -83,159 +81,233 @@ potential solutions to this are as follows:
     the end of the last message in a block and the block boundary.
 \end{itemize}
 
+\section{Format 3 packets} \label{sec:format3}
+
+Format 3 packets are used for synchronization, reporting context and supporting information.  There are 4
+sub-formats.
+
+Throughout this document, the term "synchronization packet" is used.  This refers specifically to format 3, 
+subformat 0 and subformat 1 packets.
+
+\section{Format 3 subformat 0 - Synchronisation} \label{sec:format30}
+
+This packet contains all the information the decoder needs to fully identify an instruction.  It is sent for
+the first traced instruction (unless that instruction also happens to be a the first in an exception handler), 
+and when resynchronization has been scheduled by expiry of the resynchronisation timer.
+
 \begin{table}[htp]
   \centering
-  \caption{Packet Payload Format 1 - with address}
-  \label{tab:te_inst0-1-addr}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+  \caption{Packet format 3, subformat 0}
+  \label{tab:te_inst3}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \textbf{format} & 2 & 11 (sync): synchronisation\\
     \hline
-    \textbf{branches} & 5 & Number of valid bits \textbf{branch\_map}. The length of branch-map is determined as follows: \newline
-    0:	   (cannot occur for this format) \newline
-    1:	   1 bit \newline
-    2-3:   3 bits \newline
-    4-7:   7 bits \newline
-    8-15:  15 bits \newline
-    16-31: 31 bits \newline
-    For example if branches = 12, \textbf{branch\_map} is 15 bits long, and the 12 LSBs are valid. \\
+    \textbf{subformat} & 2 & 00 (start): Start of tracing, or resync \\
     \hline
-    \textbf{branch\_map} & Determined by \newline 
-                 \textbf{branches} field. & 
-                 An array of bits indicating whether branches are taken or not.\newline
-    Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
-    0: branch taken \newline
-    1: branch not taken \\
+    \textbf{context} &  \textit {context\_width\_p}, 
+               or 0 if \textit {nocontext\_p} is 1 & 
+               The instruction context \\
     \hline
-    \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
-                Differential instruction address.\\
+    \textbf{privilege} & \textit {privilege\_width\_p} & 
+                The privilege level of the reported instruction\\
     \hline
-    \textbf{updiscon}	& 1 & 
-                If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
-                packet is reporting the instruction following an uninferable discontinuity and is also the 
-                instruction before an exception, privilege change or resync 
-                (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
+    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
     \hline
-    \textbf{irfail}	& 1 & 
-                If the value of this bit is different from \textbf{updiscon}, it indicates that this
-                packet is reporting the instruction following a return because its address differs from 
-                the predicted return address at the top of the implicit\_return return address stack.\\
-    \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
-                the number of entries on the return address stack (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
-                will also be the same value as \textbf{updiscon}. \\
+    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{address}. 
+    Set to the same value as the MSB of \textbf{address} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
 
+\subsection{Format 3 \textbf{branch} field}
+
+This bit indicates the taken/not taken status in the case where the reported address points to a branch instruction.
+Overall efficiency would be slightly improved if this bit was removed, and the branch status was instead 
+"carried over" and reported in the next \textit{te\_inst} packet.  This was considered, but there are several
+pathological cases where this approach fails.  Consider for example the situation where the first instruction
+that matches the filtering criteria is a branch, and this is then followed immediately by an exception.  This
+results in format 3 packets being generated on two consecutive cycles.  The second packet does not contain a branch
+map, so there is no way to report the branch status of the 1st branch, apart from by inserting a format 1 packet in 
+between.  There are two issues with this:
+
+\begin{itemize}
+  \item It would require the generation of 2 packets on the same cycle, which adds significant additional complexity
+    to the encoder;
+  \item It would complicate the algorithm shown in~\ref{fig:algo}. 
+\end{itemize}
+
+This bit is encoded so that most of the time it will take the same value as the MSB of the preceding field, and will
+therefore compress away, in order to minimize the efficiency impact.  Branches are unlikely to be reported using a
+format 3 packet apart from if the 1st traced instruction is a branch, or if the instruction reported when the 
+resync timer expires is a branch.
+
+\FloatBarrier
+\section{Format 3 subformat 1 - Exception} \label{sec:format31}
+
+This packet also contains all the information the decoder needs to fully identify an instruction.
+It is sent following an exception, and as well as reporting the address of the exception handler, it also 
+includes the exception cause and the address of the faulted instruction.
+
+If the implicit exception mode is enabled (see section~\ref{sec:implicit-exception}), the address is omited.
+
 \begin{table}[htp]
   \centering
-  \caption{Packet Payload Format 1  - no address, branch map}
-  \label{tab:te_inst0-1-noaddr-map}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+  \caption{Packet format 3, subformat 1}
+  \label{tab:te_inst3}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \textbf{format} & 2 & 11 (sync): synchronisation\\
     \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:    31 bits, no \textbf{address} in packet \newline
-    1-31: (cannot occur for this format) \\
+    \textbf{subformat} & 2 & 01 (exception): Exception cause and trap handler address.\\
     \hline
-    \textbf{branch\_map} & 31 & 
-                 An array of bits indicating whether branches are taken or not.\newline
-    Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
-    0: branch taken \newline
-    1: branch not taken \\
+    \textbf{context} &  \textit {context\_width\_p}, 
+               or 0 if \textit {nocontext\_p} is 1 & 
+               The instruction context. \\
     \hline
-    \textbf{branch\_fmt} & 2  & Both bits set to the same value as \textbf{branch\_map[MSB]} indicates that the
-    preceding field is \textbf{branch\_map}. \\
+    \textbf{privilege} & \textit {privilege\_width\_p} & 
+                The privilege level of the reported instruction.\\
+    \hline
+    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
+    \hline
+    \textbf{ecause} & \textit {ecause\_width\_p} & 
+             Exception cause. \\
+    \hline
+    \textbf{interrupt} & 1 & 
+                Interrupt. \\
+    \hline
+    \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
+           Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 1 (illegal instruction exception), or trap value otherwise.\\
+    \hline
+    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tvalepc}. 
+    Set to the same value as the MSB of \textbf{tvalepc} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
 
+\subsection{Format 3 \textbf{tvalepc} field}
+
+This field reports the address of illegal instructions, or the trap value otherwise.  This ensures that
+the address of the faulting instruction is reported for all required cases.  The trap value 
+is set to the address of the faulting instruction for hardware breakpoints, access or page faults and 
+instructions, loads or stores that are mis-aligned, but not for illegal instructions (for which it is set to the opcode).
+
+\FloatBarrier
+\section{Format 3 subformat 2 - Context} \label{sec:format32}
+
+This packet contains only the context, and is output when the context changes and can be reported imprecisely (see Table~\ref{tab:context-type}).
+
 \begin{table}[htp]
   \centering
-  \caption{Packet Payload Format 1 - no address, branch count}
-  \label{tab:te_inst0-1-noaddr-count}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+  \caption{Packet format 3, subformat 2}
+  \label{tab:te_inst3}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \textbf{format} & 2 & 11 (sync): synchronisation\\
     \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:    31 bits, no \textbf{address} in packet \newline
-    31-1: (cannot occur for this format) \\
+    \textbf{subformat}  & 2 & 10 (context): Context change \\
     \hline
-    \textbf{branch\_count} & 16 & Count of the number of correctly predicted branches, minus 31. \\
+    \textbf{context} &  \textit {context\_width\_p} & The instruction context. \\
     \hline
-    reserved & 15 & zero\\
-    \hline
-    \textbf{branch\_fmt} & 2 & Set to 01, indicates that the packet contains a \textbf{branch\_count} field, no
-    \textbf{address} field, and that the next branch failed prediction. \\
+    \textbf{privilege} & \textit {privilege\_width\_p} & 
+                The privilege level of the new context.\\
     \hline
   \end{tabulary}
 \end{table}
 
+\section{Format 3 subformat 3 - Support} \label{sec:format33}
+
+This packet provides supporting information to aid the decoder.  It is issued when
+
+\begin{itemize}
+  \item Trace is enabled or disabled;
+  \item The operating mode changes;
+  \item One or more trace packets cannot be sent (for example, due back-pressure from the packet transport infrastructure).
+\end{itemize}
+
+The \textbf{options} field is a placeholder that must be replaced by an implementation specific set of individual bits - one for each of the
+optional modes supported by the encoder.
+
 \begin{table}[htp]
   \centering
-  \caption{Packet Payload Format 1 - differential address, branch count}
-  \label{tab:te_inst0-1-addr-count}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+  \caption{Packet format 3, subformat 3}
+  \label{tab:te_inst3}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
-    \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:    31 bits, no \textbf{address} in packet \newline
-    31-1: (cannot occur for this format) \\
-    \hline
-    \textbf{branch\_count} & 16 & Count of the number of correctly predicted branches, minus 31. \\
-    \hline
-    \textbf{address (LSBs)}	& 15 & 
-                15 LSBs of differential instruction address.\\
-    \textbf{branch\_fmt} & 2 & Set to 10, indicates that the packet contains a \textbf{branch\_count} field and
-     an \textbf{address} field. This will be the case if the packet is output because it is necessary to report an
-     address (e.g. following an updiscon, or if the next instruction is an exception), or because \textbf{branch\_count} 
-     has reached 0xffff).\\
-    \hline
-    \textbf{bpsuccess} & 1 & This bit will be 1 if the most recent branch was predicted correctly. \\
-    \hline
-    \textbf{updiscon}	& 1 & 
-                If the value of this bit is different from \textbf{bpfail}, it indicates that this 
-                packet is reporting the instruction following an uninferable discontinuity and is also the 
-                instruction before an exception, privilege change or resync 
-                (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
-    \hline
-    \textbf{irfail}	& 1 & 
-                If the value of this bit is different from \textbf{updiscon}, it indicates that this
-                packet is reporting the instruction following a return because its address differs from 
-                the predicted return address at the top of the implicit\_return return address stack.\\
-    \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
-                the number of entries on the return address stack (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
-                will also be the same value as \textbf{updiscon}. \\
-    \hline
-    \textbf{address (MSBs)}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p - 15} & 
-                MSBs of the differential instruction address.\\
-    \hline
+     {\bf Field name} & {\bf Bits} & {\bf Description} \\
+     \hline
+     \textbf{format} & 2 & 11 (sync): synchronisation\\
+     \hline
+     \textbf{subformat}  & 2 & 11 (support): Supporting information for the decoder \\
+     \hline
+     \textbf{enable} & 1 & Indicates if the encoder is enabled\\
+     \hline
+     \textbf{encoder\_mode} & N & Identifies trace algorithm\newline
+       Details and number of bits implementation dependent.  Currently Branch trace is the only mode defined, indicated by the value 0.\\
+     \hline
+     \textbf{qual\_status} & 2 & Indicates qualification status\newline
+       00 (no\_change): No change to filter qualification \newline
+       01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
+       10: (trace\_lost): One or more packets lost.\newline
+       11 : (ended\_upd): Qualification ended, preceding \textbf{te\_inst} would have been sent anyway due to an updiscon, even if it wasn't the last qualified instruction)\\
+     \hline
+     \textbf{options} & N & Values of all run-time configuration bits\newline
+       Number of bits and definitions implementation dependent.  Examples might be\newline
+       - 'sequentially infered jumps' Don't report the targets of sequentially inferable jumps\newline
+       - 'implicit return' Don't report function return addresses \newline
+       - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
+       - 'branch prediction' Branch predictor enabled\newline
+       - 'jump target cache' Jump target cache enabled\newline
+       - 'full address' Always output full addresses (SW debug option)\\
+       \hline
   \end{tabulary}
 \end{table}
 
+\subsection{Format 3 subformat 3 \textbf{qual\_status} field}
+
+When tracing ends, the encoder reports the address of the last traced instruction, and follows this with a format 3, 
+subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
+\textbf{ended\_rep} and \textbf{ended\_upd}.  This relates to exactly the same ambiguous case described in detail in 
+section~\ref{sec:updiscon}, and in principle, the mechanism described in that section can be used to disambiguate when the last traced
+instruction is at looplabel + 4.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
+a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
+a 3-stage pipe with access to the previous, current and next instructions.  However, decoding that the next instruction
+is a privilege change or exception is straightforward, but determining whether the next instruction meets the filtering
+criteria is much more involved, and this information won't typically be available, at least not without adding an
+additional pipeline stage, which is expensive.  This means a different mechanism is required, and that is provided
+by having two codes to indicate that tracing has ended:
+
+\begin{itemize}
+  \item \textbf{ended\_rep} indicates that the preceding packet would not have been issued if tracing hadn't ended, 
+    which means that tracing stopped after executing looplabel in the 1st loop iteration;
+  \item \textbf{ended\_upd} indicates that the preceding packet would have been issued anyway because of an uninferable
+    PC discontinuity, which means that tracing stopped after executing looplabel in the 2nd loop iteration;
+\end{itemize}
+
+If the encoder implementation does have early access to the filtering results, and the designer chooses to use the
+\textbf{updiscon} bit when the last qualified instruction is also the instruction following an uninferable PC discontinuity,
+loss of qualification should always be indicated using \textbf{ended\_rep}.
+
+\FloatBarrier
+\section{Format 2 packets} \label{sec:format2}
+
+This packet contains only an instruction address, and is used when the address of an instruction must be reported, 
+and there is no unreported branch information.  The address is in differential format unless full address mode is
+enabled (see section~\ref{sec:full-address}).
 
 \begin{table}[!h]
   \centering
-  \caption{Packet Payload Format 2}
+  \caption{Packet format 2}
   \label{tab:te_inst2}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -264,239 +336,7 @@ potential solutions to this are as follows:
   \end{tabulary}
 \end{table}
 
-\begin{table}[htp]
-  \centering
-  \caption{Packet Payload Format 3, subformat 0}
-  \label{tab:te_inst3}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
-    \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format} & 2 & 11 (sync): synchronisation\\
-    \hline
-    \textbf{subformat} & 2 & 00 (start): Start of tracing, or resync \\
-    \hline
-    \textbf{context} &  \textit {context\_width\_p}, 
-               or 0 if \textit {nocontext\_p} is 1 & 
-               The instruction context \\
-    \hline
-    \textbf{privilege} & \textit {privilege\_width\_p} & 
-                The current privilege level \\
-    \hline
-    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
-              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address \\
-    \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{address}. 
-    Set to the same value as the MSB of \textbf{address} if the branch is taken or the instruction is not a branch. \\
-    \hline
-  \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-  \centering
-  \caption{Packet Payload Format 3, subformat 1}
-  \label{tab:te_inst3}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
-    \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format} & 2 & 11 (sync): synchronisation\\
-    \hline
-    \textbf{subformat} & 2 & 01 (exception): Exception cause and trap handler address\\
-    \hline
-    \textbf{context} &  \textit {context\_width\_p}, 
-               or 0 if \textit {nocontext\_p} is 1 & 
-               The instruction context \\
-    \hline
-    \textbf{privilege} & \textit {privilege\_width\_p} & 
-                The current privilege level \\
-    \hline
-    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
-              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address \\
-    \hline
-    \textbf{ecause} & \textit {ecause\_width\_p} & 
-             Exception cause \\
-    \hline
-    \textbf{interrupt} & 1 & 
-                Interrupt \\
-    \hline
-    \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
-           Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 1 (illegal instruction exception), or trap value otherwise.\\
-    \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tvalepc}. 
-    Set to the same value as the MSB of \textbf{tvalepc} if the branch is taken or the instruction is not a branch. \\
-    \hline
-  \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-  \centering
-  \caption{Packet Payload Format 3, subformat 2}
-  \label{tab:te_inst3}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
-    \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format} & 2 & 11 (sync): synchronisation\\
-    \hline
-    \textbf{subformat}  & 2 & 10 (context): Context change \\
-    \hline
-    \textbf{context} &  \textit {context\_width\_p} & The instruction context \\
-      \hline
-  \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-  \centering
-  \caption{Packet Payload Format 3, subformat 3}
-  \label{tab:te_inst3}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
-    \hline
-     {\bf Field name} & {\bf Bits} & {\bf Description} \\
-     \hline
-     \textbf{format} & 2 & 11 (sync): synchronisation\\
-     \hline
-     \textbf{subformat}  & 2 & 11 (support): Supporting information for the decoder \\
-     \hline
-     \textbf{enable} & 1 & Indicates if encoder is enabled\\
-     \hline
-     \textbf{encoder\_mode} & N & Identifies trace algorithm\newline
-       Details implementation dependent.  Currently Branch trace is the only mode defined.\\
-     \hline
-     \textbf{qual\_status} & 2 & Indicates qualification status\newline
-       00 (no\_change): No change to filter qualification \newline
-       01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
-       10: (packet\_lost): One or more packets lost.\newline
-       11 : (ended\_upd): Qualification ended, preceding \textbf{te\_inst} would have been sent anyway due to an updiscon, even if it wasn't the last qualified instruction)\\
-     \hline
-     \textbf{options} & N & Values of all run-time configuration bits\newline
-       Number of bits and definitions implementation dependent.  Examples might be\newline
-       - 'sequentially infered jumps' Don't report the targets of sequentially inferable jumps\newline
-       - 'implicit return' Don't report function return addresses \newline
-       - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
-       - 'branch prediction' Branch predictor enabled\newline
-       - 'jump target cache' Jump target cache enabled\newline
-       - 'full address' Always output full addresses (SW debug option)\\
-       \hline
-  \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-  \centering
-  \caption{Packet Payload Format 0, subformat 0 - jump target index, branch map}
-  \label{tab:te_inst0-0-cache-map}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
-    \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
-    \hline
-     \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
-     \hline
-    \textbf{index} & \textit {\textit{cache\_size\_p}} & 
-              Jump target cache index of entry containing target address.\\ 
-    \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:	   (cannot occur for this format) \newline
-    1:	   1 bit \newline
-    2-3:   3 bits \newline
-    4-7:   7 bits \newline
-    8-15:  15 bits \newline
-    16-31: 31 bits \newline
-    For example if branches = 12, \textbf{branch\_map} is 15 bits long, and the 12 LSBs are valid. \\
-    \hline
-    \textbf{branch\_map} & Determined by \newline 
-                 \textbf{branches} field. & 
-                 An array of bits indicating whether branches are taken or not.\newline
-    Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
-    0: branch taken \newline
-    1: branch not taken \\
-    \hline
-    \textbf{irfail}	& 1 & 
-                If the value of this bit is different from \textbf{branch\_map[MSB]}, it indicates that this
-                packet is reporting the instruction following a return because its address differs from 
-                the predicted return address at the top of the implicit\_return return address stack.\\
-    \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{branch\_map[MSB]}, this field indicates 
-                the number of entries on the return address stack (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{branch\_map[MSB]}, all bits in this field 
-                will also be the same value as \textbf{branch\_map[MSB]}. \\
-    \hline
-  \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-  \centering
-  \caption{Packet Payload Format 0, subformat 0 - jump target index, no branch map}
-  \label{tab:te_inst0-0-cache-nomap}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
-    \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
-    \hline
-     \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
-     \hline
-    \textbf{index} & \textit {\textit{cache\_size\_p}} & 
-              Jump target cache index of entry containing target address.\\ 
-    \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:    no \textbf{branch\_map} in packet \newline
-    1-31: (cannot occur for this format) \\
-    \hline
-    \textbf{irfail}	& 1 & 
-                If the value of this bit is different from \textbf{branches[MSB]}, it indicates that this
-                packet is reporting the instruction following a return because its address differs from 
-                the predicted return address at the top of the implicit\_return return address stack.\\
-    \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{branches[MSB]}, this field indicates 
-                the number of entries on the return address stack (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{branches[MSB]}, all bits in this field 
-                will also be the same value as \textbf{branches[MSB]}. \\
-    \hline
-  \end{tabulary}
-\end{table}
-
-
-\section {Further notes on packet format details}
-
-Throughout this document, the term "synchronization packet" is used.  This refers specifically to format 3, 
-subformat 0 and subformat 1 packets.
-
-Some of the packet fields warrant further explanation.
-
-\subsection{Format 3 \textbf{tvalepc} field}
-
-This field reports the address of illegal instructions, or the trap value otherwise.  This ensures that
-the address of the faulting instruction is reported for all required cases.  The trap value 
-is set to the address of the faulting instruction for hardware breakpoints, access or page faults and 
-instructions, loads or stores that are mis-aligned, but not for illegal instructions (for which it is set to the opcode).
-
-\subsection{Format 3 \textbf{branch} field}
-
-This bit indicates the taken/not taken status in the case where the reported address points to a branch instruction.
-Overall efficiency would be slightly improved if this bit was removed, and the branch status was instead 
-"carried over" and reported in the next \textit{te\_inst} packet.  This was considered, but there are several
-pathological cases where this approach fails.  Consider for example the situation where the first instruction
-that matches the filtering criteria is a branch, and this is then followed immediately by an exception.  This
-results in format 3 packets being generated on two consecutive cycles.  The second packet does not contain a branch
-map, so there is no way to report the branch status of the 1st branch, apart from by inserting a format 1 packet in 
-between.  There are two issues with this:
-
-\begin{itemize}
-  \item It would require the generation of 2 packets on the same cycle, which adds significant additional complexity
-    to the encoder;
-  \item It would complicate the algorithm shown in~\ref{fig:algo}. 
-\end{itemize}
-
-This bit is encoded so that most of the time it will take the same value as the MSB of the preceding field, and will
-therefore compress away, in order to minimize the efficiency impact.  Branches are unlikely to be reported using a
-format 3 packet apart from if the 1st traced instruction is a branch, or if the instruction reported when the 
-resync timer expires is a branch.
-
-\subsection{Format 1/2 \textbf{updiscon} field}
+\subsection{Format 2 \textbf{updiscon} field} \label{sec:updiscon}
 
 This bit is encoded so that most of the time it will take the same value as the MSB of the \textbf{address} field,
 and will therefore compress away, having no impact on the encoding efficiency.  It is required in order to cover a
@@ -555,6 +395,186 @@ This example uses an exception at looplabel + 4, but anything that could cause a
 the same behavior: a privilege change, or the expiry of the resync timer.  It could also occur if looplabel was the last
 traced instruction (because tracing was disabled for some reason).  See next section for further discussion of this point.
 
+\subsection{Format 2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
+These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
+and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, and
+the encoder maintains a stack of predicted return addresses that are compared with the actual return addresses, then
+a \textit{te\_inst} packet will be generated if a misprediction occurs.  In order to correctly reconstruct the 
+execution path of the program, the decoder will need to know which return it was that failed.  If a return is reported
+because the return address stack is empty, these fields will take the same value as the \textbf{updiscon} field.
+
+\FloatBarrier
+\section{Format 1 packets} \label{sec:format1}
+
+This packet branch information, and is used when either the branch information must be reported 
+(for example because the branch map is full), or whe the address of an instruction must be reported, and there has 
+been at least one branch since the previous packet.  If included, the address is in differential format unless full 
+address mode is enabled (see section~\ref{sec:full-address}).
+
+If branch prediction is supported and is enabled, then there is a choice of whether to output a 
+full branch map, or a count of correctly predicted branches.  The count format is used if the number 
+of correctly predicted branches is at least 31.  If there are 31 unreported branches (i.e. the branch
+map is full), but not all of them were predicted correctly, then the branch map will be output under the following 
+conditions:
+
+\begin{itemize}
+  \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
+    minus 31.  No address information is provided;
+  \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
+    the encoder will output the branch count (number of correctly predicted branches, minus 31).  The packet 
+    also contains \textbf{bpsuccess}, indicating whether prediction of the next branch failed.
+  \item The branch count reaches its maximum value.  Strictly speaking an address isn't required for this case, 
+    but is included to avoid having to distinguish the packet format from the case above.  t will occur so rarely 
+    that the bandwidth impact can be ignored.
+\end{itemize}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format 1 - with address}
+  \label{tab:te_inst0-1-addr}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \hline
+    \textbf{branches} & 5 & Number of valid bits \textbf{branch\_map}. The length of branch-map is determined as follows: \newline
+    0:	   (cannot occur for this format) \newline
+    1:	   1 bit \newline
+    2-3:   3 bits \newline
+    4-7:   7 bits \newline
+    8-15:  15 bits \newline
+    16-31: 31 bits \newline
+    For example if branches = 12, \textbf{branch\_map} is 15 bits long, and the 12 LSBs are valid. \\
+    \hline
+    \textbf{branch\_map} & Determined by \newline 
+                 \textbf{branches} field. & 
+                 An array of bits indicating whether branches are taken or not.\newline
+    Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
+    0: branch taken \newline
+    1: branch not taken \\
+    \hline
+    \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+                Differential instruction address.\\
+    \hline
+    \textbf{updiscon}	& 1 & 
+                If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
+                packet is reporting the instruction following an uninferable discontinuity and is also the 
+                instruction before an exception, privilege change or resync 
+                (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{updiscon}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
+                will also be the same value as \textbf{updiscon}. \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format 1  - no address, branch map}
+  \label{tab:te_inst0-1-noaddr-map}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \hline
+    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
+    0:    31 bits, no \textbf{address} in packet \newline
+    1-31: (cannot occur for this format) \\
+    \hline
+    \textbf{branch\_map} & 31 & 
+                 An array of bits indicating whether branches are taken or not.\newline
+    Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
+    0: branch taken \newline
+    1: branch not taken \\
+    \hline
+    \textbf{branch\_fmt} & 2  & Both bits set to the same value as \textbf{branch\_map[MSB]} indicates that the
+    preceding field is \textbf{branch\_map}. \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format 1 - no address, branch count}
+  \label{tab:te_inst0-1-noaddr-count}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \hline
+    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
+    0:    31 bits, no \textbf{address} in packet \newline
+    31-1: (cannot occur for this format) \\
+    \hline
+    \textbf{branch\_count} & 31 & Count of the number of correctly predicted branches, minus 31. \\
+    \hline
+    \textbf{branch\_fmt} & 2 & Set to 01, indicates that the packet contains a \textbf{branch\_count} field, no
+    \textbf{address} field, and that the next branch failed prediction. \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format 1 - differential address, branch count}
+  \label{tab:te_inst0-1-addr-count}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \hline
+    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
+    0:    31 bits, no \textbf{address} in packet \newline
+    31-1: (cannot occur for this format) \\
+    \hline
+    \textbf{branch\_count} & 31 & Count of the number of correctly predicted branches, minus 31. \\
+    \hline
+    \textbf{branch\_fmt} & 2 & Set to 10, indicates that the packet contains a \textbf{branch\_count} field and
+     an \textbf{address} field. This will be the case if the packet is output because it is necessary to report an
+     address (e.g. following an updiscon, or if the next instruction is an exception), or because \textbf{branch\_count} 
+     has reached 0xffff).\\
+    \hline
+    \textbf{bpsuccess} & 1 & This bit will be 1 if the most recent branch was predicted correctly. \\
+    \hline
+    \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+                Differential instruction address.\\
+    \hline
+    \textbf{updiscon}	& 1 & 
+                If the value of this bit is different from \textbf{address[MSB]}, it indicates that this 
+                packet is reporting the instruction following an uninferable discontinuity and is also the 
+                instruction before an exception, privilege change or resync 
+                (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{updiscon}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
+                will also be the same value as \textbf{updiscon}. \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\subsection{Format 1 \textbf{updiscon} field}
+
+See section~\ref{sec:updiscon}.
+
 \subsection{Format 1 \textbf{branch\_map} field}
 When the branch map becomes full it must be reported, but in most cases there is no need to report an address.
 This is indicated by setting \textbf{branches} to 0.  The exception to this is when the instruction immediately prior to 
@@ -570,12 +590,10 @@ waste for this case will improve overall bandwidth at times where it is most imp
 
 \subsection{Format 1 \textbf{branch\_fmt} field}
 
-This is encoded so that it will take the same value as the MSB of the \textbf{branch\_map} field, so that extra bits are
-only required when reporting predicted branch counts, and reporting a branch map is unaffected.  Although there are 15
-unused bits when reporting a branch count without address, branch counts will by their nature be reported much less 
-frequently, so this is not a significant cost.  Furthermore, even for the most pathological case (32 correctly predicted 
-branches followed by a misprediction), the total number of bits used is still fewer than if using just the branch map
-format.
+This is encoded so that when reporting a branch map it will take the same value as the MSB of the \textbf{branch\_map} 
+field, so that extra bits are only required when reporting predicted branch counts, and reporting a branch map is unaffected.  
+Even for the most pathological case (32 correctly predicted branches followed by a misprediction), the total number of bits 
+used is still fewer than if using just the branch map format.
 
 \subsection{Format 1 \textbf{bpsuccess} field}
 This bit is encoded so that most of the time it will take the same value as the MSB of the \textbf{branch\_fmt} field,
@@ -586,38 +604,93 @@ branch has been encountered when the number of correctly predicted branches is 0
 reported address will always be for a branch, and in the former cases it may be.  If it is a branch, it is necessary to 
 be explicit about whether or not the prediction was met or not.
 
-\subsection{Format 1/2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
-These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
-and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, and
-the encoder maintains a stack of predicted return addresses that are compared with the actual return addresses, then
-a \textit{te\_inst} packet will be generated if a misprediction occurs.  In order to correctly reconstruct the 
-execution path of the program, the decoder will need to know which return it was that failed.  If a return is reported
-because the return address stack is empty, these fields will take the same value as the \textbf{updiscon} field.
+\subsection{Format 1 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 
-\subsection{Format 3 subformat 3 \textbf{qual\_status} field}
+See section~\ref{sec:irxx}.
 
-When tracing ends, the encoder reports the address of the last traced instruction, and follows this with a format 3, 
-subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
-\textbf{ended\_rep} and \textbf{ended\_upd}.  This relates to exactly the same ambiguous case described in the previous
-section, and in principle, the mechanism described in that section can be used to disambiguate when the last traced
-instruction is at looplabel + 4.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
-a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
-a 3-stage pipe with access to the previous, current and next instructions.  However, decoding that the next instruction
-is a privilege change or exception is straightforward, but determining whether the next instruction meets the filtering
-criteria is much more involved, and this information won't typically be available, at least not without adding an
-additional pipeline stage, which is expensive.  This means a different mechanism is required, and that is provided
-by having two codes to indicate that tracing has ended:
+\FloatBarrier
+\section{Format 0 packets} \label{sec:format0}
 
-\begin{itemize}
-  \item \textbf{ended\_rep} indicates that the preceding packet would not have been issued if tracing hadn't ended, 
-    which means that tracing stopped after executing looplabel in the 1st loop iteration;
-  \item \textbf{ended\_upd} indicates that the preceding packet would have been issued anyway because of an uninferable
-    PC discontinuity, which means that tracing stopped after executing looplabel in the 2nd loop iteration;
-\end{itemize}
+This format is intended for optional efficiency extensions.  Currently only one extension is defined, for reporting
+the jump target cache index.
 
-If the encoder implementation does have early access to the filtering results, and the designer chooses to use the
-\textbf{updiscon} bit when the last qualified instruction is also the instruction following an uninferable PC discontinuity,
-loss of qualification should always be indicated using \textbf{ended\_rep}.
+\begin{table}[htp]
+  \centering
+  \caption{Packet format 0, subformat 0 - jump target index, branch map}
+  \label{tab:te_inst0-0-cache-map}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
+    \hline
+     \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
+     \hline
+    \textbf{index} & \textit {\textit{cache\_size\_p}} & 
+              Jump target cache index of entry containing target address.\\ 
+    \hline
+    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
+    0:	   (cannot occur for this format) \newline
+    1:	   1 bit \newline
+    2-3:   3 bits \newline
+    4-7:   7 bits \newline
+    8-15:  15 bits \newline
+    16-31: 31 bits \newline
+    For example if branches = 12, \textbf{branch\_map} is 15 bits long, and the 12 LSBs are valid. \\
+    \hline
+    \textbf{branch\_map} & Determined by \newline 
+                 \textbf{branches} field. & 
+                 An array of bits indicating whether branches are taken or not.\newline
+    Bit 0 represents the oldest branch instruction executed.   For each bit: \newline
+    0: branch taken \newline
+    1: branch not taken \\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{branch\_map[MSB]}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{branch\_map[MSB]}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{branch\_map[MSB]}, all bits in this field 
+                will also be the same value as \textbf{branch\_map[MSB]}. \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet fFormat 0, subformat 0 - jump target index, no branch map}
+  \label{tab:te_inst0-0-cache-nomap}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
+    \hline
+     \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
+     \hline
+    \textbf{index} & \textit {\textit{cache\_size\_p}} & 
+              Jump target cache index of entry containing target address.\\ 
+    \hline
+    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
+    0:    no \textbf{branch\_map} in packet \newline
+    1-31: (cannot occur for this format) \\
+    \hline
+    \textbf{irfail}	& 1 & 
+                If the value of this bit is different from \textbf{branches[MSB]}, it indicates that this
+                packet is reporting the instruction following a return because its address differs from 
+                the predicted return address at the top of the implicit\_return return address stack.\\
+    \hline
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+                If the value of \textbf{irfail} is different from \textbf{branches[MSB]}, this field indicates 
+                the number of entries on the return address stack (i.e. the entry number of the return that
+                failed).  If \textbf{irfail} is the same value as \textbf{branches[MSB]}, all bits in this field 
+                will also be the same value as \textbf{branches[MSB]}. \\
+    \hline
+  \end{tabulary}
+\end{table}
 
 \subsection{Format 0 subformat field} \label{sec:f0s}
 
@@ -632,5 +705,8 @@ or \textbf{branches[MSB]} field.  Purpose and behaviour is as described in secti
 They are included to allow return addresses that fail the implicit return prediction but 
 which reside in the jump target cache to be reported using this format.  An implementation
 could omit these if all implicit return failures are reported using format 1.
+
+
+
 
 
