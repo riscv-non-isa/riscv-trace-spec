@@ -414,15 +414,15 @@ address mode is enabled (see section~\ref{sec:full-address}).
 If branch prediction is supported and is enabled, then there is a choice of whether to output a 
 full branch map, or a count of correctly predicted branches.  The count format is used if the number 
 of correctly predicted branches is at least 31.  If there are 31 unreported branches (i.e. the branch
-map is full), but not all of them were predicted correctly, then the branch map will be output under the following 
-conditions:
+map is full), but not all of them were predicted correctly, then the branch map will be output.  A branch 
+count will be output under the following conditions:
 
 \begin{itemize}
   \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
-    minus 31.  No address information is provided;
+    minus 31.  No address information is provided - it is implicitly that of the branch which failed
+    prediction;
   \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
-    the encoder will output the branch count (number of correctly predicted branches, minus 31).  The packet 
-    also contains \textbf{bpsuccess}, indicating whether prediction of the next branch failed.
+    the encoder will output the branch count (number of correctly predicted branches, minus 31);
   \item The branch count reaches its maximum value.  Strictly speaking an address isn't required for this case, 
     but is included to avoid having to distinguish the packet format from the case above.  t will occur so rarely 
     that the bandwidth impact can be ignored.
@@ -430,8 +430,8 @@ conditions:
 
 \begin{table}[htp]
   \centering
-  \caption{Packet format 1 - with address}
-  \label{tab:te_inst0-1-addr}
+  \caption{Packet format 1 - address, branch map}
+  \label{tab:te_inst1-addr-map}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
@@ -480,7 +480,7 @@ conditions:
 \begin{table}[htp]
   \centering
   \caption{Packet format 1  - no address, branch map}
-  \label{tab:te_inst0-1-noaddr-map}
+  \label{tab:te_inst1-noaddr-map}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
@@ -497,7 +497,7 @@ conditions:
     0: branch taken \newline
     1: branch not taken \\
     \hline
-    \textbf{branch\_fmt} & 2  & Both bits set to the same value as \textbf{branch\_map[MSB]} indicates that the
+    \textbf{branch\_fmt} & 2  & Both bits set to the same value as \textbf{branch\_map[30]} indicates that the
     preceding field is \textbf{branch\_map}. \\
     \hline
   \end{tabulary}
@@ -506,7 +506,7 @@ conditions:
 \begin{table}[htp]
   \centering
   \caption{Packet format 1 - no address, branch count}
-  \label{tab:te_inst0-1-noaddr-count}
+  \label{tab:te_inst1-noaddr-count}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
@@ -527,8 +527,8 @@ conditions:
 
 \begin{table}[htp]
   \centering
-  \caption{Packet format 1 - differential address, branch count}
-  \label{tab:te_inst0-1-addr-count}
+  \caption{Packet format 1 - address, branch count}
+  \label{tab:te_inst1-addr-count}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
@@ -546,7 +546,7 @@ conditions:
      address (e.g. following an updiscon, or if the next instruction is an exception), or because \textbf{branch\_count} 
      has reached 0xffff).\\
     \hline
-    \textbf{bpsuccess} & 1 & This bit will be 1 if the most recent branch was predicted correctly. \\
+    \textbf{bpsuccess} & 1 & Set to 1 if the address points to a branch instruction and the branch was predicted correctly.  \\
     \hline
     \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
                 Differential instruction address.\\
@@ -596,13 +596,12 @@ Even for the most pathological case (32 correctly predicted branches followed by
 used is still fewer than if using just the branch map format.
 
 \subsection{Format 1 \textbf{bpsuccess} field}
-This bit is encoded so that most of the time it will take the same value as the MSB of the \textbf{branch\_fmt} field,
-and will therefore compress away, having no impact on the encoding efficiency.  When a branch count is reported without 
-an address it is because a branch has failed the prediction.  However, when an address is reported along with
-a branch count, it will be because the packet was initiated by an uninferable discontinuity, an exception, or because a
-branch has been encountered when the number of correctly predicted branches is 0xffff.  For the latter case, the 
+When a branch count is reported without an address it is because a branch has failed the prediction.  However, when an address is 
+reported along with a branch count, it will be because the packet was initiated by an uninferable discontinuity, an exception, or 
+because a branch has been encountered when the number of correctly predicted branches is 0xffff.  For the latter case, the 
 reported address will always be for a branch, and in the former cases it may be.  If it is a branch, it is necessary to 
-be explicit about whether or not the prediction was met or not.
+be explicit about whether or not the prediction was met or not.  If it is met, then the reported address is that of the last
+correctly predicted branch.
 
 \subsection{Format 1 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 
