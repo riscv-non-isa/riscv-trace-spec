@@ -297,7 +297,7 @@ must be reported in group 0 and instructions up to the 2nd taken branch
 must be reported in group 1 and so on.
 
 \textbf{sijump} is optional and may be omitted if the hart does not implement the logic to detect
-sequentially inferable jumps.  If the encoder offers an \textbf{sijump} input it should also provide a
+sequentially inferable jumps.  If the encoder offers an \textbf{sijump} input it must also provide a
 parameter to indicate whether the input is connected to a hart that implements this capability, or
 tied off.  This is to ensure the decoder can be made aware of the hart's capability.  Enabling 
 sequentially inferable jump mode in the encoder and decoder when the hart does not support it will
