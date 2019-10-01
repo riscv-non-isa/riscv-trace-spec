@@ -89,7 +89,12 @@ typedef struct
  */
 typedef struct
 {
-    /* Address of the most recent explicitly sent address */
+    /*
+     * Following is the "normalized" (i.e. un-shifted, non-differential) address
+     * corresponding to the "address" field in the most recent te_inst packet.
+     * Both the trace-encoder, and the trace-decoder (as peers) should
+     * maintain the same value for this, and always keep them in sync.
+     */
     te_address_t last_sent_addr;
     /* Reconstructed program counter, on the (peer) decoder */
     te_address_t decoders_pc;
@@ -159,6 +164,35 @@ extern void te_encode_one_irecord(
 extern te_encoder_state_t * te_open_trace_encoder(
     te_encoder_state_t * encoder,
     void * const user_data);
+
+/*
+ * Send a te_inst synchronization support packet.
+ *
+ * This should be sent after any of the following:
+ *  1) the trace-encoder initially being enabled
+ *  2) the configuration of the trace-encoder changes
+ *  3) the tracing ends (e.g. unqualified, halted)
+ */
+extern void te_send_te_inst_sync_support(
+    te_encoder_state_t * const encoder,
+    const te_qual_status_t qual_status);
+
+
+/*
+ * The following is an external functions USED by this code to:
+ *
+ *  notify the user that the PC has been updated
+ *
+ * Users of this code are expected to implement each of
+ * these functions as appropriate, as they will be called
+ * by the trace-encoder algorithm from time to time.
+ *
+ * Some of these functions are passed a "user_data" void pointer,
+ * which is whatever was passed to te_open_trace_encoder().
+ */
+extern void te_send_te_inst(
+    void * const user_data,
+    te_inst_t * const te_inst);
 
 
 #ifdef __cplusplus

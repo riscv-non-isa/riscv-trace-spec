@@ -55,8 +55,8 @@ static const te_discovery_response_t default_discovery_response =
  */
 static const te_options_t default_support_options =
 {
-    .full_address = 0,      /* use differential addresses */
-    .implicit_return = 0,   /* disable using return_stack[] */
+    .full_address = false,      /* use differential addresses */
+    .implicit_return = false,   /* disable using return_stack[] */
 };
 
 
@@ -223,7 +223,7 @@ static void disseminate_pc(
     {
         fprintf(decoder->debug_stream,
             "%s\t[%2u] set_pc %8" PRIx64 " -> %8" PRIx64 ":\t%s\n",
-            (decoder->pc == decoder->address) ? "---->" : "",
+            (decoder->pc == decoder->last_sent_addr) ? "---->" : "",
             decoder->branches,
             decoder->last_pc,
             decoder->pc,
@@ -792,7 +792,7 @@ void te_process_te_inst(
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
     {
         decoder->inferred_address = false;
-        decoder->address = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+        decoder->last_sent_addr = (te_inst->address << decoder->discovery_response.iaddress_lsb);
 
         /* is it a te_inst synchronization support packet ? */
         if (TE_INST_SUBFORMAT_SUPPORT == te_inst->subformat)
@@ -809,7 +809,7 @@ void te_process_te_inst(
             decoder->branch_map = 0;
         }
 
-        if (is_branch(get_instr(decoder, decoder->address, &instr)))
+        if (is_branch(get_instr(decoder, decoder->last_sent_addr, &instr)))
         {
             /* 1 unprocessed branch if this instruction is a branch */
             const uint32_t branch = te_inst->branch ? 1 : 0;
@@ -820,7 +820,7 @@ void te_process_te_inst(
         if ( (TE_INST_SUBFORMAT_START == te_inst->subformat) &&
              (!decoder->start_of_trace) )
         {
-            follow_execution_path(decoder, decoder->address, te_inst);
+            follow_execution_path(decoder, decoder->last_sent_addr, te_inst);
         }
         else
         {
@@ -830,7 +830,7 @@ void te_process_te_inst(
              * After we return from disseminate_pc(), we will update it again!
              */
             decoder->last_pc = decoder->pc;
-            decoder->pc = decoder->address;
+            decoder->pc = decoder->last_sent_addr;
             disseminate_pc(decoder);
             /*
              * To avoid the (unlikely, but not impossible) possibility that the
@@ -864,11 +864,11 @@ void te_process_te_inst(
             decoder->stop_at_last_branch = false;
             if (decoder->options.full_address)
             {
-                decoder->address  = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+                decoder->last_sent_addr  = (te_inst->address << decoder->discovery_response.iaddress_lsb);
             }
             else
             {
-                decoder->address += (te_inst->address << decoder->discovery_response.iaddress_lsb);
+                decoder->last_sent_addr += (te_inst->address << decoder->discovery_response.iaddress_lsb);
             }
         }
         if (TE_INST_FORMAT_1_DIFF == te_inst->format)
@@ -891,7 +891,7 @@ void te_process_te_inst(
                 decoder->branches += te_inst->branches;
             }
         }
-        follow_execution_path(decoder, decoder->address, te_inst);
+        follow_execution_path(decoder, decoder->last_sent_addr, te_inst);
     }
 }
 
@@ -933,7 +933,7 @@ te_decoder_state_t * te_open_trace_decoder(
      */
     decoder->pc = TE_SENTINEL_BAD_ADDRESS;
     decoder->last_pc = TE_SENTINEL_BAD_ADDRESS;
-    decoder->address = TE_SENTINEL_BAD_ADDRESS;
+    decoder->last_sent_addr = TE_SENTINEL_BAD_ADDRESS;
     decoder->start_of_trace = true;
 
     /*

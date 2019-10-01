@@ -234,11 +234,12 @@ typedef struct
     /* memory for the "call-stack" (only when "implicit_return" is 1) */
     te_address_t return_stack[TE_MAX_CALL_DEPTH];
     /*
-     * Reconstructed address from te_inst packets.
-     * Only used in process_te_inst(), logically "static" therein
-     * Note: pseudo-code has this at global scope (for persistence)
+     * Following is the "normalized" (i.e. un-shifted, non-differential) address
+     * corresponding to the "address" field in the most recent te_inst packet.
+     * Both the trace-encoder, and the trace-decoder (as peers) should
+     * maintain the same value for this, and always keep them in sync.
      */
-    te_address_t address;
+    te_address_t last_sent_addr;
 
     /* fields from the discovery_response packets */
     te_discovery_response_t discovery_response;
