@@ -183,7 +183,7 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
                 Interrupt. \\
     \hline
     \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
-           Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 1 (illegal instruction exception), or trap value otherwise.\\
+           Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 0 (illegal instruction exception), or trap value otherwise.\\
     \hline
     \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tvalepc}. 
     Set to the same value as the MSB of \textbf{tvalepc} if the branch is taken or the instruction is not a branch. \\
