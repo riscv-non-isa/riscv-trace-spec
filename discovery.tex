@@ -1,10 +1,201 @@
-\chapter{Discovery}
+\chapter{Parameters and Discovery}
 
-\section{Example ipxact description}
+This document defines a number of parameters for describing aspects of the encoder such as the 
+widths of buses, the presence or absence of optional features and the size of resources, as 
+listed in Table~\ref{tab:parameters}.
 
-A particular encoder may have various features it supports and it is
-useful for the decoder/debugger to be able to determine these. This
-section provides an example of discovery information represented in
+Depending on the implementation, some parameters may be inherently fixed whilst others
+may be passed in to the design by some means.
+
+\begin{table}[h]
+    \centering
+    \caption{Parameters to the encoder}
+    \label{tab:parameters}
+    \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
+        \hline
+        \textbf{Parameter name} & \textbf{Range} & \textbf{Description} \\
+        \hline
+        \textit{arch\_p} & & The architecture specification version with which the encoder is compliant (0 for initial version). \\
+        \hline
+        \textit{bpred\_size\_p} & & Number of entries in the branch predictor is 2\textsuperscript{\textbf{bpred\_size\_p}}. 
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no branch predictor implemented.\\
+        \hline
+        \textit{cache\_size\_p} & & Number of entries in the jump target cache is 2\textsuperscript{\textbf{cache\_size\_p}}. 
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no jump target cache implemented.\\
+        \hline
+        \textit{call\_counter\_size\_p} &  & Number of bits in the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size\_p}}.
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return call counter implemented.\\
+        \hline
+        \textit{context\_type\_width\_p} & & Width of the \textbf{context\_type} bus\\
+        \hline
+        \textit{context\_width\_p} &  & Width of context bus \\
+        \hline
+        \textit{ecause\_width\_p} &  & Width of exception cause bus \\
+        \hline
+        \textit{ecause\_choice\_p} & & Number of bits of exception cause to match using multiple choice \\
+        \hline
+        \textit{f0s\_width\_p} & & Width of the \textbf{subformat} field in format 0 \textit{te\_inst} packets (see section~\ref{sec:f0s}). \\
+        \hline
+        \textit{filter\_context\_p} & 0 or 1 & Filtering on context supported when 1 \\
+        \hline
+        \textit{filter\_ecause\_p} & & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter\_ecause\_p} \\
+        \hline
+        \textit{filter\_interrupt\_p} & 0 or 1 & Filtering on interrupt supported when 1 \\
+        \hline
+        \textit{filter\_privilege\_p} & 0 or 1 & Filtering on privilege supported when 1 \\
+        \hline
+        \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 \\
+        \hline
+        \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
+        \hline
+        \textit{iaddress\_width\_p} & & Width of instruction address bus. This is the same as \textit{DXLEN}\\
+        \hline
+        \textit{iretire\_width\_p} & & Width of the \textbf{iretire} bus\\
+        \hline
+        \textit{ilastsize\_width\_p} & & Width of the \textbf{ilastsize} bus\\
+        \hline
+        \textit{itype\_width\_p} & & Width of the \textbf{itype} bus\\
+        \hline
+        \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
+        \hline
+        \textit{ntkn\_width\_p} & & Width of the \textbf{ntkn} bus\\
+        \hline
+        \textit{privilege\_width\_p} & & Width of privilege bus \\
+        \hline
+        \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
+        \hline
+        \textit{return\_stack\_size\_p} &  & Number of entries in the return address stack is 2\textsuperscript{\textbf{return\_stack\_size\_p}}.
+                                    Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return stack implemented.\\
+        \hline
+        \textit{sijump\_p} & 0 or 1 & \textbf{sijump} is used to identify sequentially inferable jumps\\
+        \hline
+        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
+        \hline
+        \textit{impdef\_width\_p} & & Width of implementation-defined input bus \\
+        \hline
+    \end{tabulary}
+\end{table}
+\FloatBarrier
+
+\section {Discovery of encoder parameters} \label{sec:disco}
+
+To operate correctly, the decoder must be able to determine some of the encoder's parameters 
+at runtime, in the form of discoverable attributes.  These parameters must be discoverable by the 
+decoder, or else be fixed at the default value (in other words, if an encoder does not make a 
+particular parameter discoverable, it must implement only the default value of that parameter, 
+which the decoder will also use).  Table \ref{tab:requiredAttributes} lists the required 
+discoverable attributes.
+
+To access the discoverable attributes, some external entity, for example a debugger or a 
+supervisory hart, must request it from the encoder. The encoder will
+provide the discovery information in one or more different formats.  
+The preferred format is a packet which is sent over the trace infrastructure.
+Another format would be allowing the external entity to read the
+values from some register or memory mapped space maintained by the encoder.
+Section~\ref{sec:ipxact} gives an example of how this may be accomplished.
+
+\begin{table}[!h]
+    \centering
+    \caption{Required attributes}
+    \label{tab:requiredAttributes}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Name} & \textbf{Default} & \textbf{Parameter mapping} \\
+        \hline
+        \textit{arch} & 0 & \textit{arch\_p} \\
+        \hline
+        \textit{bpred\_size} & 0 & \textit{bpred\_size\_p}  \\
+        \hline
+        \textit{cache\_size} & 0 & \textit{cache\_size\_p} \\
+        \hline
+        \textit{call\_counter\_size} & 0 & \textit{call\_counter\_size\_p} \\
+        \hline
+        \textit{context\_width} & 0 & \textit{context\_width\_p} - 1 \\
+        \hline
+        \textit{ecause\_width} & 3 & \textit{ecause\_width\_p} - 1 \\
+        \hline
+        \textit{f0s\_width} & 0 & \textit{f0s\_width\_p} \\
+        \hline
+        \textit{iaddress\_lsb} & 0 & \textit{iaddress\_lsb\_p} - 1 \\
+        \hline
+        \textit{iaddress\_width} & 31 & \textit{iaddress\_width\_p} - 1 \\
+        \hline
+        \textit{nocontext} & 0 & \textit{nocontext} \\
+        \hline
+        \textit{privilege\_width} & 2 & \textit{privilege\_width\_p} - 1 \\
+        \hline
+        \textit{return\_stack\_size} & 0 & \textit{return\_stack\_size\_p} \\
+        \hline
+        \textit{sijump} & 0 & \textit{sijump\_p} \\
+        \hline
+    \end{tabulary}
+\end{table}
+
+For ease of use it is further recommended that all of the encoder's parameters be mapped to 
+discoverable attributes, even if not directly required by the decoder.  In particular, 
+attributes related to filtering capabilities.  Table \ref{tab:optionalAttributes} lists the attributes
+associated with the filtering recommendations discussed in Chapter~\ref{ch:filtering}, and 
+Table \ref{tab:otherAttributes} lists attributes related to other parameters mentioned in this 
+document.
+
+\begin{table}[!h]
+    \centering
+    \caption{Optional filtering attributes}
+    \label{tab:optionalAttributes}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Name} & \textbf{Default} & \textbf{Parameter mapping} \\
+        \hline
+         \textit{comparators} & 0 & \textit{comparators\_p} - 1\\
+        \hline
+        \textit{filters} & 0 & \textit{filters\_p} - 1\\
+        \hline
+        \textit{ecause\_choice} & 5 & \textit{ecause\_choice\_p}\\
+        \hline
+        \textit{filter\_context} & 1 & \textit{filter\_context\_p}\\
+        \hline
+        \textit{filter\_ecause} & 1 & \textit{filter\_ecause\_p}\\
+        \hline
+        \textit{filter\_interrupt} & 1 & \textit{filter\_interrupt\_p}\\
+        \hline
+        \textit{filter\_privilege} & 1 & \textit{filter\_privilege\-p}\\
+        \hline
+        \textit{filter\_tval} & 1 & \textit{filter\_tval\_p}\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[!h]
+    \centering
+    \caption{Other recommended attributes}
+    \label{tab:otherAttributes}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Name} & \textbf{Default} & \textbf{Description} \\
+        \hline
+        \textit{context\_type\_width} & 1 & \textit{context\_type\_width\_p} - 1\\
+        \hline
+        \textit{ilastsize\_width} & 0 & \textit{ilastsize\_width\_p} - 1\\
+        \hline
+        \textit{itype\_width} & 4 & \textit{itype\_width\_p} - 1\\
+        \hline
+        \textit{iretire\_width} & 2 & \textit{iretire\_width\_p} - 1\\
+        \hline
+        \textit{ntkn\_width} & 0 & \textit{ntkn\_width\_p} - 1\\
+        \hline
+        \textit{retires} & 0 & \textit{retires\_p} - 1\\
+        \hline
+        \textit{taken\_branches} & 0 & \textit{taken\_branches\_p} - 1\\
+        \hline
+        \textit{impdef\_width} & 0 & \textit{impdef\_width\_p} - 1\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\FloatBarrier
+\section{Example ipxact description} \label{sec:ipxact}
+
+This section provides an example of discovery information represented in
 the ipxact form.
 
 \begin{alltt}
@@ -12,8 +203,8 @@ the ipxact form.
 <ipxact:component 
    xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-   xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014
-                         http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
+   xsi:schemaLocation="http://www.accellera.org/XMLSchema/IPXACT/1685-2014 
+                       http://www.accellera.org/XMLSchema/IPXACT/1685-2014/index.xsd">
    <ipxact:vendor>UltraSoC</ipxact:vendor>
    <ipxact:library>TraceEncoder</ipxact:library>
    <ipxact:name>TraceEncoder</ipxact:name>
@@ -33,43 +224,43 @@ the ipxact form.
                <ipxact:size>64</ipxact:size>
                <ipxact:access>read-only</ipxact:access>
                <ipxact:field>
-                  <ipxact:name>minor_version</ipxact:name>
+                  <ipxact:name>version</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>0</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>version</ipxact:name>
+                  <ipxact:name>minor_revision</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>4</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>comparators</ipxact:name>
+                  <ipxact:name>arch</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>8</ipxact:bitOffset>
-                  <ipxact:bitWidth>3</ipxact:bitWidth>
-               </ipxact:field>
-               <ipxact:field>
-                  <ipxact:name>filters</ipxact:name>
-                  <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>11</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>bpred_size</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>15</ipxact:bitOffset>
+                  <ipxact:bitOffset>12</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>cache_size</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>19</ipxact:bitOffset>
+                  <ipxact:bitOffset>16</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>call_counter_size</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>20</ipxact:bitOffset>
+                  <ipxact:bitWidth>3</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>comparators</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>23</ipxact:bitOffset>
                   <ipxact:bitWidth>3</ipxact:bitWidth>
@@ -99,52 +290,58 @@ the ipxact form.
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>filter_context</ipxact:name>
+                  <ipxact:name>filters</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>43</ipxact:bitOffset>
+                  <ipxact:bitWidth>4</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_context</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>47</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_ecause</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>44</ipxact:bitOffset>
+                  <ipxact:bitOffset>48</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_interrupt</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>48</ipxact:bitOffset>
+                  <ipxact:bitOffset>52</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_privilege</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>49</ipxact:bitOffset>
+                  <ipxact:bitOffset>53</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>filter_tval</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>50</ipxact:bitOffset>
+                  <ipxact:bitOffset>54</ipxact:bitOffset>
+                  <ipxact:bitWidth>1</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>filter_impdef</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>55</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>f0s_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>51</ipxact:bitOffset>
+                  <ipxact:bitOffset>56</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>iaddress_lsb</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>53</ipxact:bitOffset>
+                  <ipxact:bitOffset>58</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
-               </ipxact:field>
-               <ipxact:field>
-                  <ipxact:name>iaddress_width</ipxact:name>
-                  <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>55</ipxact:bitOffset>
-                  <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
             </ipxact:register>
 
@@ -155,75 +352,75 @@ the ipxact form.
                <ipxact:size>64</ipxact:size>
                <ipxact:access>read-only</ipxact:access>
                <ipxact:field>
-                  <ipxact:name>ilastsize_width</ipxact:name>
+                  <ipxact:name>iaddress_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>0</ipxact:bitOffset>
                   <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>itype_width</ipxact:name>
+                  <ipxact:name>ilastsize_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>7</ipxact:bitOffset>
                   <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>iretire_width</ipxact:name>
+                  <ipxact:name>itype_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>14</ipxact:bitOffset>
                   <ipxact:bitWidth>7</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>nocontext</ipxact:name>
+                  <ipxact:name>iretire_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>21</ipxact:bitOffset>
+                  <ipxact:bitWidth>7</ipxact:bitWidth>
+               </ipxact:field>
+               <ipxact:field>
+                  <ipxact:name>nocontext</ipxact:name>
+                  <ipxact:description>text</ipxact:description>
+                  <ipxact:bitOffset>28</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>ntkn_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>22</ipxact:bitOffset>
+                  <ipxact:bitOffset>29</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>privilege_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>24</ipxact:bitOffset>
+                  <ipxact:bitOffset>31</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>retires</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>26</ipxact:bitOffset>
+                  <ipxact:bitOffset>33</ipxact:bitOffset>
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>return_stack_size</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>29</ipxact:bitOffset>
+                  <ipxact:bitOffset>36</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
-               </ipxact:field>
-               <ipxact:field>
-                  <ipxact:name>rv32</ipxact:name>
-                  <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>33</ipxact:bitOffset>
-                  <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>sijump</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>34</ipxact:bitOffset>
+                  <ipxact:bitOffset>40</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>taken_branches</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>35</ipxact:bitOffset>
+                  <ipxact:bitOffset>41</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>user_width</ipxact:name>
+                  <ipxact:name>impdef_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>39</ipxact:bitOffset>
+                  <ipxact:bitOffset>45</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>
                </ipxact:field>
             </ipxact:register>

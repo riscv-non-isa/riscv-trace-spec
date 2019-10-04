@@ -1,90 +1,30 @@
 \chapter{Filtering} \label{ch:filtering}
 
-
-The instruction trace encoder must be able to filter on the following inputs to the encoder:
+Filtering provides a mechanism to control whether the encoder should produce trace.  For example,
+it may be desirable to trace:
 
 \begin{itemize}
-  \item The instruction address 
-  \item The context 
-  \item The exception cause 
-  \item Whether the exception is an interrupt or not 
-  \item The privilege level
-  \item Tval 
-  \item User specific signals
+  \item When the instruction address is within a particular range;
+  \item Starting from one instruction address and continuing until a second instruction address;
+  \item For one or more specified privilege levels;
+  \item For a particular context or range of contexts;
+  \item Exception and/or interrupt handlers for specified exception causes or with particular \textbf{tval} values;
+  \item Based on values applied to the \textbf{impdef} or \textbf{trigger} signals;
+  \item For a fixed period of time
+  \item etc.
 \end{itemize}
 
-Internal to the encoder will be several comparators and filters. The
-actual number of these will vary for different classes of devices. The
-filters and comparators must be configured to provide the trace and
-filtering required. There will be three command types needed to set up
-the filtering operation.
+How this is accomplished is implementation specific.  
 
-\begin{enumerate}
-    \item Set up comparator 
-    \begin{itemize}
-      \item Which input bus to compare
-        \begin {enumerate}
-          \item address
-          \item context
-          \item tval
-        \end{enumerate}
-      \item Which comparator(s) to use which filtering operation to enable
-        \begin {enumerate}
-          \item \textit {eq}
-          \item \textit {neq}
-          \item \textit {lt}
-          \item \textit {lte}
-          \item \textit {gt}
-          \item \textit {gte}
-          \item \textit {always}
-          \end{enumerate}
-    \end{itemize}
+One suggested implementation provides: 
 
-  \item Value e.g. start address
-    \item Set up filter 
-    \item Set match 
-    \begin{itemize}
-      \item Configure matching behaviour for exception, privilege and user sideband
-    \end{itemize}
-\end{enumerate}
+\begin{itemize}
+  \item Comparators offering a range of arithmetic options (<, >, =, !=, etc) for \textbf{iaddress}, 
+    \textbf{context} and \textbf{tval} inputs;
+  \item Multiple choice selection for \textbf{priv} and \textbf{cause} inputs;
+  \item Masked matching for \textbf{interrupt} and \textbf{impdef} inputs;
+  \item The ability to enable tracing when \textbf{trigger[0]} is asserted, and continue tracing 
+    until \textbf{trigger[0]} is asserted (see Section~\ref{sec:trigger}).
+\end{itemize}
 
-The user may wish to:
 
-\begin{enumerate}
-  \item Trace instructions between a range of addresses
-  \item Trace instruction from one address to another
-  \item Trace interrupt service routine
-  \item Start/stop trace when in a particular privilege level
-  \item Start/stop trace when context changes or is a particular value
-  \begin {itemize}
-    \item This can be HARTs and/or software contexts. If the latter this would be 
-    \item Start/stop trace when specific instruction
-    \item Start/stop based on \textbf{user} sideband signals 
-    \item This could be the specific CSR value being presented to the Encoder
-  \end{itemize}
-\end{enumerate}
-
-\section {Using trigger outputs from Debug Module}
-
-The debug module of the RISC-V core may have a trigger unit. This exposes a 4-bit field as shown 
-in table \ref{tab:debugModuleTriggerSupport}.
-
-\begin{table}[!h]
-    \centering
-    \caption{Debug module trigger support (mcontrol)}
-    \label{tab:debugModuleTriggerSupport}
-    \begin{tabulary}{\textwidth}{|l|p{80mm}|}
-        \hline
-        \textbf {Value} & \textbf {Description} \\
-        \hline
-        2 & Trace on\\
-        \hline
-        3 & Trace off \\
-        \hline
-        4 & Trace single. The 'single' action for an instruction
-        trigger could cause just that instruction to be traced if connected to a \textbf{user} input;
-        Alternatively it could be used to assert the 'Notification' \textbf{context\_type} to generate
-        a watchpoint trace. \\
-        \hline
-    \end{tabulary}
-\end{table}
