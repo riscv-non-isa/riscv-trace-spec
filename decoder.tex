@@ -100,13 +100,19 @@ function follow_execution_path(address, te_inst)
           # Check all branches processed (except 1 if this instruction is a branch)
           ERROR: unprocessed branches
         return
+      if (te_inst.format != 3 and pc == address and 
+        (te_inst.notify != te_inst.address[MSB]) and
+        (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
+          # All branches processed, and reached reported address due to notification,
+          # not as an uninferrable jump target
+        return
       if (te_inst.format != 3 and pc == address and
-        (te_inst.updiscon == te_inst.address[MSB]) and
-          (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
-            # All branches processed, and reached reported address, but not as an
-            #   uninferrable jump target
-            # Stop here for now, though flag indicates this may not be
-            #  final retired instruction
+        (te_inst.updiscon == te_inst.notify) and
+        (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
+          # All branches processed, and reached reported address, but not as an
+          #   uninferrable jump target
+          # Stop here for now, though flag indicates this may not be
+          #  final retired instruction
         inferred_address = TRUE
         return
       if (te_inst.format == 3 and pc == address and
