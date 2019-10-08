@@ -26,7 +26,7 @@ may be passed in to the design by some means.
         \textit{call\_counter\_size\_p} &  & Number of bits in the nested call counter is 2\textsuperscript{\textbf{call\_counter\_size\_p}}.
                                     Minimum number of entries is 2, so a value of 0 indicates that there is no implicit return call counter implemented.\\
         \hline
-        \textit{context\_type\_width\_p} & & Width of the \textbf{context\_type} bus\\
+        \textit{ctype\_width\_p} & & Width of the \textbf{ctype} bus\\
         \hline
         \textit{context\_width\_p} &  & Width of context bus \\
         \hline
@@ -173,7 +173,7 @@ document.
         \hline
         \textbf{Name} & \textbf{Default} & \textbf{Description} \\
         \hline
-        \textit{context\_type\_width} & 1 & \textit{context\_type\_width\_p} - 1\\
+        \textit{ctype\_width} & 1 & \textit{cctype\_width\_p} - 1\\
         \hline
         \textit{ilastsize\_width} & 0 & \textit{ilastsize\_width\_p} - 1\\
         \hline
@@ -266,7 +266,7 @@ the ipxact form.
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>context_type_width</ipxact:name>
+                  <ipxact:name>ctype_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>26</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>

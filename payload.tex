@@ -319,7 +319,7 @@ enabled (see section~\ref{sec:full-address}).
     \textbf{notify}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
                 packet is reporting an instruction that is not the target of an uninferable discontinuity 
-                because a notification was requested via \textbf{context\_type} (see table~\ref{tab:common-ingress}). \\
+                because a notification was requested via \textbf{trigger[2]} (see section~\ref{sec:trigger}). \\
     \hline
     \textbf{updiscon}	& 1 & 
                 If the value of this bit is different from \textbf{notify}, it indicates that this 
@@ -346,7 +346,7 @@ enabled (see section~\ref{sec:full-address}).
 This bit is encoded so that most of the time it will take the same value as the MSB of the \textbf{address} field,
 and will therefore compress away, having no impact on the encoding efficiency.  It is required in order to cover 
 the case where an address is reported as a result of a notification request, signalled by setting the 
-\textbf{context\_type} input to 11. 
+\textbf{trigger[2]} input to 1. 
 
 
 \subsection{Format 2 \textbf{notify} and \textbf{updiscon} fields} \label{sec:updiscon}
@@ -498,7 +498,7 @@ count will be output under the following conditions:
     \textbf{notify}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
                 packet is reporting an instruction that is not the target of an uninferable discontinuity 
-                because a notification was requested via \textbf{context\_type} (see table~\ref{tab:common-ingress}). \\
+                because a notification was requested via \textbf{trigger[2]} (see section~\ref{sec:trigger}). \\
     \hline
     \textbf{updiscon}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{notify}, it indicates that this 
@@ -597,7 +597,7 @@ count will be output under the following conditions:
     \textbf{notify}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
                 packet is reporting an instruction that is not the target of an uninferable discontinuity 
-                because a notification was requested via \textbf{context\_type} (see table~\ref{tab:common-ingress}). \\
+                because a notification was requested via \textbf{trigger[2]} (see section~\ref{sec:trigger}). \\
     \hline
     \textbf{updiscon}	& 1 & 
                 If the value of this bit is different from \textbf{notify}, it indicates that this 
