@@ -147,7 +147,7 @@ function next_pc (address)
   else
     pc += instruction_size(instr)
 
-  if (is_call(instr))
+  if (options.implicit_return and is_call(instr))
     push_return_stack(this_pc)
 
   last_pc = this_pc
