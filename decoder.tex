@@ -147,7 +147,7 @@ function next_pc (address)
   else
     pc += instruction_size(instr)
 
-  if (options.implicit_return and is_call(instr))
+  if (is_call(instr))
     push_return_stack(this_pc)
 
   last_pc = this_pc
@@ -308,6 +308,9 @@ function is_implicit_return (instr)
 \begin{alltt}
 # Push address onto return stack #
 function push_return_stack (address)
+
+  if (options.implicit_return == 0) # Implicit return mode disabled
+    return FALSE
 
   local call_counter_max = 2**(discovery_response.call_counter_width + 2)
   local instr            = get_instr(address)
