@@ -176,27 +176,27 @@ Signals are assigned to one of the  following groups:
         14: Other uninferable jump;\newline
         15: Other inferable jump.\\
         \hline
-        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & M & Exception or interrupt cause (\textbf{\textit{ucause/scause/mcause}}), \newline
+        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & M & Exception or interrupt cause (\textbf{\textit{ucause/scause/ mcause}}).
         Ignored unless \textbf {itype}=1 or 2.\\
         \hline
         \textbf{tval}[\textit{iaddress\_width\_p}-1:0] & M & The associated trap value, e.g. the
         faulting virtual address for address exceptions, as would be
         written to the \textbf{utval/stval/mtval} CSR. Future optional extensions may define \textbf{tval} 
-        to provide ancillary information in cases where it currently supplies zero\newline
+        to provide ancillary information in cases where it currently supplies zero.
         Ignored unless \textbf{itype}=1 or 2.\\
         \hline
         \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions in this block.\\
         \hline
-        \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.\newline
+        \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.
         Invalid if \textbf{iretire}=0 \\
         \hline
-        \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context and/or hart ID for all instructions in this block.\\
+        \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context for all instructions in this block.\\
         \hline
-        \textbf{ctype}[\textit{ctype\_width\_p}-1:0] & O & Behavior type of \textbf{context}\newline
-        0: Context change with discontinuity;\newline
-        1: Precise context change;\newline
-        2: Imprecise context change;\newline
-        3: reserved.\\
+        \textbf{ctype}[\textit{ctype\_width\_p}-1:0] & O & Reporting behavior for \textbf{context}:\newline
+        0: Don't report; \newline
+        1: Report imprecisely;\newline
+        2: Report precisely;\newline
+        3: Report as asynchronous discontinuity.\\
         \hline
         \textbf{ntkn}[\textit{ntkn\_width\_p}-1:0] & OR & Number of nontaken branches in this block.\\
         \hline
@@ -302,29 +302,32 @@ The \textbf{context} field can be used to convey any additional information to t
     CSR number and value when a CSR is written.
 \end{itemize}
 
-Table~\ref{tab:context-type} specifies the actions for the various \textbf{ctype} values.
+Table~\ref{tab:context-type} specifies the actions for the various \textbf{ctype} values.  A typical 
+behaviour would be for this signal to remain zero except on the 1st retirement after a context change.
 
 \begin{table}[htp]
     \centering
-    \caption{Call/return \textbf{ctype} values and corresponding actions}
+    \caption{Context type \textbf{ctype} values and corresponding actions}
     \label{tab:context-type}
-    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+    \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
         \hline
         \textbf{Type} & \textbf{Value} & \textbf{Actions} \\
         \hline
-        Context change with discontinuity & 0 &  An example would be a change of hart.\newline
-        Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
-        Treated the same as an exception.\\
+        Unreported & 0 & No action (don't report context).\\
         \hline
-        Precise context change & 1 & Need to output the address of the 1st instruction, and the new context.\newline
-        If there were unreported branches beforehand, these need to be output first.\newline
+        Report context imprecisely & 1 & An example would be a SW thread change.\newline
+        Report the new context value at the earliest convenient opportunity.\newline
+        It is reported without any address information, and the assumption is that the precise 
+        point of context change can be deduced from the source code (e.g. a CSR write). \\
+        \hline
+        Report context precisely  & 2 & Report the address of the 1st instruction retired in this block, and the new context.\newline
+        If there were unreported branches beforehand, these need to be reported first.\newline
         Treated the same as a privilege change.\\
         \hline
-        Imprecise context change & 2 & An example would be a SW thread change.\newline
-        Report the new context value at the earliest convenient opportunity.\newline
-        It is reported without any address information, and the assumption is that the precise point of context change can be deduced from the source code (e.g. a CSR write). \\
-        \hline
-        reserved & 3 & \\
+        Report context as an & 3 &  An example would be a change of hart.\\
+        asynchronous discontinuity & & 
+        Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
+        Treated the same as an exception.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -371,7 +374,7 @@ will need to be applied via the \textbf{context} input.
     \centering
     \caption{Optional sideband encoder ingress signals}
     \label{tab:ingress-side-band}
-    \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
+    \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline

@@ -81,6 +81,7 @@ function process_te_inst (te_inst)
 function follow_execution_path(address, te_inst)
 
   local previous_address = pc
+  local stop_here        = FALSE
   while (TRUE)
     if (inferred_address) # iterate again from previously reported address to
                           #   find second occurrence
@@ -88,34 +89,33 @@ function follow_execution_path(address, te_inst)
       if (pc == previous_address)
         inferred_address = FALSE
     else
-      next_pc(address)
+      stop_here = next_pc(address)
       if (branches == 1 and is_branch(get_instr(pc)) and stop_at_last_branch)
         # Reached final branch - stop here (do not follow to next instruction as
         #  we do not yet know whether it retires)
         stop_at_last_branch = FALSE
         return
-      else if (!stop_at_last_branch)
-        if (pc == address and is_uninferrable_discon(get_instr(last_pc)))
-          # Reached reported address following an uninferrable discontinuity - stop here
-          if (branches > (is_branch(get_instr(pc)) ? 1 : 0))
-            # Check all branches processed (except 1 if this instruction is a branch)
-            ERROR: unprocessed branches
-          return
-        if (te_inst.format != 3 and pc == address and 
-          (te_inst.notify != te_inst.address[MSB]) and
-          (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
-            # All branches processed, and reached reported address due to notification,
-            # not as an uninferrable jump target
-          return
-        if (te_inst.format != 3 and pc == address and
-          (te_inst.updiscon == te_inst.notify) and
-          (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
-            # All branches processed, and reached reported address, but not as an
-            #   uninferrable jump target
-            # Stop here for now, though flag indicates this may not be
-            #  final retired instruction
-          inferred_address = TRUE
-          return
+      if (pc == address and stop_here))
+        # Reached reported address following an uninferrable discontinuity - stop here
+        if (branches > (is_branch(get_instr(pc)) ? 1 : 0))
+          # Check all branches processed (except 1 if this instruction is a branch)
+          ERROR: unprocessed branches
+        return
+      if (te_inst.format != 3 and pc == address and 
+        (te_inst.notify != te_inst.address[MSB]) and !stop_at_last_branch and
+        (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
+          # All branches processed, and reached reported address due to notification,
+          # not as an uninferrable jump target
+        return
+      if (te_inst.format != 3 and pc == address and
+        (te_inst.updiscon == te_inst.notify) and !stop_at_last_branch and
+        (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
+          # All branches processed, and reached reported address, but not as an
+          #   uninferrable jump target
+          # Stop here for now, though flag indicates this may not be
+          #  final retired instruction
+        inferred_address = TRUE
+        return
       if (te_inst.format == 3 and pc == address and
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
         # All branches processed, and reached reported address
@@ -237,11 +237,11 @@ function is_uninferrable_discon (instr)
       (instr.opcode == URET)      or
       (instr.opcode == SRET)      or
       (instr.opcode == MRET)      or
-      (instr.opcode == DRET))
+      (instr.opcode == DRET)      or
+      (instr.opcode == ECALL)     or
+      (instr.opcode == EBREAK)    or
+      (instr.opcode == C.EBREAK))
     return TRUE
-    # Note: The exception reporting mechanism means it is not
-    #   necessary to include
-    # ECALL, EBREAK or C.EBREAK in this test
 
   return FALSE
 
@@ -299,6 +299,8 @@ function is_implicit_return (instr)
 
   if ((instr.opcode == JALR and instr.rs1 == 1 and instr.rd == 0) or
       (instr.opcode == C.JR and instr.rs1 == 1))
+    if (implicit_return_fail(te_inst) and te_inst.ircount == call_counter)
+      return FALSE 
     return (call_counter > 0)
 
   return FALSE
@@ -311,7 +313,7 @@ function is_implicit_return (instr)
 function push_return_stack (address)
 
   if (options.implicit_return == 0) # Implicit return mode disabled
-    return FALSE
+    return
 
   local call_counter_max = 2**(discovery_response.call_counter_width + 2)
   local instr            = get_instr(address)
@@ -338,5 +340,20 @@ function pop_return_stack ()
 
   local  link = return_stack[call_counter]
   return link
+
+# Check for implicit_return failure #
+function implicit_return_fail(te_inst)
+
+  local previous_bit = te_inst.updiscon
+  if (te_inst.format == 0 and te_inst.subformat == 0)
+    previous_bit = te_inst.branches == 0 ? te_inst.branches[4]    :
+                   te_inst.branches <  2 ? te_inst.branch_map[0]  : 
+                   te_inst.branches <  4 ? te_inst.branch_map[2]  : 
+                   te_inst.branches <  8 ? te_inst.branch_map[7]  : 
+                   te_inst.branches < 16 ? te_inst.branch_map[15] : 
+                                           te_inst.branch_map[31]
+                   
+  return te_inst.irfail != previous_bit
+  
 \end{alltt}
 %\end{lstlisting}
