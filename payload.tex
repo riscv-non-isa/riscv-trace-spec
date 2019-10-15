@@ -332,15 +332,9 @@ enabled (see section~\ref{sec:full-address}).
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
-                will also be the same value as \textbf{updiscon}. \\
-    \hline
-    \textbf{ircount}	& \textit {call\_counter\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
-                the value of the call counter (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
                 will also be the same value as \textbf{updiscon}. \\
     \hline
@@ -439,7 +433,7 @@ small, a notification packet is significantly less efficient.  This could be mit
  requires more than 16 bits, as some of the address bits are now after the \textbf{notify} bit.  However, if the likelihood 
  of such long jumps is low, this is probably worth it.
 
-\subsection{Format 2 \textbf{irfail}, \textbf{irdepth} and \textbf{ircount} fields} \label{sec:irxx}
+\subsection{Format 2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
 and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, the
 encoder maintains a count of the number of traced calls (\textit{call\_counter\_size\_p} non-zero) or a stack of 
@@ -522,15 +516,9 @@ count will be output under the following conditions:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
-                will also be the same value as \textbf{updiscon}. \\
-    \hline
-    \textbf{ircount}	& \textit {call\_counter\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
-                the value of the call counter (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
                 will also be the same value as \textbf{updiscon}. \\
     \hline
@@ -627,17 +615,11 @@ count will be output under the following conditions:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
                 will also be the same value as \textbf{updiscon}. \\
-    \textbf{ircount}	& \textit {call\_counter\_size\_p} & 
-                If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
-                the value of the call counter (i.e. the entry number of the return that
-                failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
-                will also be the same value as \textbf{updiscon}. \\
-    \hline
     \hline
   \end{tabulary}
 \end{table}
@@ -674,7 +656,7 @@ reported address will always be for a branch, and in the former cases it may be.
 be explicit about whether or not the prediction was met or not.  If it is met, then the reported address is that of the last
 correctly predicted branch.
 
-\subsection{Format 1 \textbf{irfail}, \textbf{irdepth} and \textbf{ircount} fields} \label{sec:irxx}
+\subsection{Format 1 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 
 See section~\ref{sec:irxx}.
 
@@ -720,7 +702,7 @@ the jump target cache index.
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{branch\_map[MSB]}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{branch\_map[MSB]}, all bits in this field 
@@ -753,7 +735,7 @@ the jump target cache index.
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{branches[MSB]}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{branches[MSB]}, all bits in this field 
@@ -769,7 +751,7 @@ defined (branch target cache), and as such the width of this field is 0 (i.e. it
 specified by the \textit{f0s\_width} discovery field (see section~\ref{sec:disco}).  Provision of this field
 allows additional formats to be added in future without reducing the efficiency of the existing formats.
 
-\subsection{Format 0 \textbf{irfail}, \textbf{irdepth} and \textbf{ircount} fields}
+\subsection{Format 0 \textbf{irfail} and \textbf{irdepth} fields}
 These bits are encoded so that most of the time they will take the same value as the \textbf{branch\_map[MSB]} 
 or \textbf{branches[MSB]} field.  Purpose and behaviour is as described in section~\ref{sec:irxx}.
 They are included to allow return addresses that fail the implicit return prediction but 

@@ -21,8 +21,8 @@ global bool  start_of_trace = TRUE       # Flag indicating 1st trace packet stil
                                          #   to be processed
 global       address                     # Reconstructed address from te_inst messages
 global       options                     # Operating mode flags
-global       call_counter = 0            # Count of number of nested calls being traced
 global array return_stack                # Array holding return address stack
+global       irstack_depth = 0           # Depth of the return address stack
 \end{alltt}
 
 \pagebreak
@@ -50,7 +50,7 @@ function process_te_inst (te_inst)
       last_pc      = pc # previous pc not known but ensures correct
                         #  operation for is_sequential_jump()
     start_of_trace = FALSE
-    call_counter   = 0
+    irstack_depth  = 0
 
   else
     if (start_of_trace) # This should not be possible!
@@ -85,8 +85,8 @@ function follow_execution_path(address, te_inst)
   while (TRUE)
     if (inferred_address) # iterate again from previously reported address to
                           #   find second occurrence
-      next_pc(previous_address)
-      if (pc == previous_address)
+      stop_here = next_pc(previous_address)
+      if (stop_here)
         inferred_address = FALSE
     else
       stop_here = next_pc(address)
@@ -95,20 +95,20 @@ function follow_execution_path(address, te_inst)
         #  we do not yet know whether it retires)
         stop_at_last_branch = FALSE
         return
-      if (pc == address and stop_here))
+      if (stop_here))
         # Reached reported address following an uninferrable discontinuity - stop here
         if (branches > (is_branch(get_instr(pc)) ? 1 : 0))
           # Check all branches processed (except 1 if this instruction is a branch)
           ERROR: unprocessed branches
         return
-      if (te_inst.format != 3 and pc == address and 
-        (te_inst.notify != te_inst.address[MSB]) and !stop_at_last_branch and
+      if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
+        (te_inst.notify != get_previous_bit(te_inst, "notify")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
           # All branches processed, and reached reported address due to notification,
           # not as an uninferrable jump target
         return
-      if (te_inst.format != 3 and pc == address and
-        (te_inst.updiscon == te_inst.notify) and !stop_at_last_branch and
+      if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
+        (te_inst.updiscon == get_previous_bit(te_inst, "updiscon")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
           # All branches processed, and reached reported address, but not as an
           #   uninferrable jump target
@@ -156,6 +156,8 @@ function next_pc (address)
 # Process support packet #
 function process_support (te_inst)
 
+  local stop_here = FALSE
+
   options = te_inst.options
     if (te_inst.qual_status != no_change)
       start_of_trace = TRUE # Trace ended, so get ready to start again
@@ -163,8 +165,8 @@ function process_support (te_inst)
       local previous_address = pc
       inferred_address       = FALSE
       while (TRUE)
-        next_pc(previous_address)
-        if (pc == previous_address)
+        stop_here = next_pc(previous_address)
+        if (stop_here)
           return
     return
 
@@ -299,9 +301,10 @@ function is_implicit_return (instr)
 
   if ((instr.opcode == JALR and instr.rs1 == 1 and instr.rd == 0) or
       (instr.opcode == C.JR and instr.rs1 == 1))
-    if (implicit_return_fail(te_inst) and te_inst.ircount == call_counter)
+    if (te_inst.irfail != get_previous_bit(te_inst, "irfail") and 
+        te_inst.irdepth == irstack_depth)
       return FALSE 
-    return (call_counter > 0)
+    return (irstack_depth > 0)
 
   return FALSE
 \end{alltt}
@@ -315,45 +318,33 @@ function push_return_stack (address)
   if (options.implicit_return == 0) # Implicit return mode disabled
     return
 
-  local call_counter_max = 2**(discovery_response.call_counter_width + 2)
-  local instr            = get_instr(address)
-  local link             = address
+  local irstack_depth_max = discovery_response.return_stack_size ?
+                             2**discovery_response.return_stack_size :
+                             2**discovery_response.call_counter_size
+  local instr             = get_instr(address)
+  local link              = address
 
-  if (call_counter == call_counter_max)
+  if (irstack_depth == irstack_depth_max)
     # Delete oldest entry from stack to make room for new entry added below
-    call_counter--
-    for (i = 0; i < call_counter; i++)
+    irstack_depth--
+    for (i = 0; i < irstack_depth; i++)
       return_stack[i] = return_stack[i+1]
 
   link += instruction_size(instr)
 
-  return_stack[call_counter] = link
-  call_counter++
+  return_stack[irstack_depth] = link
+  irstack_depth++
 
   return
 
 # Pop address from return stack #
 function pop_return_stack ()
 
-  call_counter-- # function not called if call_counter is 0, so no need
-                 #  to check for underflow
+  irstack_depth-- # function not called if irstack_depth is 0, so no need
+                  #  to check for underflow
+  local  link = return_stack[irstack_depth]
 
-  local  link = return_stack[call_counter]
   return link
 
-# Check for implicit_return failure #
-function implicit_return_fail(te_inst)
-
-  local previous_bit = te_inst.updiscon
-  if (te_inst.format == 0 and te_inst.subformat == 0)
-    previous_bit = te_inst.branches == 0 ? te_inst.branches[4]    :
-                   te_inst.branches <  2 ? te_inst.branch_map[0]  : 
-                   te_inst.branches <  4 ? te_inst.branch_map[2]  : 
-                   te_inst.branches <  8 ? te_inst.branch_map[7]  : 
-                   te_inst.branches < 16 ? te_inst.branch_map[15] : 
-                                           te_inst.branch_map[31]
-                   
-  return te_inst.irfail != previous_bit
-  
 \end{alltt}
 %\end{lstlisting}
