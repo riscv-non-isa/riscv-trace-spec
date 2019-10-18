@@ -114,11 +114,11 @@ and when resynchronization has been scheduled by expiry of the resynchronisation
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the reported instruction\\
     \hline
+    \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
+              Set to 1 if the instruction is not a branch or if the branch is not taken. \\
+    \hline
     \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
-    \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{address}. 
-    Set to the same value as the MSB of \textbf{address} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
@@ -128,22 +128,17 @@ and when resynchronization has been scheduled by expiry of the resynchronisation
 This bit indicates the taken/not taken status in the case where the reported address points to a branch instruction.
 Overall efficiency would be slightly improved if this bit was removed, and the branch status was instead 
 "carried over" and reported in the next \textit{te\_inst} packet.  This was considered, but there are several
-pathological cases where this approach fails.  Consider for example the situation where the first instruction
-that matches the filtering criteria is a branch, and this is then followed immediately by an exception.  This
-results in format 3 packets being generated on two consecutive cycles.  The second packet does not contain a branch
+pathological cases where this approach fails.  Consider for example the situation where the first traced instruction
+is a branch, and this is then followed immediately by an exception.  This results in format 3 packets being generated 
+on two consecutive instructions.  The second packet does not contain a branch
 map, so there is no way to report the branch status of the 1st branch, apart from by inserting a format 1 packet in 
 between.  There are two issues with this:
 
 \begin{itemize}
   \item It would require the generation of 2 packets on the same cycle, which adds significant additional complexity
     to the encoder;
-  \item It would complicate the algorithm shown in~\ref{fig:algo}. 
+  \item It would complicate the algorithm shown in figure~\ref{fig:algo}. 
 \end{itemize}
-
-This bit is encoded so that most of the time it will take the same value as the MSB of the preceding field, and will
-therefore compress away, in order to minimize the efficiency impact.  Branches are unlikely to be reported using a
-format 3 packet apart from if the 1st traced instruction is a branch, or if the instruction reported when the 
-resync timer expires is a branch.
 
 \FloatBarrier
 \section{Format 3 subformat 1 - Exception} \label{sec:format31}
@@ -173,6 +168,9 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the reported instruction.\\
     \hline
+    \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
+              Set to 1 if the instruction is not a branch or if the branch is not taken. \\
+    \hline
     \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
     \hline
@@ -184,9 +182,6 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \hline
     \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
            Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 0 (illegal instruction exception), or trap value otherwise.\\
-    \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tvalepc}. 
-    Set to the same value as the MSB of \textbf{tvalepc} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
@@ -271,7 +266,7 @@ optional modes supported by the encoder.
   \end{tabulary}
 \end{table}
 
-\subsection{Format 3 subformat 3 \textbf{qual\_status} field}
+\subsection{Format 3 subformat 3 \textbf{qual\_status} field} \label{sec:qual-status}
 
 When tracing ends, the encoder reports the address of the last traced instruction, and follows this with a format 3, 
 subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
@@ -316,8 +311,13 @@ enabled (see section~\ref{sec:full-address}).
     \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Differential instruction address.\\ 
     \hline
-    \textbf{updiscon}	& 1 & 
+    \textbf{notify}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
+                packet is reporting an instruction that is not the target of an uninferable discontinuity 
+                because a notification was requested via \textbf{trigger[2]} (see section~\ref{sec:trigger}). \\
+    \hline
+    \textbf{updiscon}	& 1 & 
+                If the value of this bit is different from \textbf{notify}, it indicates that this 
                 packet is reporting the instruction following an uninferable discontinuity and is also the 
                 instruction before an exception, privilege change or resync 
                 (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
@@ -327,7 +327,7 @@ enabled (see section~\ref{sec:full-address}).
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
@@ -336,12 +336,21 @@ enabled (see section~\ref{sec:full-address}).
   \end{tabulary}
 \end{table}
 
-\subsection{Format 2 \textbf{updiscon} field} \label{sec:updiscon}
+\subsection{Format 2 \textbf{notify} field} \label{sec:notify}
 
 This bit is encoded so that most of the time it will take the same value as the MSB of the \textbf{address} field,
-and will therefore compress away, having no impact on the encoding efficiency.  It is required in order to cover a
-pathological case where otherwise the decoding software would not be able to reconstruct the program execution
-unambiguously.  Consider the following code fragment:
+and will therefore compress away, having no impact on the encoding efficiency.  It is required in order to cover 
+the case where an address is reported as a result of a notification request, signalled by setting the 
+\textbf{trigger[2]} input to 1. 
+
+
+\subsection{Format 2 \textbf{notify} and \textbf{updiscon} fields} \label{sec:updiscon}
+
+These bits are encoded so that most of the time they will compress away, having no impact on efficiency, by taking on 
+the same value as the preceding bit in the packet (\textbf{notify} is normally the same value as the MSB of the 
+\textbf{address} field, and \textbf{updiscon} is normally the same value as \textbf{notify}).  They are required in
+order to cover a pathological case where otherwise the decoding software would not be able to reconstruct the program 
+execution unambiguously. Consider the following code fragment:
 
 looplabel~~-~4: \textbf{\textit{opcode A}} \newline
 looplabel~~~~~: \textbf{\textit{opcode B}} \newline
@@ -361,47 +370,76 @@ does not work.  For example, consider the case where there is an exception at lo
 cannot tell whether this occurred during the 1st or 2nd loop iterations, without additional information from the 
 encoder.  This is the purpose of the \textbf{updiscon} field.  In more detail:
 
-There are three scenarios to consider:
+There are four scenarios to consider:
 
 \begin{enumerate}
   \item Code executes through to the end of the 1st loop iteration, and the encoder reports looplabel using format 1/2 following 
-    the \textbf{\textit{JALR}}, then carries on executing the 2nd pass of the loop.  In this case \textbf{updiscon} == \textbf{address[MSB]}.  
+    the \textbf{\textit{JALR}}, then carries on executing the 2nd pass of the loop.  In this case \textbf{updiscon} == \textbf{notify}.  
     The next packet will be a format 1/2;
   \item Code executes through to the end of the 1st loop iteration, but there is an exception, privilege change or resync at
     the instruction following the \textbf{\textit{JALR}} (i.e. at looplabel + 4).  In this case, the encoder reports looplabel using 
-    format 1/2 following the \textbf{\textit{JALR}}, with \textbf{updiscon} == !\textbf{address[MSB]}, and the next packet is a 
+    format 1/2 following the \textbf{\textit{JALR}}, with \textbf{updiscon} == !\textbf{notify}, and the next packet is a 
     format 3;
   \item An exception occurs after the 1st execution of looplabel.  In this case, the encoder reports looplabel using format 0/1/2 and again,
-    \textbf{updiscon} == \textbf{address[MSB]}, and the next packet is a format 3.
+    \textbf{updiscon} == \textbf{notify}, and the next packet is a format 3;
+  \item The hart requests the encoder to notify retirement of the instruction at looplabel.  In this case, the encoder reports the 1st 
+    execution of looplabel with \textbf{notify} == !\textbf{address[MSB]}, and subsequent executions with \textbf{notify} == 
+    \textbf{address[MSB]}.
 \end{enumerate}
 
 Looking at this from the perspective of the decoder, the decoder receives a format 1/2 reporting the address of the 1st instruction in the 
 loop (looplabel).  It follows the execution path from the last reported address, until it reaches looplabel.  Because looplabel is not 
-preceded by an uninferable discontinuity, it must take the value of \textbf{updiscon} into consideration, and may need to wait for the 
-next packet in order to determine whether it has reached the final retired instruction:
-\begin{itemize}  
-  \item If \textbf{updiscon} == !\textbf{address[MSB]}, this indicates case 2.  The decoder must continue until it encounters 
+preceded by an uninferable discontinuity, it must take the value of \textbf{notify} and \textbf{updiscon} into consideration, and may need 
+to wait for the next packet in order to determine whether it has reached the final retired instruction:
+\begin{itemize}
+  \item If \textbf{updiscon} == !\textbf{notify}, this indicates case 2.  The decoder must continue until it encounters 
     looplabel a 2nd time;
-  \item If \textbf{updiscon} == \textbf{address[MSB]}, the decoder cannot yet distinguish cases 1 and 3, and must wait for the 
+  \item If \textbf{updiscon} == \textbf{notify}, the decoder cannot yet distinguish cases 1 and 3, and must wait for the 
     next packet.
     \begin{itemize}
       \item If the next packet is a format 3, this is case 3.  The decoder has already reached the correct instruction;
       \item If the next packet is a format 1/2, this is case 1.  The decoder must continue until it encounters 
         looplabel a 2nd time.
     \end{itemize}
+  \item If \textbf{notify} == !\textbf{address[MSB]}, this indicates case 4, 1st iteration.  The decoder has reached the 
+    correct instruction.
 \end{itemize}
 
 This example uses an exception at looplabel + 4, but anything that could cause a format 3 for looplabel + 4 would result in 
 the same behavior: a privilege change, or the expiry of the resync timer.  It could also occur if looplabel was the last
-traced instruction (because tracing was disabled for some reason).  See next section for further discussion of this point.
+traced instruction (because tracing was disabled for some reason).  See section~\ref{sec:qual-status} for further discussion 
+of this point.
+
+\textbf{Note:} Correct decoder behavior could have been achieved by implementing the \textbf{notify} bit only, setting it 
+to the inverse of \textbf{address[MSB]} whenever an address is reported and it is not the instruction following an 
+uninferable discontinuity.  However, this would have been much less efficient, as this would have required \textbf{notify} 
+to be different from \textbf{address[MSB]} the majority of the time when outputting a format 1/2 before an exception,
+interrupt or resync (as the probability of this instruction being the target of an uninferable jump is low).  Using 2 
+separate bits results in superior compression.
+
+\textbf{DISCUSSION POINT:} The \textbf{notify} bit will only be different from \textbf{address[MSB]} when the hart has 
+requested notification.  As such, it will have no impact on 'normal' encoding efficiency. However, if the instruction 
+being notified occurs in a loop, it may result in a relatively high number of notification packets close together in
+time.  Because the \textbf{address} is typically 32-bits or more in length, but differtial address values are typically
+small, a notification packet is significantly less efficient.  This could be mitigated by partitioning \textbf{address}
+ into two parts, with \textbf{notify} in between (for example, \textbf{address[15:0]}, \textbf{notify}, 
+ \textbf{address[MSB:16]}).  This would signicantly reduce the efficiency impact of sending a notification.  In return, the 
+ efficiency of a 'normal' format 1/2 packet may be slightly reduced if the differential address value being reported 
+ requires more than 16 bits, as some of the address bits are now after the \textbf{notify} bit.  However, if the likelihood 
+ of such long jumps is low, this is probably worth it.
 
 \subsection{Format 2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
-and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, and
-the encoder maintains a stack of predicted return addresses that are compared with the actual return addresses, then
-a \textit{te\_inst} packet will be generated if a misprediction occurs.  In order to correctly reconstruct the 
-execution path of the program, the decoder will need to know which return it was that failed.  If a return is reported
-because the return address stack is empty, these fields will take the same value as the \textbf{updiscon} field.
+and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, the
+encoder maintains a count of the number of traced calls (\textit{call\_counter\_size\_p} non-zero) or a stack of 
+predicted return addresses (\textit{return\_stack\_size\_p} non-zero).  Predicted return addresses are compared 
+with the actual return addresses, and a \textit{te\_inst} packet will be generated if a misprediction occurs.  
+Furthermore, a return that would not normally be reported (because the call counter is non-zero, or because it matches
+the predicted return address) may need to be reported anyway if it happens to be the last instruction before an 
+exception (for example).   In either case, in order to correctly reconstruct the execution path of the program, the 
+decoder will need to know which return it was that is being reported explicitly.  If a return is reported
+because the return address stack is empty or the call counter is zero, these fields will take the same value as the 
+\textbf{updiscon} field.
 
 \FloatBarrier
 \section{Format 1 packets} \label{sec:format1}
@@ -457,8 +495,13 @@ count will be output under the following conditions:
     \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
                 Differential instruction address.\\
     \hline
-    \textbf{updiscon}	& 1 & 
+    \textbf{notify}	& 1 & 
                 If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
+                packet is reporting an instruction that is not the target of an uninferable discontinuity 
+                because a notification was requested via \textbf{trigger[2]} (see section~\ref{sec:trigger}). \\
+    \hline
+    \textbf{updiscon}	& 1 & 
+                If the value of this bit is different from the MSB of \textbf{notify}, it indicates that this 
                 packet is reporting the instruction following an uninferable discontinuity and is also the 
                 instruction before an exception, privilege change or resync 
                 (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
@@ -468,7 +511,7 @@ count will be output under the following conditions:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
@@ -551,8 +594,13 @@ count will be output under the following conditions:
     \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
                 Differential instruction address.\\
     \hline
+    \textbf{notify}	& 1 & 
+                If the value of this bit is different from the MSB of \textbf{address}, it indicates that this 
+                packet is reporting an instruction that is not the target of an uninferable discontinuity 
+                because a notification was requested via \textbf{trigger[2]} (see section~\ref{sec:trigger}). \\
+    \hline
     \textbf{updiscon}	& 1 & 
-                If the value of this bit is different from \textbf{address[MSB]}, it indicates that this 
+                If the value of this bit is different from \textbf{notify}, it indicates that this 
                 packet is reporting the instruction following an uninferable discontinuity and is also the 
                 instruction before an exception, privilege change or resync 
                 (i.e. it will be followed immediately by a format 3 \textit{te\_inst}).\\
@@ -562,7 +610,7 @@ count will be output under the following conditions:
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{updiscon}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{updiscon}, all bits in this field 
@@ -649,7 +697,7 @@ the jump target cache index.
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{branch\_map[MSB]}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{branch\_map[MSB]}, all bits in this field 
@@ -682,7 +730,7 @@ the jump target cache index.
                 packet is reporting the instruction following a return because its address differs from 
                 the predicted return address at the top of the implicit\_return return address stack.\\
     \hline
-    \textbf{irdepth}	& \textit {return\_stack\_size\_p} & 
+    \textbf{irdepth}	& \textit {return\_stack\_size\_p + call\_counter\_size\_p} & 
                 If the value of \textbf{irfail} is different from \textbf{branches[MSB]}, this field indicates 
                 the number of entries on the return address stack (i.e. the entry number of the return that
                 failed).  If \textbf{irfail} is the same value as \textbf{branches[MSB]}, all bits in this field 
