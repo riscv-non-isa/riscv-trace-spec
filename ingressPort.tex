@@ -262,7 +262,7 @@ than \textit{iaddress\_width\_p} bits must be sign-extended to make
 computation of differential addresses easier, and physical addresses
 narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
 
-Cores can retire multiple non-taken branches per clock cycle, indicated via \textbf{ntkn}.
+Harts can retire multiple non-taken branches per clock cycle, indicated via \textbf{ntkn}.
 However, a consequence of this is that the encoder will be unaware of the addresses of some non-taken branches, 
 which will prevent the use of a branch predictor to improve compression (see Section~\ref{sec:branch-prediction}).
 For harts that can only retire a maximum of one non-taken branch per clock cycle,
@@ -385,11 +385,11 @@ will need to be applied via the \textbf{context} input.
         notice, subject to other filtering criteria also being met.\newline
         A pulse on bit 1 will cause the encoder to stop tracing until further notice.  See section~\ref{sec:trigger}).\\
         \hline
-        \textbf{halted} & O & Core is halted.  Upon assertion, the encoder will output a packet to report the address 
+        \textbf{halted} & O & Hart is halted.  Upon assertion, the encoder will output a packet to report the address 
         of the last instruction retired before halting, followed by a support packet to indicate that tracing has stopped. 
         Upon deassertion, the encoder will start tracing again, commencing with a synchronization packet.\\
         \hline
-        \textbf{reset} & O & Core is in reset.  Provided the encoder is in a different reset domain to the hart, this
+        \textbf{reset} & O & Hart is in reset.  Provided the encoder is in a different reset domain to the hart, this
         allows the encoder to indicate that tracing has ended on entry to reset, and restarted on exit.  
         Behavior is as described above for halt.\\
         \hline

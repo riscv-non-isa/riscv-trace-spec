@@ -108,6 +108,7 @@ function follow_execution_path(address, te_inst)
           # not as an uninferrable jump target
         return
       if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
+        !is_uninferrable_discon(get_instr(last_pc)) and 
         (te_inst.updiscon == get_previous_bit(te_inst, "updiscon")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
           # All branches processed, and reached reported address, but not as an

@@ -114,11 +114,11 @@ and when resynchronization has been scheduled by expiry of the resynchronisation
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the reported instruction\\
     \hline
+    \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
+              Set to 1 if the instruction is not a branch or if the branch is not taken. \\
+    \hline
     \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
-    \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{address}. 
-    Set to the same value as the MSB of \textbf{address} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
@@ -128,22 +128,17 @@ and when resynchronization has been scheduled by expiry of the resynchronisation
 This bit indicates the taken/not taken status in the case where the reported address points to a branch instruction.
 Overall efficiency would be slightly improved if this bit was removed, and the branch status was instead 
 "carried over" and reported in the next \textit{te\_inst} packet.  This was considered, but there are several
-pathological cases where this approach fails.  Consider for example the situation where the first instruction
-that matches the filtering criteria is a branch, and this is then followed immediately by an exception.  This
-results in format 3 packets being generated on two consecutive cycles.  The second packet does not contain a branch
+pathological cases where this approach fails.  Consider for example the situation where the first traced instruction
+is a branch, and this is then followed immediately by an exception.  This results in format 3 packets being generated 
+on two consecutive instructions.  The second packet does not contain a branch
 map, so there is no way to report the branch status of the 1st branch, apart from by inserting a format 1 packet in 
 between.  There are two issues with this:
 
 \begin{itemize}
   \item It would require the generation of 2 packets on the same cycle, which adds significant additional complexity
     to the encoder;
-  \item It would complicate the algorithm shown in~\ref{fig:algo}. 
+  \item It would complicate the algorithm shown in figure~\ref{fig:algo}. 
 \end{itemize}
-
-This bit is encoded so that most of the time it will take the same value as the MSB of the preceding field, and will
-therefore compress away, in order to minimize the efficiency impact.  Branches are unlikely to be reported using a
-format 3 packet apart from if the 1st traced instruction is a branch, or if the instruction reported when the 
-resync timer expires is a branch.
 
 \FloatBarrier
 \section{Format 3 subformat 1 - Exception} \label{sec:format31}
@@ -173,6 +168,9 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the reported instruction.\\
     \hline
+    \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
+              Set to 1 if the instruction is not a branch or if the branch is not taken. \\
+    \hline
     \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
     \hline
@@ -184,9 +182,6 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \hline
     \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
            Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 0 (illegal instruction exception), or trap value otherwise.\\
-    \hline
-    \textbf{branch} & 1 & If the address points to a branch instruction, the branch is not taken if the value of this bit is different from the MSB of \textbf{tvalepc}. 
-    Set to the same value as the MSB of \textbf{tvalepc} if the branch is taken or the instruction is not a branch. \\
     \hline
   \end{tabulary}
 \end{table}
