@@ -45,11 +45,6 @@
 
 
 /*
- * define the maximum number of branches in a te_inst packet
- */
-#define TE_MAX_NUM_BRANCHES     31
-
-/*
  * Extract the most-significant bit of an integer.
  */
 #define MSB(x)  (((x)>>(8*(sizeof(x))-1)) & 0x1)
@@ -68,6 +63,7 @@ static const te_discovery_response_t default_discovery_response =
 {
     .call_counter_width = 7,    /* maximum of 512 calls on return_stack[] */
     .iaddress_lsb = 1,          /* 1 == compressed instructions supported */
+    .jump_target_cache_size = TE_CACHE_SIZE_P,
 };
 
 
@@ -78,6 +74,7 @@ static const te_options_t default_support_options =
 {
     .full_address = false,      /* use differential addresses */
     .implicit_return = false,   /* disable using return_stack[] */
+    .jump_target_cache = false, /* disable using jump_target[] */
 };
 
 
@@ -236,7 +233,10 @@ static void send_te_inst(
      */
     if ( (TE_INST_FORMAT_2_ADDR==te_inst->format) ||
          (TE_INST_FORMAT_3_SYNC==te_inst->format) ||
-         (te_inst->branches) )
+         (te_inst->branches)                      ||
+         ( (encoder->options.jump_target_cache)     &&
+           (TE_INST_FORMAT_0_EXTN==te_inst->format) &&
+           (TE_INST_EXTN_JUMP_TARGET_CACHE==te_inst->extension) ) )
     {
         encoder->last_sent_addr = address;
     }
@@ -369,13 +369,44 @@ static void send_te_inst_sync(
     }
 
     /*
-     * for "start" and "exception" synchronization te_inst packets,
-     * we also reinitialize the resynchronization counter to zero.
+     * The specification contains the following words:
+     *      Throughout this document, the term "synchronization packet"
+     *      is used. This refers specifically to format 3, subformat 0
+     *      and subformat 1 packets.
+     * Perform all the necessary re-initialization actions here,
+     * on generation of such a "synchronization packet".
      */
     if ( (TE_INST_SUBFORMAT_EXCEPTION == subformat) ||
          (TE_INST_SUBFORMAT_START == subformat) )
     {
+        /* reinitialize the resynchronization counter to zero. */
         encoder->resync_count = 0;
+
+        /*
+         * The specification requires that the counter for a call-stack is
+         * reset to zero when we send a "synchronization packet".
+         * Optionally, we may want to log (for debugging) exactly how
+         * many current entries in the call-stack we are about to drop!
+         * Note: Dropping such return addresses from the call-stack is
+         * NOT a real problem ... just an efficiency impact!
+         */
+        if (encoder->call_counter)
+        {
+            if ((encoder->debug_stream) && (encoder->debug_flags & TE_DEBUG_CALL_STACK))
+            {
+                fprintf(encoder->debug_stream,
+                    "call-stack: dropping a total of %" PRIu64
+                    " entries from the call-stack!\n",
+                    encoder->call_counter);
+            }
+            encoder->call_counter = 0;  /* drop them all */
+        }
+
+        /* invalidate the entire jump target cache, if enabled */
+        if (encoder->options.jump_target_cache)
+        {
+            memset(encoder->jump_target, 0, sizeof(encoder->jump_target));
+        }
     }
 }
 
@@ -413,88 +444,82 @@ static void send_te_inst_non_sync(
     assert(encoder);
 
     /*
-     * for convenience, just have 2 simple names for
-     * the current and next instructions.
+     * for convenience, just have simple names for
+     * the previous, current and next instructions.
      */
+    const te_instruction_record_t * const prev = encoder->third;
     const te_instruction_record_t * const curr = encoder->second;
     const te_instruction_record_t * const next = encoder->first;
+    assert(prev);
     assert(curr);
     assert(next);
 
     /*
      * fill in the fields for a single te_inst packet
      * ... specifically for a NON-format 3 (SYNC) te_packet.
-     *
-     * Note: "is_updiscon" is true if the current instruction is
-     * the result of an uninferable PC discontinuity.
-     * Whereas "updiscon" is the value of the updiscon field in a
-     * te_inst packet, and depends on the msb of the address field.
-     *
-     * That is:
-     *      updiscon = is_updiscon ^ MSB(address)
-     *
-     * But this is only if we know that the NEXT instruction WILL
-     * generate a te_inst synchronization packet (i.e. if the
-     * next instruction is one of:
-     *
-     *      1)  an exception
-     *      2)  a change in privilege levels
-     *      3)  resync_count == max_resync
-     *
-     * Otherwise, for maximum compressibility:
-     *      updiscon = MSB(address)
      */
-
     te_inst.branches = encoder->branches;
     te_inst.branch_map = encoder->branch_map;
     te_inst.address = curr->pc;
     if (with_address)
     {
-        te_address_t address;
-        const uint32_t max_resync = get_max_resync(encoder);
-        bool next_generates_sync = false;
-        assert(encoder->resync_count <= max_resync);
-
-        if ( (next->is_exception)                   ||
-             (curr->priv != next->priv)             ||
-             (encoder->resync_count == max_resync) )
+        bool jump_cache_hit = false;    /* PC is in jump_target[] ? */
+        if (encoder->options.jump_target_cache)
         {
-            /* next instruction will generate a te_inst sync packet */
-            next_generates_sync = true;
+            /* find the (direct-mapped) index into the jump target cache */
+            const size_t mask =
+                (1u << encoder->discovery_response.jump_target_cache_size) - 1u;
+            assert(mask < elements_of(encoder->jump_target));
+            const size_t index =
+                (curr->pc >> encoder->discovery_response.iaddress_lsb) & mask;
+            /* have we just performed an uninferrable updiscon ? */
+            if (prev->is_updiscon)
+            {
+                /* is it in the jump target cache ? */
+                if (encoder->jump_target[index] == curr->pc)
+                {
+                    jump_cache_hit = true;   /* yes it is! */
+                    encoder->statistics.jtc_hits++;
+                }
+                encoder->statistics.jtc_lookups++;
+            }
+            if ( (encoder->debug_stream) &&
+                 (encoder->statistics.jtc_lookups) &&
+                 (encoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
+            {
+                fprintf(encoder->debug_stream,
+                    "jump-cache: %lx -> %lx, jump_target[%lx] = %5s, hit-rate = %lu/%lu (%.2f%%)\n",
+                    prev->pc,
+                    curr->pc,
+                    index,
+                    (!prev->is_updiscon) ? "write" : jump_cache_hit ? "HIT" : "miss",
+                    encoder->statistics.jtc_hits,
+                    encoder->statistics.jtc_lookups,
+                    (double)(encoder->statistics.jtc_hits)/((double)encoder->statistics.jtc_lookups)*100.0);
+            }
+            /*
+             * finally, unconditionally update the jump target cache with
+             * the current target ... do this for ALL non-sync packets,
+             * if the jump target cache is enabled.
+             */
+            encoder->jump_target[index] = curr->pc;
+            te_inst.jtc_index = index;
         }
-
-        if (te_inst.branches)
+        if (jump_cache_hit)
+        {
+            /* send a jump target cache efficiency extension packet */
+            te_inst.format = TE_INST_FORMAT_0_EXTN;
+            te_inst.extension = TE_INST_EXTN_JUMP_TARGET_CACHE;
+        }
+        else if (te_inst.branches)
         {
             /* send a differential address, with a branch-map */
             te_inst.format = TE_INST_FORMAT_1_DIFF;
-            address = te_inst.address - encoder->last_sent_addr;
         }
         else
         {
+            /* send an address, without a branch-map */
             te_inst.format = TE_INST_FORMAT_2_ADDR;
-            if (encoder->options.full_address)
-            {
-                /* send a full address, without a branch-map */
-                address = te_inst.address;
-            }
-            else
-            {
-                /* send a differential address, without a branch-map */
-                address = te_inst.address - encoder->last_sent_addr;
-            }
-        }
-
-        /* initially assume updiscon is the msb of the address */
-        te_inst.updiscon = MSB(address);
-
-        /*
-         * compute the "updiscon" field in the current te_inst packet, by
-         * XOR-ing in the current is_updiscon flag, but only if the next
-         * instruction will generate a synchronization te_inst packet.
-         */
-        if (next_generates_sync)
-        {
-            te_inst.updiscon ^= curr->is_updiscon;
         }
     }
     else
@@ -503,8 +528,59 @@ static void send_te_inst_non_sync(
         te_inst.format = TE_INST_FORMAT_1_DIFF;
         assert(TE_MAX_NUM_BRANCHES == te_inst.branches);
         te_inst.branches = 0;   /* special-case: full is mapped to 0 */
-        /* set to false the "updiscon" field in the te_inst ... no address */
-        te_inst.updiscon = false;
+    }
+
+    /*
+     * Update the "updiscon" field in the current te_inst packet, to
+     * determine if the transmitted bit value of the updison field is
+     * the same (or inverted) value as the previously transmitted bit.
+     *
+     * Note: "is_updiscon" is true if the given instruction is
+     * the result of an uninferable PC discontinuity.
+     * Whereas "updiscon" is the field in a te_inst_t structure,
+     * which will be used to calculate the bit physically transmitted.
+     *
+     * The value of the bit physically transmitted depends on two things:
+     *
+     *      1) the value of the previously transmitted bit
+     *         (typically the msb of the address field)
+     *      2) the "updiscon" field in the te_inst_t structure
+     *
+     * That is:
+     *      transmitted-value = MSB(address) ^ te_inst.updiscon
+     *
+     * But te_inst.updiscon will only be true if we know that the
+     * NEXT instruction WILL generate a te_inst synchronization
+     * packet (i.e. if the next instruction is one of:
+     *
+     *      1)  an exception
+     *      2)  a change in privilege levels
+     *      3)  resync_count == max_resync
+     *
+     * ... AND the PREVIOUS instruction has is_updiscon == true.
+     *
+     * Otherwise, for maximum compressibility:
+     *      transmitted-value = MSB(address)
+     * i.e. te_inst.updiscon = false
+     *
+     * Where there is no address, (e.g. with_address == 0) then the
+     * most-significant bit of the branch-map shall be used instead.
+     */
+    if ( (next->is_exception)                   ||
+         (curr->priv != next->priv)             ||
+         (encoder->resync_count == get_max_resync(encoder)) )
+    {
+        /* next instruction will generate a te_inst sync packet */
+        if (prev->is_updiscon)
+        {
+            /*
+             * The previous instruction was an updiscon, so we do want
+             * to invert the previously transmitted bit when we
+             * eventually transmit the updiscon field in the bit-stream.
+             */
+            te_inst.updiscon = true;
+            encoder->statistics.num_updiscon_fields++;
+        }
     }
 
     /* finally, send the completed te_inst packet downstream */
@@ -522,9 +598,9 @@ static void clock_the_encoder(
      * the previous, current and next instructions.
      * Note: previous may be unknown here (i.e. NULL).
      */
-    te_instruction_record_t * const prev = encoder->third;
-    te_instruction_record_t * const curr = encoder->second;
-    te_instruction_record_t * const next = encoder->first;
+    const te_instruction_record_t * const prev = encoder->third;
+    const te_instruction_record_t * const curr = encoder->second;
+    const te_instruction_record_t * const next = encoder->first;
     assert(curr);
     assert(next);
 
@@ -614,11 +690,47 @@ static void clock_the_encoder(
             const size_t call_counter_max = (size_t)1 << (encoder->discovery_response.call_counter_width + 2);
             assert(encoder->call_counter <= call_counter_max);
             assert(call_counter_max <= TE_MAX_CALL_DEPTH);
+            /*
+             * We will *always* push the newest return address on to the call-stack.
+             * The question is: do we drop the oldest return address on the call-stack?
+             * Optionally show what we will push onto the call stack
+             */
+            if ((encoder->debug_stream) && (encoder->debug_flags & TE_DEBUG_CALL_STACK))
+            {
+                /*
+                 * TODO: calculate and print the return address that will
+                 * be pushed onto the call-stack.
+                 */
+                fprintf(encoder->debug_stream,
+                    "call-stack: pushed [%3" PRIu64 "]\n",
+                    encoder->call_counter);
+            }
             if (encoder->call_counter < call_counter_max)
             {
-                encoder->call_counter++;    /* push new function */
+                /*
+                 * counter is not yet saturated ... call-stack has room
+                 * for at least one more return addresses to be added
+                 * so, just push the new return address on the call-stack
+                 */
+                encoder->call_counter++;
             }
-            /* else, counter is saturated ... do not overflow */
+            else
+            {
+                /*
+                 * counter is already saturated ... do not overflow!
+                 * We will drop the oldest return address on the call-stack.
+                 * Optionally advise the user we have dropped one return address!
+                 * Note: Dropping such a return address from the call-stack is
+                 * NOT a real problem ... just an efficiency impact!
+                 */
+                if ((encoder->debug_stream) && (encoder->debug_flags & TE_DEBUG_CALL_STACK))
+                {
+                    fprintf(encoder->debug_stream,
+                        "call-stack: call-counter at maximum (%" PRIu64
+                        ") ... dropping oldest return address!\n",
+                        encoder->call_counter);
+                }
+            }
         }
 
         if (curr->is_return) /* was it a function return ? */
@@ -626,8 +738,43 @@ static void clock_the_encoder(
             if (encoder->call_counter)
             {
                 encoder->call_counter--;    /* pop function */
+                /* optionally show what we will pop from the call stack */
+                if ((encoder->debug_stream) && (encoder->debug_flags & TE_DEBUG_CALL_STACK))
+                {
+                    fprintf(encoder->debug_stream,
+                        "call-stack: popped [%3" PRIu64 "] --> %08" PRIx64 "\n",
+                        encoder->call_counter,
+                        next->pc);
+                }
+                /*
+                 * if we are able to pop a return address successfully from the
+                 * call stack, then we must not treat the return as an updiscon.
+                 * Effectively, such a return is treated as an inferrable jump!
+                 * Over-write "is_updiscon" so next time this function is
+                 * called, prev->is_updiscon will be false!
+                 * Note: cast is just to remove the "const" qualifier.
+                 */
+                ((te_instruction_record_t*)curr)->is_updiscon = false;
             }
-            /* else, counter is saturated ... do not underflow */
+            else
+            {
+                /*
+                 * counter is already at minimum ... do not underflow!
+                 * This means we cannot "pop" the return address, and we will
+                 * have to revert to non implicit-return mode ... that is,
+                 * we will need to treat this return as a normal updiscon!
+                 * Optionally advise the user we failed to pop a return address.
+                 * Note: Dropping such a return address from the call-stack is
+                 * NOT a real problem ... just an efficiency impact!
+                 */
+                if ((encoder->debug_stream) && (encoder->debug_flags & TE_DEBUG_CALL_STACK))
+                {
+                    fprintf(encoder->debug_stream,
+                        "call-stack: call-counter at minimum (%" PRIu64
+                        ") ... no return address to pop!\n",
+                        encoder->call_counter);
+                }
+            }
         }
     }
 
@@ -635,10 +782,9 @@ static void clock_the_encoder(
      * last instruction was an unpredictable discontinuity?
      *
      * However, do not send a te_inst packet if it was an implicit
-     * function return (i.e. one popped from a call-stack counter).
+     * return (i.e. one that was popped from a call-stack).
      */
-    if ( (prev->is_updiscon)                            &&
-         (!prev->is_return || !encoder->call_counter) )
+    if (prev->is_updiscon)
     {
         /*
          * send a te_inst packet with address of current

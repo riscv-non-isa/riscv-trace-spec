@@ -145,6 +145,12 @@ typedef struct
     /* pointer to user-data, whatever was passed to te_open_trace_encoder() */
     void * user_data;
 
+    /* allocate memory for a "jump target cache" */
+    te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
+
+    /* collection of various counters, to generate statistics */
+    te_statistics_t statistics;
+
     /* the FILE I/O stream to which to write all debug info */
     FILE * debug_stream;
 

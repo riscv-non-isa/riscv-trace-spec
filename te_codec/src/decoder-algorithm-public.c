@@ -37,6 +37,12 @@
 #define MSB(x)  (((x)>>(8*(sizeof(x))-1)) & 0x1)
 
 
+/*
+ * evaluate the number of elements in an array
+ */
+#define elements_of(array)  (sizeof(array)/sizeof(*array))
+
+
 
 
 /*
@@ -47,6 +53,7 @@ static const te_discovery_response_t default_discovery_response =
 {
     .call_counter_width = 7,    /* maximum of 512 calls on return_stack[] */
     .iaddress_lsb = 1,          /* 1 == compressed instructions supported */
+    .jump_target_cache_size = TE_CACHE_SIZE_P,
 };
 
 
@@ -57,6 +64,7 @@ static const te_options_t default_support_options =
 {
     .full_address = false,      /* use differential addresses */
     .implicit_return = false,   /* disable using return_stack[] */
+    .jump_target_cache = false, /* disable using jump_target[] */
 };
 
 
@@ -204,7 +212,7 @@ static void disseminate_pc(
 
     /* do some sanity checks ... just in case! */
     assert(TE_SENTINEL_BAD_ADDRESS != decoder->pc);
-    if (decoder->instruction_count)
+    if (decoder->statistics.num_instructions)
     {
         /* it is NOT the first transition */
         assert(TE_SENTINEL_BAD_ADDRESS != decoder->last_pc);
@@ -238,7 +246,7 @@ static void disseminate_pc(
         &instr);
 
     /* advance the count of PC transitions */
-    decoder->instruction_count++;
+    decoder->statistics.num_instructions++;
 }
 
 
@@ -508,6 +516,11 @@ static void push_return_stack(
 
     assert(decoder);
 
+    if (!decoder->options.implicit_return)
+    {
+        return;     /* Implicit return mode is disabled */
+    }
+
     const size_t call_counter_max = (size_t)1 << (decoder->discovery_response.call_counter_width + 2);
     assert(decoder->call_counter <= call_counter_max);
     assert(call_counter_max <= TE_MAX_CALL_DEPTH);
@@ -530,7 +543,7 @@ static void push_return_stack(
     if ((decoder->debug_stream) && (decoder->debug_flags & TE_DEBUG_CALL_STACK))
     {
         fprintf(decoder->debug_stream,
-            "pushed [%3" PRIu64 "] <-- %08" PRIx64 "\n",
+            "call-stack: pushed [%3" PRIu64 "] <-- %08" PRIx64 "\n",
             decoder->call_counter,
             link_reg);
     }
@@ -549,22 +562,22 @@ static te_address_t pop_return_stack(
 {
     assert(decoder);
 
+    /*
+     * Note: this function is not called if call_counter is 0,
+     * so no need to check for underflow
+     */
+    decoder->call_counter--;
+
     const te_address_t link_reg = decoder->return_stack[decoder->call_counter];
 
     /* optionally show what we will pop from the call stack */
     if ((decoder->debug_stream) && (decoder->debug_flags & TE_DEBUG_CALL_STACK))
     {
         fprintf(decoder->debug_stream,
-            "popped [%3" PRIu64 "] --> %08" PRIx64 "\n",
+            "call-stack: popped [%3" PRIu64 "] --> %08" PRIx64 "\n",
             decoder->call_counter,
             link_reg);
     }
-
-    /*
-     * Note: this function is not called if call_counter is 0,
-     * so no need to check for underflow
-     */
-    decoder->call_counter--;
 
     return link_reg;
 }
@@ -572,17 +585,30 @@ static te_address_t pop_return_stack(
 
 /*
  * Compute the next PC
+ *
+ * Returns true if it is an uninferrable discontinuity,
+ * and a return address was NOT popped from a call-stack.
+ * i.e. the parameter "address" is assigned to the PC.
+ * Otherwise this function returns false.
  */
-static void next_pc(
+static bool next_pc(
     te_decoder_state_t * const decoder,
     const te_address_t address)
 {
+    bool stop_here = false;
+
     assert(decoder);
 
     const te_address_t this_pc = decoder->pc;
     te_decoded_instruction_t instr = { .decode.pc = TE_SENTINEL_BAD_ADDRESS };
 
     (void)get_instr(decoder, decoder->pc, &instr);
+
+    if (is_branch(&instr))
+    {
+        /* update counter with number of branch instructions */
+        decoder->statistics.num_branches++;
+    }
 
     if (is_inferrable_jump(&instr))
     {
@@ -608,12 +634,17 @@ static void next_pc(
         else
         {
           decoder->pc = address;
+          stop_here = true;
         }
+        /* update counter with number of unpredicted discontinuities */
+        decoder->statistics.num_updiscons++;
     }
     else if (is_taken_branch(decoder, &instr))
     {
         const int64_t imm = instr.decode.imm;
         decoder->pc += (te_address_t)imm;
+        /* update counter with number of taken branches */
+        decoder->statistics.num_taken++;
     }
     else
     {
@@ -623,10 +654,14 @@ static void next_pc(
     if (is_call(&instr))
     {
         push_return_stack(decoder, this_pc);
+        /* update counter with number of function calls */
+        decoder->statistics.num_calls++;
     }
 
     decoder->last_pc = this_pc;
     disseminate_pc(decoder);
+
+    return stop_here;
 }
 
 
@@ -641,15 +676,9 @@ static void follow_execution_path(
     assert(decoder);
 
     te_address_t previous_address = decoder->pc;
-    te_decoded_instruction_t instr      = { .decode.pc = TE_SENTINEL_BAD_ADDRESS };
-    te_decoded_instruction_t last_instr = { .decode.pc = TE_SENTINEL_BAD_ADDRESS };
+    te_decoded_instruction_t instr = { .decode.pc = TE_SENTINEL_BAD_ADDRESS };
 
     assert(te_inst);
-    assert( (!decoder->stop_at_last_branch)  ||
-            (1==decoder->branches)           ||
-            (2==decoder->branches)           ||
-            (31==decoder->branches)          ||
-            (32==decoder->branches) );
 
     (void)get_instr(decoder, decoder->pc, &instr);
 
@@ -674,16 +703,16 @@ static void follow_execution_path(
             /*
              * iterate again from previously reported address to find second occurrence
              */
-            next_pc(decoder, previous_address);
+            const bool stop_here = next_pc(decoder, previous_address);
             (void)get_instr(decoder, decoder->pc, &instr);
-            if (decoder->pc == previous_address)
+            if (stop_here)
             {
                 decoder->inferred_address = false;
             }
         }
         else
         {
-            next_pc(decoder, address);
+            const bool stop_here = next_pc(decoder, address);
             (void)get_instr(decoder, decoder->pc, &instr);
             if ( (1 == decoder->branches)                             &&
                  (is_branch(get_instr(decoder, decoder->pc, &instr))) &&
@@ -696,8 +725,7 @@ static void follow_execution_path(
                 decoder->stop_at_last_branch = false;
                 return;
             }
-            if ( (decoder->pc == address) &&
-                 is_uninferrable_discon(get_instr(decoder, decoder->last_pc, &last_instr)) )
+            if (stop_here)
             {
                 /*
                  * Reached reported address following an uninferrable discontinuity - stop here
@@ -712,9 +740,20 @@ static void follow_execution_path(
                 }
                 return;
             }
+            /*
+             * In the following code the value of "te_inst->updiscon" is
+             * not the value of the updiscon bit physically transmitted
+             * in the te_inst packet. Instead it is a logical flag to
+             * indicate if the updiscon bit physically transmitted should
+             * be inverted. The de-serializer will perform the XOR.
+             * That is, the XOR has already been done, and there is
+             * no need to compare it against the previously transmitted
+             * bit here (i.e. the MSB of the address field).
+             */
             if ( (TE_INST_FORMAT_3_SYNC != te_inst->format)     &&
                  (decoder->pc == address)                       &&
-                 (te_inst->updiscon == MSB(te_inst->address))   &&
+                 (!te_inst->updiscon)                           &&
+                 (!decoder->stop_at_last_branch)                &&
                  (decoder->branches == (is_branch(get_instr(decoder, decoder->pc, &instr)) ? 1 : 0)) )
             {
                 /*
@@ -737,6 +776,21 @@ static void follow_execution_path(
 }
 
 
+#define PRINT_CHANGES_FLAG(option)                              \
+do                                                              \
+{                                                               \
+    if (decoder->options.option != support->options.option)     \
+    {                                                           \
+        fprintf(                                                \
+            decoder->debug_stream,                              \
+            "info: configuration of %s changed: %s -> %s\n",    \
+            #option,                                            \
+            decoder->options.option ? "true" : "false",         \
+            support->options.option ? "true" : "false");        \
+    }                                                           \
+} while (0)
+
+
 /*
  * Process a single te_inst synchronization support packet.
  * Called each time a support packet is received.
@@ -749,7 +803,23 @@ static void process_support(
     assert(te_inst);
     const te_support_t * const support = &te_inst->support;
 
-    /* first, copy the latest set of "options" into the decoder's state */
+    /*
+     * If the current te_inst support packet will change any of the run-time
+     * configuration options, and we have a valid debug stream, then
+     * append to this stream details of which options are being changed.
+     */
+    if (decoder->debug_stream)
+    {
+        PRINT_CHANGES_FLAG(implicit_return);
+        PRINT_CHANGES_FLAG(full_address);
+        PRINT_CHANGES_FLAG(jump_target_cache);
+    }
+
+    /*
+     * Copy the latest set of "options" into the decoder's state.
+     * This will update the "live" set of run-time configuration
+     * options that the trace-decoder will now use.
+     */
     decoder->options = support->options;
 
     if ( (TE_QUAL_STATUS_ENDED_UPD == support->qual_status) ||
@@ -766,8 +836,8 @@ static void process_support(
         decoder->inferred_address = false;
         while (true)
         {
-            next_pc(decoder, previous_address);
-            if (decoder->pc == previous_address)
+            const bool stop_here = next_pc(decoder, previous_address);
+            if (stop_here)
             {
                 return;
             }
@@ -788,6 +858,15 @@ void te_process_te_inst(
 
     assert(decoder);
     assert(te_inst);
+
+    /*
+     * update counters for each new te_inst packet that is received
+     */
+    decoder->statistics.num_format[te_inst->format]++;
+    if (TE_INST_FORMAT_3_SYNC == te_inst->format)
+    {
+        decoder->statistics.num_subformat[te_inst->subformat]++;
+    }
 
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
     {
@@ -848,7 +927,25 @@ void te_process_te_inst(
             decoder->last_pc = decoder->pc;
         }
         decoder->start_of_trace = false;
-        decoder->call_counter = 0;
+        /*
+         * The specification contains the following words:
+         *      Throughout this document, the term "synchronization packet"
+         *      is used. This refers specifically to format 3, subformat 0
+         *      and subformat 1 packets.
+         * Perform all the necessary re-initialization actions here,
+         * on receipt of such a "synchronization packet".
+         *
+         * The trace-encoder will reinitialise the jump target cache on sync,
+         * and will only ever send an index after having already sent the
+         * address, hence the decoder’s jump target cache entries are always
+         * guaranteed to be valid when referenced. Thus there is no need to
+         * reinitialise/invalidate the decoder’s jump target cache at all!
+         */
+        if ( (TE_INST_SUBFORMAT_START == te_inst->subformat) ||
+             (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat) )
+        {
+            decoder->call_counter = 0;
+        }
     }
     else
     {
@@ -858,37 +955,79 @@ void te_process_te_inst(
             unrecoverable_error(NULL,
                 "Expecting trace to start with a format 3 packet");
         }
-        if ( (TE_INST_FORMAT_2_ADDR == te_inst->format) ||
-             (0 != te_inst->branches) )
+        if ( (decoder->options.jump_target_cache) &&
+             (TE_INST_FORMAT_0_EXTN == te_inst->format) &&
+             (TE_INST_EXTN_JUMP_TARGET_CACHE == te_inst->extension) )
         {
             decoder->stop_at_last_branch = false;
-            if (decoder->options.full_address)
+            /* use the address in the jump target cache */
+            assert(te_inst->jtc_index < elements_of(decoder->jump_target));
+            decoder->last_sent_addr = decoder->jump_target[te_inst->jtc_index];
+            if ( (decoder->debug_stream) &&
+                 (decoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
             {
-                decoder->last_sent_addr  = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+                fprintf(decoder->debug_stream,
+                    "jump-cache: using jump_target[%x] = %lx\n",
+                    te_inst->jtc_index,
+                    decoder->last_sent_addr);
             }
-            else
+            /* is there also a branch-map included ? */
+            if (te_inst->branches)
             {
-                decoder->last_sent_addr += (te_inst->address << decoder->discovery_response.iaddress_lsb);
+                decoder->branch_map |= te_inst->branch_map << decoder->branches;
+                decoder->branches += te_inst->branches;
             }
         }
-        if (TE_INST_FORMAT_1_DIFF == te_inst->format)
+        else
         {
-            decoder->stop_at_last_branch = (te_inst->branches == 0);
-            /*
-             * Branch map will contain <= 1 branch
-             * (1 if last reported instruction was a branch)
-             */
-            assert(decoder->branches <= 1);
-            assert( ( (0==decoder->branches) && (0==decoder->branch_map) ) ||
-                    ( (1==decoder->branches) && (0==(decoder->branch_map&(~1))) ) );
-            decoder->branch_map |= te_inst->branch_map << decoder->branches;
-            if (0 == te_inst->branches)
+            if ( (TE_INST_FORMAT_2_ADDR == te_inst->format) ||
+                 (0 != te_inst->branches) )
             {
-                decoder->branches += 31;
+                decoder->stop_at_last_branch = false;
+                if (decoder->options.full_address)
+                {
+                    decoder->last_sent_addr  = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+                }
+                else
+                {
+                    decoder->last_sent_addr += (te_inst->address << decoder->discovery_response.iaddress_lsb);
+                }
+                if (decoder->options.jump_target_cache)
+                {
+                    /* find the (direct-mapped) index into the jump target cache */
+                    const size_t mask =
+                        (1u << decoder->discovery_response.jump_target_cache_size) - 1u;
+                    assert(mask < elements_of(decoder->jump_target));
+                    const size_t index =
+                        (decoder->last_sent_addr >> decoder->discovery_response.iaddress_lsb) & mask;
+                    /* add the current address to the jump target cache */
+                    decoder->jump_target[index] = decoder->last_sent_addr;
+                    if ( (decoder->debug_stream) &&
+                         (decoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
+                    {
+                        fprintf(decoder->debug_stream,
+                            "jump-cache: writing %lx to jump_target[%x]\n",
+                            decoder->last_sent_addr,
+                            te_inst->jtc_index);
+                    }
+                }
             }
-            else
+            if (TE_INST_FORMAT_1_DIFF == te_inst->format)
             {
-                decoder->branches += te_inst->branches;
+                decoder->stop_at_last_branch = (te_inst->branches == 0);
+                /*
+                 * Branch map will contain <= 1 branch
+                 * (1 if last reported instruction was a branch)
+                 */
+                decoder->branch_map |= te_inst->branch_map << decoder->branches;
+                if (0 == te_inst->branches)
+                {
+                    decoder->branches += TE_MAX_NUM_BRANCHES;
+                }
+                else
+                {
+                    decoder->branches += te_inst->branches;
+                }
             }
         }
         follow_execution_path(decoder, decoder->last_sent_addr, te_inst);

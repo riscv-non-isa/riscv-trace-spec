@@ -74,6 +74,7 @@ extern "C" {
 #define TE_DEBUG_CALL_STACK         (1u << 1)
 #define TE_DEBUG_FOLLOW_PATH        (1u << 2)
 #define TE_DEBUG_PACKETS            (1u << 3)
+#define TE_DEBUG_JUMP_TARGET_CACHE  (1u << 4)
 
 
 /*
@@ -84,6 +85,25 @@ extern "C" {
 #if !defined(TE_MAX_CALL_DEPTH)
 #   define TE_MAX_CALL_DEPTH (1u<<9)   /* 2^9 = 512 slots */
 #endif  /* TE_MAX_CALL_DEPTH */
+
+
+/*
+ * Define "cache_size_p", the number of bits used to dimension
+ * the size of the "jump target cache".
+ * This cache is only used when the run-time option "jump_target_cache" is true.
+ * If not defined elsewhere, define TE_CACHE_SIZE_P here.
+ */
+#if !defined(TE_CACHE_SIZE_P)
+#   define TE_CACHE_SIZE_P  (7u)    /* 2^7 = 128 entries */
+#endif  /* TE_CACHE_SIZE_P */
+#define TE_JUMP_TARGET_CACHE_SIZE (1u<<TE_CACHE_SIZE_P)
+
+
+/*
+ * Define the maximum number of branches in a te_inst packet.
+ * This is the maximum length of the branch-map (in bits).
+ */
+#define TE_MAX_NUM_BRANCHES     31u
 
 
 /*
@@ -130,7 +150,7 @@ typedef uint64_t te_address_t;
 /* enumerate the 2-bit te_inst format types */
 typedef enum
 {
-    TE_INST_FORMAT_0_RESERVED = 0,  /* 00 (not used) */
+    TE_INST_FORMAT_0_EXTN = 0,      /* 00 (optional efficiency extensions) */
     TE_INST_FORMAT_1_DIFF = 1,      /* 01 (diff-delta) */
     TE_INST_FORMAT_2_ADDR = 2,      /* 10 (addr-only) */
     TE_INST_FORMAT_3_SYNC = 3       /* 11 (sync) */
@@ -144,6 +164,12 @@ typedef enum
     TE_INST_SUBFORMAT_CONTEXT = 2,  /* 10 (context) */
     TE_INST_SUBFORMAT_SUPPORT = 3   /* 11 (support) */
 } te_inst_subformat_t;
+
+/* enumerate the optional efficiency extensions */
+typedef enum
+{
+    TE_INST_EXTN_JUMP_TARGET_CACHE = 0, /* jump target cache */
+} te_inst_extensions_t;
 
 /* enumerate the 2-bit qualification status */
 typedef enum
@@ -176,6 +202,7 @@ typedef struct
     unsigned int version;               /* 9-bits */
     unsigned int call_counter_width;    /* 3-bits */
     unsigned int iaddress_lsb;          /* 2-bits */
+    unsigned int jump_target_cache_size;/* 3-bits */
 } te_discovery_response_t;
 
 
@@ -188,6 +215,7 @@ typedef struct
 {
     bool        implicit_return;        /* 1-bit */
     bool        full_address;           /* 1-bit */
+    bool        jump_target_cache;      /* 1-bit */
 } te_options_t;
 
 
@@ -203,6 +231,50 @@ typedef struct
     te_qual_status_t    qual_status;    /* 2-bits */
     te_options_t        options;        /* run-time configuration bits */
 } te_support_t;
+
+
+/*
+ * The following is used to accumulate various counters
+ * and metrics about te_inst packets received, and the
+ * traced instructions ... ultimately to print various
+ * statistics about a trace session.
+ */
+typedef struct
+{
+    /* counters for each type of te_inst format */
+    size_t num_format[4];       /* index is two bits */
+    /* counters for each type of te_inst format 3 sub-format */
+    size_t num_subformat[4];    /* index is two bits */
+
+    /* counter that increments each time the PC is changed */
+    size_t num_instructions;
+
+    /*
+     * counters for total number of branch instructions,
+     * and for the number of branches actually taken
+     */
+    size_t num_branches;
+    size_t num_taken;
+
+    /* counter for the number of unpredicted discontinuities */
+    size_t num_updiscons;
+
+    /*
+     * counter for the number of times an inverted updiscon
+     * field was transmitted in a te_inst packet.
+     * i.e. the number of times that the updiscon field was
+     * different from the MSB of the adjacent address field.
+     */
+    size_t num_updiscon_fields;
+
+    /* counter for the number of function calls + returns */
+    size_t num_calls;
+    size_t num_returns;
+
+    /* counters for the jump target cache, jump_target[] */
+    size_t jtc_lookups;
+    size_t jtc_hits;
+} te_statistics_t;
 
 
 /*
@@ -256,8 +328,11 @@ typedef struct
     /* the ISA to use (for riscv-disassembler) */
     rv_isa isa;
 
-    /* maintain a counter that increments each time the PC is changed */
-    unsigned long instruction_count;  /* for statistics only */
+    /* allocate memory for a "jump target cache" */
+    te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
+
+    /* collection of various counters, to generate statistics */
+    te_statistics_t statistics;
 
     /* see comment above for an explanation of this decode cache */
     te_decoded_instruction_t decoded_cache[TE_DECODED_CACHE_SIZE];
@@ -289,6 +364,36 @@ typedef struct
     unsigned branches;      /* 5-bits */
     uint32_t branch_map;    /* up to 31-bits */
     bool updiscon;          /* 1-bit */
+    /*
+     * Warning: The "updison" field above has "odd" semantics!
+     *
+     * Originally, this code mapped the value of this field to
+     * be the same as the value of the appropriate bit that was
+     * physically transmitted in the bit-stream of a te_inst packet.
+     *
+     * However, to simply coding, the semantics have now changed and
+     * it no longer is the value of the bit physically transmitted!
+     * Instead it represents the value to be XOR-ed with the MSB of
+     * the previous field (either address or branch_map), prior
+     * to transmission.
+     *
+     * In other words, the responsibility to perform any and all
+     * XOR operations now lie with the serializer and the de-serializer.
+     * This field merely indicates if an inversion should/did occur.
+     *
+     * To be clear, a value of FALSE means that updiscon field should be
+     * transmitted with the SAME value as the previous bit. And as a
+     * corollary, a value of TRUE means that updiscon field should be
+     * transmitted as the INVERTED value of the previous bit.
+     * With the "previous bit" meaning the bit physically transmitted
+     * immediately before the updison field, and that bit is the
+     * most-significant-bit of either the address or the branch-map
+     * fields, i.e. address[MSB], or branch-map[30].
+     *
+     * In most cases, this value will be false, and the updiscon
+     * field will be transmitted as the same value as the previous
+     * bit, which should in most cases should be compressed away.
+     */
 
     /* following only used by TE_INST_FORMAT_3_SYNC */
     te_inst_subformat_t subformat;  /* 2-bits */
@@ -299,6 +404,10 @@ typedef struct
     bool interrupt;         /* up to 1-bit */
     te_address_t tval;      /* width of instruction address bus */
     te_support_t support;   /* for a synchronization support packet */
+
+    /* following only used by TE_INST_FORMAT_0_EXTN */
+    te_inst_extensions_t extension; /* sub-format for optional efficiency extensions */
+    unsigned jtc_index;     /* cache_size_p-bits, index for the jump target cache */
 } te_inst_t;
 
 
