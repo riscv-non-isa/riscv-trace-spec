@@ -198,8 +198,6 @@ Signals are assigned to one of the  following groups:
         2: Report precisely;\newline
         3: Report as asynchronous discontinuity.\\
         \hline
-        \textbf{ntkn}[\textit{ntkn\_width\_p}-1:0] & OR & Number of nontaken branches in this block.\\
-        \hline
         \textbf{sijump} & OR & If \textbf{itype} indicates that this block ends with an uninferable discontinuity, setting this signal to 1 
         indicates that it is sequentially inferable and may be treated as inferable by the encoder if the preceding 
         \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} has been traced.  
@@ -261,15 +259,6 @@ address, else it is a physical address. Virtual addresses narrower
 than \textit{iaddress\_width\_p} bits must be sign-extended to make
 computation of differential addresses easier, and physical addresses
 narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
-
-Harts can retire multiple non-taken branches per clock cycle, indicated via \textbf{ntkn}.
-However, a consequence of this is that the encoder will be unaware of the addresses of some non-taken branches, 
-which will prevent the use of a branch predictor to improve compression (see Section~\ref{sec:branch-prediction}).
-For harts that can only retire a maximum of one non-taken branch per clock cycle,
-\textbf{ntkn} can be omitted, provided all non-taken branches are indicated via \textbf{itype}.  
-The number of non-taken branches is \textbf{ntkn} if \textbf{ntkn} is non-zero, or 1 if \textbf{itype} = 4 and \textbf{ntkn} is zero.
-In other words, if for example \textbf{ntkn} is 2 and \textbf{itype} = 4, the encoder will interpret this as 2 non-taken branches,
-not 3.
 
 For harts that can retire a maximum of N taken branches per clock
 cycle, the signal groups MR, OR and either BR or SR must be replicated N times. 
@@ -343,15 +332,13 @@ simplifications can be summarized as follows:
     encoder does not need information to enable it to deduce the address of the last instruction 
     retired (it is the same as the 1st and only instruction retired).  So 
     \textbf{ilastsize} is not necessary, and \textbf{iretire} simply indicates whether an
-    instruction retired or not;
-  \item As the number of non-taken branches retired is never more than 1, and can always
-    be indicated via \textbf{itype}, \textbf{ntkn} is not necessary.
+    instruction retired or not.
 \end{itemize}
 
 The parameter \textit{retires\_p} which indicates to the encoder the maximum number of 
 instructions that can be retired per cycle can be used by an encoder capable of supporting single or 
 multiple retirement to select the appropriate interpretation of \textbf{iretire}.  
-\textbf{ilastsize} and \textbf{ntkn} encoder inputs must be tied low when attached to a single-retirement
+The \textbf{ilastsize} encoder input must be tied low when attached to a single-retirement
 hart that does not provide these outputs.
 
 
@@ -446,26 +433,28 @@ Trace-on and Trace-off actions provide a means for the hart to control when trac
 Trace-notify provides  means to ensure that a specified instruction is explicitly reported.  
 This capability is sometimes known as a watchpoint.
 
+\FloatBarrier
 \subsection{Example retirement sequences}
 
 \begin{table}[htp]
     \centering
-    \caption{Example 1 : 9 Instructions retired over three cycles, 2 branches} 
+    \caption{Example 1 : 9 Instructions retired over four cycles, 2 branches} 
     \label{tab:signal-block-9-instructions-2-branches}
     \begin{tabulary}{\textwidth}{|l|l|}
         \hline
         \textbf {Retired} & \textbf {Instruction Trace Block} \\
         \hline
-        1000: \textbf{\textit{divuw}} &  \textbf{iretire}=7, \textbf{iaddr}=0x1000, \textbf{ntkn}=0, \textbf{itype}=8\\
+        1000: \textbf{\textit{divuw}} &  \textbf{iretire}=7, \textbf{iaddr}=0x1000, \textbf{itype}=8\\
         1004: \textbf{\textit{add}} &  \\
         1008: \textbf{\textit{or}} &  \\
         100C: \textbf{\textit{c.jalr}} &  \\
         \hline
-        0940: \textbf{\textit{addi}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0940, \textbf{ntkn}=1, \textbf{itype}=5\\
+        0940: \textbf{\textit{addi}} &  \textbf{iretire}=3, \textbf{iaddr}=0x0940, \textbf{itype}=4\\
         0944: \textbf{\textit{c.beq}} &  \\
-        0946: \textbf{\textit{c.bnez}} &  \\
         \hline
-        0988: \textbf{\textit{lbu}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0988, \textbf{ntkn}=0, \textbf{itype}=0\\
+        0946: \textbf{\textit{c.bnez}} &  \textbf{iretire}=1, \textbf{iaddr}=0x0946, \textbf{itype}=5\\
+        \hline
+        0988: \textbf{\textit{lbu}} &  \textbf{iretire}=4, \textbf{iaddr}=0x0988, \textbf{itype}=0\\
         098C: \textbf{\textit{csrrw}} &  \\
         \hline
     \end{tabulary}

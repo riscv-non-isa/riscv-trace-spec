@@ -258,7 +258,7 @@ optional modes supported by the encoder.
        Number of bits and definitions implementation dependent.  Examples might be\newline
        - 'sequentially infered jumps' Don't report the targets of sequentially inferable jumps\newline
        - 'implicit return' Don't report function return addresses \newline
-       - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
+       - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause}\newline
        - 'branch prediction' Branch predictor enabled\newline
        - 'jump target cache' Jump target cache enabled\newline
        - 'full address' Always output full addresses (SW debug option)\\
@@ -416,17 +416,6 @@ uninferable discontinuity.  However, this would have been much less efficient, a
 to be different from \textbf{address[MSB]} the majority of the time when outputting a format 1/2 before an exception,
 interrupt or resync (as the probability of this instruction being the target of an uninferable jump is low).  Using 2 
 separate bits results in superior compression.
-
-\textbf{DISCUSSION POINT:} The \textbf{notify} bit will only be different from \textbf{address[MSB]} when the hart has 
-requested notification.  As such, it will have no impact on 'normal' encoding efficiency. However, if the instruction 
-being notified occurs in a loop, it may result in a relatively high number of notification packets close together in
-time.  Because the \textbf{address} is typically 32-bits or more in length, but differtial address values are typically
-small, a notification packet is significantly less efficient.  This could be mitigated by partitioning \textbf{address}
- into two parts, with \textbf{notify} in between (for example, \textbf{address[15:0]}, \textbf{notify}, 
- \textbf{address[MSB:16]}).  This would signicantly reduce the efficiency impact of sending a notification.  In return, the 
- efficiency of a 'normal' format 1/2 packet may be slightly reduced if the differential address value being reported 
- requires more than 16 bits, as some of the address bits are now after the \textbf{notify} bit.  However, if the likelihood 
- of such long jumps is low, this is probably worth it.
 
 \subsection{Format 2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,

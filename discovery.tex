@@ -38,13 +38,11 @@ may be passed in to the design by some means.
         \hline
         \textit{filter\_context\_p} & 0 or 1 & Filtering on context supported when 1 \\
         \hline
-        \textit{filter\_ecause\_p} & & Filtering on exception cause supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter\_ecause\_p} \\
-        \hline
-        \textit{filter\_interrupt\_p} & 0 or 1 & Filtering on interrupt supported when 1 \\
+        \textit{filter\_excint\_p} & & Filtering on exception cause or interrupt supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter\_excint\_p} \\
         \hline
         \textit{filter\_privilege\_p} & 0 or 1 & Filtering on privilege supported when 1 \\
         \hline
-        \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 \\
+        \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 (provided \textit{filter\_excint\_p} is non-zero) \\
         \hline
         \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
         \hline
@@ -58,8 +56,6 @@ may be passed in to the design by some means.
         \hline
         \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
         \hline
-        \textit{ntkn\_width\_p} & & Width of the \textbf{ntkn} bus\\
-        \hline
         \textit{privilege\_width\_p} & & Width of privilege bus \\
         \hline
         \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
@@ -69,7 +65,7 @@ may be passed in to the design by some means.
         \hline
         \textit{sijump\_p} & 0 or 1 & \textbf{sijump} is used to identify sequentially inferable jumps\\
         \hline
-        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype}, \textbf{ntkn} is replicated\\
+        \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype} etc. are replicated\\
         \hline
         \textit{impdef\_width\_p} & & Width of implementation-defined input bus \\
         \hline
@@ -154,9 +150,7 @@ document.
         \hline
         \textit{filter\_context} & 1 & \textit{filter\_context\_p}\\
         \hline
-        \textit{filter\_ecause} & 1 & \textit{filter\_ecause\_p}\\
-        \hline
-        \textit{filter\_interrupt} & 1 & \textit{filter\_interrupt\_p}\\
+        \textit{filter\_excint} & 1 & \textit{filter\_excint\_p}\\
         \hline
         \textit{filter\_privilege} & 1 & \textit{filter\_privilege\-p}\\
         \hline
@@ -180,8 +174,6 @@ document.
         \textit{itype\_width} & 4 & \textit{itype\_width\_p} - 1\\
         \hline
         \textit{iretire\_width} & 2 & \textit{iretire\_width\_p} - 1\\
-        \hline
-        \textit{ntkn\_width} & 0 & \textit{ntkn\_width\_p} - 1\\
         \hline
         \textit{retires} & 0 & \textit{retires\_p} - 1\\
         \hline
@@ -266,7 +258,7 @@ the ipxact form.
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>ctype_width</ipxact:name>
+                  <ipxact:name>context_type_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>26</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>
@@ -302,45 +294,39 @@ the ipxact form.
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>filter_ecause</ipxact:name>
+                  <ipxact:name>filter_excint</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>48</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>filter_interrupt</ipxact:name>
+                  <ipxact:name>filter_privilege</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>52</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>filter_privilege</ipxact:name>
+                  <ipxact:name>filter_tval</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>53</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>filter_tval</ipxact:name>
+                  <ipxact:name>filter_impdef</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>54</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>filter_impdef</ipxact:name>
-                  <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>55</ipxact:bitOffset>
-                  <ipxact:bitWidth>1</ipxact:bitWidth>
-               </ipxact:field>
-               <ipxact:field>
                   <ipxact:name>f0s_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>56</ipxact:bitOffset>
+                  <ipxact:bitOffset>55</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>iaddress_lsb</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>58</ipxact:bitOffset>
+                  <ipxact:bitOffset>57</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
             </ipxact:register>
@@ -382,45 +368,39 @@ the ipxact form.
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>ntkn_width</ipxact:name>
+                  <ipxact:name>privilege_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
                   <ipxact:bitOffset>29</ipxact:bitOffset>
                   <ipxact:bitWidth>2</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
-                  <ipxact:name>privilege_width</ipxact:name>
-                  <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>31</ipxact:bitOffset>
-                  <ipxact:bitWidth>2</ipxact:bitWidth>
-               </ipxact:field>
-               <ipxact:field>
                   <ipxact:name>retires</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>33</ipxact:bitOffset>
+                  <ipxact:bitOffset>31</ipxact:bitOffset>
                   <ipxact:bitWidth>3</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>return_stack_size</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>36</ipxact:bitOffset>
+                  <ipxact:bitOffset>34</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>sijump</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>40</ipxact:bitOffset>
+                  <ipxact:bitOffset>38</ipxact:bitOffset>
                   <ipxact:bitWidth>1</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>taken_branches</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>41</ipxact:bitOffset>
+                  <ipxact:bitOffset>39</ipxact:bitOffset>
                   <ipxact:bitWidth>4</ipxact:bitWidth>
                </ipxact:field>
                <ipxact:field>
                   <ipxact:name>impdef_width</ipxact:name>
                   <ipxact:description>text</ipxact:description>
-                  <ipxact:bitOffset>45</ipxact:bitOffset>
+                  <ipxact:bitOffset>43</ipxact:bitOffset>
                   <ipxact:bitWidth>5</ipxact:bitWidth>
                </ipxact:field>
             </ipxact:register>
@@ -430,5 +410,4 @@ the ipxact form.
       </ipxact:memoryMap>
    </ipxact:memoryMaps>
 </ipxact:component>
-
 \end{alltt}
