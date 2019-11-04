@@ -14,22 +14,20 @@ The following information is mandatory:
   \item The \textit{instruction\_type} of retired instructions for:
     \begin{itemize}
       \item Jumps with a target that cannot be inferred from the source code;
-      \item Taken branches;
+      \item Taken and nontaken branches;
       \item Return from exception or interrupt (\textbf{\textit{*ret}} instructions).
     \end{itemize}
   \item The \textit{instruction\_address} for:
     \begin{itemize}
       \item Jumps with a target that \textit{cannot} be inferred from the source code;
-      \item Taken branches;
-      \item The instruction executed immediately after a jump or taken branch (also referred to as the target or destination of the jump or taken branch);
-      \item The last instruction executed before an exception or interrupt;
-      \item Exceptions;
-      \item The first instruction executed following an exception or interrupt;
-      \item The last instruction executed before a privilege change;
-      \item The first instruction executed following a privilege change;
-      \item The first and last instruction being retired.
+      \item The instruction retired immediately after a jump with a target that \textit{cannot} be inferred 
+        from the source code (also referred to as the target or destination of the jump);
+      \item Taken and nontaken branches;
+      \item The last instruction retired before an exception or interrupt;
+      \item The first instruction retired following an exception or interrupt;
+      \item The last instruction retired before a privilege change;
+      \item The first instruction retired following a privilege change.
     \end{itemize}
-  \item The number of nontaken branches being retired.
 \end{itemize}
 
 The following information is optional:
@@ -50,13 +48,12 @@ The following information is optional:
       \item Returns with a target that \textit{can} be inferred from the source code;
       \item Co-routine swap;
       \item Jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
-      \item Jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code;
-      \item Nontaken branches.
+      \item Jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code.
     \end{itemize}
   \item If context is supported then the \textit{instruction\_address} for:
     \begin{itemize}
-      \item The last instruction executed before a context change;
-      \item The first instruction executed following a context change.
+      \item The last instruction retired before a context change;
+      \item The first instruction retired following a context change.
     \end{itemize}
   \item Whether jump targets are sequentially inferable or not.
 \end{itemize}
@@ -93,9 +90,9 @@ even though by the above definition they are classified as uninferable.  Specifi
   \item an \textbf{\textit{auipc}} (a register which contains a constant offset from the PC).
 \end{itemize}
 
-Such jump targets are classified as \textit{sequentially inferable} if the pair of instructions are executed consecutively 
+Such jump targets are classified as \textit{sequentially inferable} if the pair of instructions are retired consecutively 
 (i.e. the \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} immediately precedes the jump).  Note:
-the restriction that the instructions are executed consecutively is necessary in order to minimize the additional signalling
+the restriction that the instructions are retired consecutively is necessary in order to minimize the additional signalling
 needed between the hart and the encoder, and should have a minimal impact on trace efficiency as it is anticipated that
 consecutive execution will be the norm. Support for sequentially inferable jumps is optional.
 
@@ -147,7 +144,8 @@ Signals are assigned to one of the  following groups:
   \item BR: Block, may be replicated.  Mandatory for harts that can retire multiple instructions in a block.  
     Replication as per OR.  If omitted, the interface must include SR group signals instead.
   \item SR: Single, may be replicated.  Mandatory for harts that can only retire one instruction in a block.  
-    Replication as per OR.  If omitted, the interface must include BR group signals instead.
+    Replication as per OR (see section~\ref{sec:alt-multi}).  If omitted, the interface must include BR 
+    group signals instead.
 \end{itemize}
 
 \begin{table}[htp]
@@ -201,7 +199,7 @@ Signals are assigned to one of the  following groups:
         \textbf{sijump} & OR & If \textbf{itype} indicates that this block ends with an uninferable discontinuity, setting this signal to 1 
         indicates that it is sequentially inferable and may be treated as inferable by the encoder if the preceding 
         \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} has been traced.  
-        Must be zero for \textbf{itype} codes other than 8, 10, 12 or 14.\\
+        Ignored for \textbf{itype} codes other than 8, 10, 12 or 14.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -315,7 +313,7 @@ behaviour would be for this signal to remain zero except on the 1st retirement a
         \hline
         Report context as an & 3 &  An example would be a change of hart.\\
         asynchronous discontinuity & & 
-        Need to report the last instruction executed on the previous context, as well as the 1st on the new context.\newline
+        Need to report the last instruction retired on the previous context, as well as the 1st on the new context.\newline
         Treated the same as an exception.\\
         \hline
     \end{tabulary}
@@ -342,7 +340,7 @@ The \textbf{ilastsize} encoder input must be tied low when attached to a single-
 hart that does not provide these outputs.
 
 
-\subsection{Alternative multiple-retirement interface configurations}
+\subsection{Alternative multiple-retirement interface configurations} \label{sec:alt-multi}
 
 For a hart that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
 solution is to use one instance of signals from groups BR, MR and OR.  However, an alternative approach would 

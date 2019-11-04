@@ -171,14 +171,14 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
               Set to 1 if the instruction is not a branch or if the branch is not taken. \\
     \hline
-    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
-              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
-    \hline
     \textbf{ecause} & \textit {ecause\_width\_p} & 
              Exception cause. \\
     \hline
     \textbf{interrupt} & 1 & 
                 Interrupt. \\
+    \hline
+    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
     \hline
     \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
            Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 0 (illegal instruction exception), or trap value otherwise.\\
@@ -272,7 +272,7 @@ When tracing ends, the encoder reports the address of the last traced instructio
 subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
 \textbf{ended\_rep} and \textbf{ended\_upd}.  This relates to exactly the same ambiguous case described in detail in 
 section~\ref{sec:updiscon}, and in principle, the mechanism described in that section can be used to disambiguate when the last traced
-instruction is at looplabel + 4.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
+instruction is at looplabel.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
 a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
 a 3-stage pipe with access to the previous, current and next instructions.  However, decoding that the next instruction
 is a privilege change or exception is straightforward, but determining whether the next instruction meets the filtering
@@ -376,15 +376,15 @@ There are four scenarios to consider:
   \item Code executes through to the end of the 1st loop iteration, and the encoder reports looplabel using format 1/2 following 
     the \textbf{\textit{JALR}}, then carries on executing the 2nd pass of the loop.  In this case \textbf{updiscon} == \textbf{notify}.  
     The next packet will be a format 1/2;
-  \item Code executes through to the end of the 1st loop iteration, but there is an exception, privilege change or resync at
-    the instruction following the \textbf{\textit{JALR}} (i.e. at looplabel + 4).  In this case, the encoder reports looplabel using 
+  \item Code executes through to the end of the 1st loop iteration and jumps back to looplabel, but there is then an exception, 
+    privilege change or resync in the second iteration at looplabel + 4.  In this case, the encoder reports looplabel using 
     format 1/2 following the \textbf{\textit{JALR}}, with \textbf{updiscon} == !\textbf{notify}, and the next packet is a 
     format 3;
-  \item An exception occurs after the 1st execution of looplabel.  In this case, the encoder reports looplabel using format 0/1/2 and again,
-    \textbf{updiscon} == \textbf{notify}, and the next packet is a format 3;
+  \item An exception occurs immediately after the 1st execution of looplabel.  In this case, the encoder reports looplabel using 
+    format 0/1/2 with \textbf{updiscon} == \textbf{notify}, and the next packet is a format 3;
   \item The hart requests the encoder to notify retirement of the instruction at looplabel.  In this case, the encoder reports the 1st 
     execution of looplabel with \textbf{notify} == !\textbf{address[MSB]}, and subsequent executions with \textbf{notify} == 
-    \textbf{address[MSB]}.
+    \textbf{address[MSB]} (because they would have been reported anyway as a result of the \textbf{\textit{JALR}}).
 \end{enumerate}
 
 Looking at this from the perspective of the decoder, the decoder receives a format 1/2 reporting the address of the 1st instruction in the 
@@ -451,7 +451,7 @@ count will be output under the following conditions:
   \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
     the encoder will output the branch count (number of correctly predicted branches, minus 31);
   \item The branch count reaches its maximum value.  Strictly speaking an address isn't required for this case, 
-    but is included to avoid having to distinguish the packet format from the case above.  t will occur so rarely 
+    but is included to avoid having to distinguish the packet format from the case above.  It will occur so rarely 
     that the bandwidth impact can be ignored.
 \end{itemize}
 
