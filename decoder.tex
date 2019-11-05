@@ -36,6 +36,8 @@ function process_te_inst (te_inst)
     if (te_inst.subformat == 3) # Support packet
       process_support(te_inst)
       return
+    if (te_inst.subformat == 2) # Context packet
+      return
 
     if (te_inst.subformat == 1 or start_of_trace)
       branches    = 0
