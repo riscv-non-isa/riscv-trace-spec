@@ -31,12 +31,14 @@ global       irstack_depth = 0           # Depth of the return address stack
 # Process te_inst packet.  Call each time a te_inst packet is received #
 function process_te_inst (te_inst)
   if (te_inst.format == 3)
-    inferred_address = FALSE
-    address       = (te_inst.address << discovery_response.iaddress_lsb)
     if (te_inst.subformat == 3) # Support packet
       process_support(te_inst)
       return
+    if (te_inst.subformat == 2) # Context packet
+      return
 
+    inferred_address = FALSE
+    address       = (te_inst.address << discovery_response.iaddress_lsb)
     if (te_inst.subformat == 1 or start_of_trace)
       branches    = 0
       branch_map  = 0

@@ -63,8 +63,9 @@ A branch is an instruction where a jump is conditional on the
 value of a register or a flag. For a decoder to able to follow program flow,
 the trace must include whether a branch was taken or not.
 
-For a direct branch, where the destination address is a constant that
-is encoded in the program binary, no further information is required.
+For a direct branch, where the destination address is encoded in the 
+program binary (either as a constant, or as a constant offset from the
+program counter), no further information is required.
 Direct branches are the only type of branch that is supported by the
 RISC-V ISA.
 
@@ -82,7 +83,7 @@ must report the address where normal program flow ceased, as well as
 give an indication of the asynchronous destination which may be as
 simple as reporting the exception type.  When an interrupt or
 exception occurs, or the processor is halted, the final instruction
-executed beforehand must be traced.  Following this, for an interrupt
+retired beforehand must be traced.  Following this, for an interrupt
 or exception, the next valid instruction address (the first of the
 interrupt or exception handler) must be traced in order to instruct the
 trace decoder to classify the instruction as an indirect jump even

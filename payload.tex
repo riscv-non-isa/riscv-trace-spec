@@ -171,14 +171,14 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
               Set to 1 if the instruction is not a branch or if the branch is not taken. \\
     \hline
-    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
-              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
-    \hline
     \textbf{ecause} & \textit {ecause\_width\_p} & 
              Exception cause. \\
     \hline
     \textbf{interrupt} & 1 & 
                 Interrupt. \\
+    \hline
+    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+              Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} Address must be left shifted in order to recreate original byte address. \\
     \hline
     \textbf{tvalepc} & \textit {iaddress\_width\_p} & 
            Exception address if \textbf{ecause} is 2 and \textbf{interrupt} is 0 (illegal instruction exception), or trap value otherwise.\\
@@ -258,7 +258,7 @@ optional modes supported by the encoder.
        Number of bits and definitions implementation dependent.  Examples might be\newline
        - 'sequentially infered jumps' Don't report the targets of sequentially inferable jumps\newline
        - 'implicit return' Don't report function return addresses \newline
-       - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause field}\newline
+       - 'implicit exception' Exclude address from format 3, sub-format 1 \textit{te\_inst} packets if trap vector can be determined from \textit{ecause}\newline
        - 'branch prediction' Branch predictor enabled\newline
        - 'jump target cache' Jump target cache enabled\newline
        - 'full address' Always output full addresses (SW debug option)\\
@@ -272,7 +272,7 @@ When tracing ends, the encoder reports the address of the last traced instructio
 subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
 \textbf{ended\_rep} and \textbf{ended\_upd}.  This relates to exactly the same ambiguous case described in detail in 
 section~\ref{sec:updiscon}, and in principle, the mechanism described in that section can be used to disambiguate when the last traced
-instruction is at looplabel + 4.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
+instruction is at looplabel.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
 a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
 a 3-stage pipe with access to the previous, current and next instructions.  However, decoding that the next instruction
 is a privilege change or exception is straightforward, but determining whether the next instruction meets the filtering
@@ -376,15 +376,15 @@ There are four scenarios to consider:
   \item Code executes through to the end of the 1st loop iteration, and the encoder reports looplabel using format 1/2 following 
     the \textbf{\textit{JALR}}, then carries on executing the 2nd pass of the loop.  In this case \textbf{updiscon} == \textbf{notify}.  
     The next packet will be a format 1/2;
-  \item Code executes through to the end of the 1st loop iteration, but there is an exception, privilege change or resync at
-    the instruction following the \textbf{\textit{JALR}} (i.e. at looplabel + 4).  In this case, the encoder reports looplabel using 
+  \item Code executes through to the end of the 1st loop iteration and jumps back to looplabel, but there is then an exception, 
+    privilege change or resync in the second iteration at looplabel + 4.  In this case, the encoder reports looplabel using 
     format 1/2 following the \textbf{\textit{JALR}}, with \textbf{updiscon} == !\textbf{notify}, and the next packet is a 
     format 3;
-  \item An exception occurs after the 1st execution of looplabel.  In this case, the encoder reports looplabel using format 0/1/2 and again,
-    \textbf{updiscon} == \textbf{notify}, and the next packet is a format 3;
+  \item An exception occurs immediately after the 1st execution of looplabel.  In this case, the encoder reports looplabel using 
+    format 0/1/2 with \textbf{updiscon} == \textbf{notify}, and the next packet is a format 3;
   \item The hart requests the encoder to notify retirement of the instruction at looplabel.  In this case, the encoder reports the 1st 
     execution of looplabel with \textbf{notify} == !\textbf{address[MSB]}, and subsequent executions with \textbf{notify} == 
-    \textbf{address[MSB]}.
+    \textbf{address[MSB]} (because they would have been reported anyway as a result of the \textbf{\textit{JALR}}).
 \end{enumerate}
 
 Looking at this from the perspective of the decoder, the decoder receives a format 1/2 reporting the address of the 1st instruction in the 
@@ -417,17 +417,6 @@ to be different from \textbf{address[MSB]} the majority of the time when outputt
 interrupt or resync (as the probability of this instruction being the target of an uninferable jump is low).  Using 2 
 separate bits results in superior compression.
 
-\textbf{DISCUSSION POINT:} The \textbf{notify} bit will only be different from \textbf{address[MSB]} when the hart has 
-requested notification.  As such, it will have no impact on 'normal' encoding efficiency. However, if the instruction 
-being notified occurs in a loop, it may result in a relatively high number of notification packets close together in
-time.  Because the \textbf{address} is typically 32-bits or more in length, but differtial address values are typically
-small, a notification packet is significantly less efficient.  This could be mitigated by partitioning \textbf{address}
- into two parts, with \textbf{notify} in between (for example, \textbf{address[15:0]}, \textbf{notify}, 
- \textbf{address[MSB:16]}).  This would signicantly reduce the efficiency impact of sending a notification.  In return, the 
- efficiency of a 'normal' format 1/2 packet may be slightly reduced if the differential address value being reported 
- requires more than 16 bits, as some of the address bits are now after the \textbf{notify} bit.  However, if the likelihood 
- of such long jumps is low, this is probably worth it.
-
 \subsection{Format 2 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
 These bits are encoded so that most of the time they will take the same value as the \textbf{updiscon} field,
 and will therefore compress away, having no impact on the encoding efficiency.  If implicit\_return mode is enabled, the
@@ -444,27 +433,10 @@ because the return address stack is empty or the call counter is zero, these fie
 \FloatBarrier
 \section{Format 1 packets} \label{sec:format1}
 
-This packet branch information, and is used when either the branch information must be reported 
+This packet includes branch information, and is used when either the branch information must be reported 
 (for example because the branch map is full), or whe the address of an instruction must be reported, and there has 
 been at least one branch since the previous packet.  If included, the address is in differential format unless full 
 address mode is enabled (see section~\ref{sec:full-address}).
-
-If branch prediction is supported and is enabled, then there is a choice of whether to output a 
-full branch map, or a count of correctly predicted branches.  The count format is used if the number 
-of correctly predicted branches is at least 31.  If there are 31 unreported branches (i.e. the branch
-map is full), but not all of them were predicted correctly, then the branch map will be output.  A branch 
-count will be output under the following conditions:
-
-\begin{itemize}
-  \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
-    minus 31.  No address information is provided - it is implicitly that of the branch which failed
-    prediction;
-  \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
-    the encoder will output the branch count (number of correctly predicted branches, minus 31);
-  \item The branch count reaches its maximum value.  Strictly speaking an address isn't required for this case, 
-    but is included to avoid having to distinguish the packet format from the case above.  t will occur so rarely 
-    that the bandwidth impact can be ignored.
-\end{itemize}
 
 \begin{table}[htp]
   \centering
@@ -476,7 +448,7 @@ count will be output under the following conditions:
     \hline
     \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
     \hline
-    \textbf{branches} & 5 & Number of valid bits \textbf{branch\_map}. The length of branch-map is determined as follows: \newline
+    \textbf{branches} & 5 & Number of valid bits \textbf{branch\_map}. The number of bits of \textbf{branch\_map} is determined as follows: \newline
     0:	   (cannot occur for this format) \newline
     1:	   1 bit \newline
     2-3:   3 bits \newline
@@ -540,56 +512,97 @@ count will be output under the following conditions:
     0: branch taken \newline
     1: branch not taken \\
     \hline
-    \textbf{branch\_fmt} & 2  & Both bits set to the same value as \textbf{branch\_map[30]} indicates that the
-    preceding field is \textbf{branch\_map}. \\
+  \end{tabulary}
+\end{table}
+
+\subsection{Format 1 \textbf{updiscon} field}
+
+See section~\ref{sec:updiscon}.
+
+\subsection{Format 1 \textbf{branch\_map} field}
+When the branch map becomes full it must be reported, but in most cases there is no need to report an address.
+This is indicated by setting \textbf{branches} to 0.  The exception to this is when the instruction immediately prior to 
+the final branch causes an uninferable discontinuity, in which case \textbf{branches} is set to 31.
+
+The choice of sizes (1, 3, 7, 15, 31) is designed to minimize efficiency loss.  On average there will be some 'wasted' bits 
+because the number of branches to report is less than the selected size of the \textbf{branch\_map} field.
+Using a tapered set of sizes means that the number of wasted bits will on average be less for shorter packets.
+If the number of branches between updiscons is randomly distributed then the probability of generating packets with large
+branch counts will be lower, in which case increased waste for longer packets will have less overall impact.
+Furthermore, the rate at which packets are generated can be higher for lower branch counts, and so reducing
+waste for this case will improve overall bandwidth at times where it is most important.
+
+\subsection{Format 1 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
+
+See section~\ref{sec:irxx}.
+
+\FloatBarrier
+\section{Format 0 packets} \label{sec:format0}
+
+This format is intended for optional efficiency extensions.  Currently two extensions are defined, for reporting counts of
+correctly predicted branches, and for reporting the jump target cache index.
+
+If branch prediction is supported and is enabled, then there is a choice of whether to output a 
+full branch map (via format 1), or a count of correctly predicted branches.  
+The count format is used if the number of correctly predicted branches is at least 31.  If there are 31 unreported 
+branches (i.e. the branch map is full), but not all of them were predicted correctly, then the branch map will be output.  
+A branch count will be output under the following conditions:
+
+\begin{itemize}
+  \item A branch is mis-predicted.  The count value will be the number of correctly predicted branches, 
+    minus 31.  No address information is provided - it is implicitly that of the branch which failed
+    prediction;
+  \item An updiscon, interrupt or exception requires the encoder to output an address.  In this case 
+    the encoder will output the branch count (number of correctly predicted branches, minus 31);
+  \item The branch count reaches its maximum value.  Strictly speaking an address isn't required for this case, 
+    but is included to avoid having to distinguish the packet format from the case above.  It will occur so rarely 
+    that the bandwidth impact can be ignored.
+\end{itemize}
+
+If a jump target cache is supported and enabled, and the address to report following an updiscon is
+in the cache then the encoder can output the cache index index using format 0, subformat 1.  
+However, the encoder may still choose to output the differential address using format 1 or 2 if the 
+resulting packet is shorter.  This may occur if the differential address is zero, or very small.
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format 0, subformat 0 - no address, branch count}
+  \label{tab:te_inst0-0-noaddr-count}
+  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
+    \hline
+    \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (correctly predicted branches)\\
+    \hline
+    \textbf{branch\_count} & 32 & Count of the number of correctly predicted branches, minus 31. \\
+    \hline
+    \textbf{branch\_fmt} & 2 & 00 (no-addr): Packet does not contain an \textbf{address}, and the branch following the 
+    last correct prediction failed. \newline
+    01-11: (cannot occur for this format) \\
     \hline
   \end{tabulary}
 \end{table}
 
 \begin{table}[htp]
   \centering
-  \caption{Packet format 1 - no address, branch count}
-  \label{tab:te_inst1-noaddr-count}
+  \caption{Packet format 0, subformat 0 - address, branch count}
+  \label{tab:te_inst0-0-addr-count}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
+    \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
     \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:    31 bits, no \textbf{address} in packet \newline
-    31-1: (cannot occur for this format) \\
+    \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (correctly predicted branches)\\
     \hline
-    \textbf{branch\_count} & 31 & Count of the number of correctly predicted branches, minus 31. \\
+    \textbf{branch\_count} & 32 & Count of the number of correctly predicted branches, minus 31. \\
     \hline
-    \textbf{branch\_fmt} & 2 & Set to 01, indicates that the packet contains a \textbf{branch\_count} field, no
-    \textbf{address} field, and that the next branch failed prediction. \\
-    \hline
-  \end{tabulary}
-\end{table}
-
-\begin{table}[htp]
-  \centering
-  \caption{Packet format 1 - address, branch count}
-  \label{tab:te_inst1-addr-count}
-  \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
-    \hline
-    {\bf Field name} & {\bf Bits} & {\bf Description} \\
-    \hline
-    \textbf{format}	& 2	& 01 (diff-delta): includes branch information and may include differential address\\
-    \hline
-    \textbf{branches} & 5 & Number of valid bits in \textbf{branch\_map}. The length of \textbf{branch\_map} is determined as follows: \newline
-    0:    31 bits, no \textbf{address} in packet \newline
-    31-1: (cannot occur for this format) \\
-    \hline
-    \textbf{branch\_count} & 31 & Count of the number of correctly predicted branches, minus 31. \\
-    \hline
-    \textbf{branch\_fmt} & 2 & Set to 10, indicates that the packet contains a \textbf{branch\_count} field and
-     an \textbf{address} field. This will be the case if the packet is output because it is necessary to report an
-     address (e.g. following an updiscon, or if the next instruction is an exception), or because \textbf{branch\_count} 
-     has reached 0xffff).\\
-    \hline
-    \textbf{bpsuccess} & 1 & Set to 1 if the address points to a branch instruction and the branch was predicted correctly.  \\
+    \textbf{branch\_fmt} & 2 & 10 (addr): Packet contains an \textbf{address}.  If this points to
+    a branch instruction, then the branch was predicted correctly. \newline
+    11 (addr-fail): Packet contains an \textbf{address} that points to a branch which failed the prediction. \newline
+    00,01: (cannot occur for this format) \\ 
     \hline
     \textbf{address}	& \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
                 Differential instruction address.\\
@@ -619,59 +632,18 @@ count will be output under the following conditions:
   \end{tabulary}
 \end{table}
 
-\subsection{Format 1 \textbf{updiscon} field}
-
-See section~\ref{sec:updiscon}.
-
-\subsection{Format 1 \textbf{branch\_map} field}
-When the branch map becomes full it must be reported, but in most cases there is no need to report an address.
-This is indicated by setting \textbf{branches} to 0.  The exception to this is when the instruction immediately prior to 
-the final branch causes an uninferable discontinuity, in which case \textbf{branches} is set to 31.
-
-The choice of sizes (1, 3, 7, 15, 31) is designed to minimize efficiency loss.  On average there will be some 'wasted' bits 
-because the number of branches to report is less than the selected size of the \textbf{branch\_map} field.
-Using a tapered set of sizes means that the number of wasted bits will on average be less for shorter packets.
-If the number of branches between updiscons is randomly distributed then the probability of generating packets with large
-branch counts will be lower, in which case increased waste for longer packets will have less overall impact.
-Furthermore, the rate at which packets are generated can be higher for lower branch counts, and so reducing
-waste for this case will improve overall bandwidth at times where it is most important.
-
-\subsection{Format 1 \textbf{branch\_fmt} field}
-
-This is encoded so that when reporting a branch map it will take the same value as the MSB of the \textbf{branch\_map} 
-field, so that extra bits are only required when reporting predicted branch counts, and reporting a branch map is unaffected.  
-Even for the most pathological case (32 correctly predicted branches followed by a misprediction), the total number of bits 
-used is still fewer than if using just the branch map format.
-
-\subsection{Format 1 \textbf{bpsuccess} field}
-When a branch count is reported without an address it is because a branch has failed the prediction.  However, when an address is 
-reported along with a branch count, it will be because the packet was initiated by an uninferable discontinuity, an exception, or 
-because a branch has been encountered when the number of correctly predicted branches is 0xffff.  For the latter case, the 
-reported address will always be for a branch, and in the former cases it may be.  If it is a branch, it is necessary to 
-be explicit about whether or not the prediction was met or not.  If it is met, then the reported address is that of the last
-correctly predicted branch.
-
-\subsection{Format 1 \textbf{irfail} and \textbf{irdepth} fields} \label{sec:irxx}
-
-See section~\ref{sec:irxx}.
-
-\FloatBarrier
-\section{Format 0 packets} \label{sec:format0}
-
-This format is intended for optional efficiency extensions.  Currently only one extension is defined, for reporting
-the jump target cache index.
 
 \begin{table}[htp]
   \centering
-  \caption{Packet format 0, subformat 0 - jump target index, branch map}
-  \label{tab:te_inst0-0-cache-map}
+  \caption{Packet format 0, subformat 1 - jump target index, branch map}
+  \label{tab:te_inst0-1-cache-map}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{90mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
     \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
     \hline
-     \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
+     \textbf{subformat}  & See section~\ref{sec:f0s} & 1 (jump target cache)\\
      \hline
     \textbf{index} & \textit {\textit{cache\_size\_p}} & 
               Jump target cache index of entry containing target address.\\ 
@@ -708,15 +680,15 @@ the jump target cache index.
 
 \begin{table}[htp]
   \centering
-  \caption{Packet fFormat 0, subformat 0 - jump target index, no branch map}
-  \label{tab:te_inst0-0-cache-nomap}
+  \caption{Packet format 0, subformat 1 - jump target index, no branch map}
+  \label{tab:te_inst0-1-cache-nomap}
   \begin{tabulary}{\textwidth}{|l|p{35mm}|p{80mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
     \textbf{format}	& 2	& 00 (opt-ext): formats for optional efficiency extensions\\
     \hline
-     \textbf{subformat}  & See section~\ref{sec:f0s} & 0 (jump target cache)\\
+     \textbf{subformat}  & See section~\ref{sec:f0s} & 1 (jump target cache)\\
      \hline
     \textbf{index} & \textit {\textit{cache\_size\_p}} & 
               Jump target cache index of entry containing target address.\\ 
@@ -741,16 +713,31 @@ the jump target cache index.
 
 \subsection{Format 0 subformat field} \label{sec:f0s}
 
-The width of this field depends on the number of optional formats supported.  Currently, only one optional format is
-defined (branch target cache), and as such the width of this field is 0 (i.e. it is omitted).  The width is 
-specified by the \textit{f0s\_width} discovery field (see section~\ref{sec:disco}).  Provision of this field
-allows additional formats to be added in future without reducing the efficiency of the existing formats.
+The width of this field depends on the number of optional formats supported.  Currently, two optional formats are
+defined (correctly predicted branches and jump target cache).  If only the former is supported, the field can be 
+omitted (interpreted as being zero).  The width is specified by the \textit{f0s\_width} discovery field 
+(see section~\ref{sec:disco}).  This provision allows additional formats to be added in future without reducing 
+the efficiency of the existing formats.
+
+\subsection{Format 0 \textbf{branch\_fmt} field}
+
+This is encoded so that when no address is required it will be zero, allowing the upper bits of the \textbf{branch\_count} 
+field to be compressed away.
+
+When a branch count is reported without an address it is because a branch has failed the prediction.  However, when an address is 
+reported along with a branch count, it will be because the packet was initiated by an uninferable discontinuity, an exception, or 
+because a branch has been encountered when \textbf{branch\_count} is 0xffff\_ffff.  For the latter case, the 
+reported address will always be for a branch, and in the former cases it may be.  If it is a branch, 
+it is necessary to be explicit about whether or not the prediction was met or not.  If it is met, then the reported address is 
+that of the last correctly predicted branch.
 
 \subsection{Format 0 \textbf{irfail} and \textbf{irdepth} fields}
-These bits are encoded so that most of the time they will take the same value as the \textbf{branch\_map[MSB]} 
-or \textbf{branches[MSB]} field.  Purpose and behaviour is as described in section~\ref{sec:irxx}.
-They are included to allow return addresses that fail the implicit return prediction but 
-which reside in the jump target cache to be reported using this format.  An implementation
+These bits are encoded so that most of the time they will take the same value as the immediately preceding bit
+(\textbf{updiscon}, \textbf{branch\_map[MSB]} or \textbf{branches[MSB]} depending on the specific packet format).  
+Purpose and behaviour is as described in section~\ref{sec:irxx}.
+
+For the jump target cache (subformat 1), they are included to allow return addresses that fail the implicit return 
+prediction but which reside in the jump target cache to be reported using this format.  An implementation
 could omit these if all implicit return failures are reported using format 1.
 
 
