@@ -85,9 +85,15 @@ simple as reporting the exception type.  When an interrupt or
 exception occurs, or the processor is halted, the final instruction
 retired beforehand must be traced.  Following this, for an interrupt
 or exception, the next valid instruction address (the first of the
-interrupt or exception handler) must be traced in order to instruct the
-trace decoder to classify the instruction as an indirect jump even
-if it is not.
+trap handler) must be traced.
+
+Note: not all exceptions and interrupts cause traps (see 
+section~\ref{sec:terminology} for definitions). Most notably, 
+floating point exceptions and disabled interrupts do not trap.
+If an exception or interrupt doesn't trap, the program counter does not
+change. So, there is no need to trace all exceptions/interrupts, just
+traps.  In this document, interrupts and exceptions are only traced when 
+they cause traps to be taken.
 
 \subsection{Synchronization} \label{synchronization}
 
@@ -102,10 +108,10 @@ The instruction trace encoder needs to synchronise fully:
 
 \begin{itemize}
 
-\item After a reset.
-  \item When tracing starts.
+\item For the first instruction traced after reset or resume from halt;
+\item Any time that an instruction is traced and the previous instruction was not traced;
 \item If the instruction is the first of an interrupt service routine or
-exception handler (hardware context change).
+exception handler.
 \item After a prolonged period of time.
 \end{itemize}
 
@@ -128,7 +134,7 @@ Here are common examples of such modes:
     the destination address of an exception (i.e. the address of the exception trap) is assumed to 
     be known by the decoder, and thus not encoded in the trace.
   \item Sequentially inferable jump mode:
-    The target of an indirect jump can be infered by considering the combined effect of two instructions. 
+    The target of an indirect jump can be inferred by considering the combined effect of two instructions. 
   \item implicit return mode:
     the destination address of function call returns is derived from a call stack, and thus not encoded
     in the trace.
@@ -166,11 +172,11 @@ debugging aid for software decoder developers.
 Related parameters: None
 
 The RISC-V Privileged ISA specification stores exception handler base
-addresses in the \textbf{\textit{utvec/stvec/mvec}} CSR registers.
+addresses in the \textbf{\textit{utvec/stvec/mtvec}} CSR registers.
 In some RISC-V implementations, the lower address bits are stored in
 the \textbf{\textit{ucause/scause/mcause}} CSR registers.
 
-By default, both the \textbf{\textit{*vec}} and \textbf{\textit{*cause}} 
+By default, both the \textbf{\textit{*tvec}} and \textbf{\textit{*cause}} 
 values are reported when an exception or interrupt occurs.
 
 The implicit exception mode omits \textbf{\textit{*vec}} (the trap handler address), 
@@ -189,7 +195,8 @@ can be considered inferable under some circumstances.  The hart must identify ju
 sequentially inferable targets and provide this information separately to the encoder.  The
 final decision as to whether to treat the jump as inferable or not must be made by the encoder.
 Both the constant load and the jump must be traced in order for the decoder to be able to
-infer the jump target.
+infer the jump target.  See Section~\ref{Jump Classes} for details of what constitutes a sequentially
+inferable jump.
 
 \subsection{Implicit return mode} \label{sec:implicit-return}
 
@@ -243,7 +250,8 @@ the encoder and decoder synchronized, a predictor with identical behavior will n
 software.
 
 The predictor shall comprise a lookup table of 2\textsuperscript{\textit{bpred\_size\_p}} entries.  
-Each entry is indexed by bits N:1 of the instruction address (or N+1:2 if compressed instructions aren't supported), 
+Each entry is indexed by bits \textit{bpred\_size\_p}:1 of the instruction address (or \textit{bpred\_size\_p}+1:2 if 
+compressed instructions aren't supported), 
 and each contains a 2-bit prediction state:
 \begin{itemize}
   \item 00: predict not taken, transition to 01 if prediction fails;
@@ -273,12 +281,14 @@ An efficiency gain can be obtained by the addition of a jump target cache to the
 the encoder and decoder synchronized, a cache with identical behavior will need to be implemented in the 
 decoder software.  Even a small cache can provide significant improvement.
 
-The cache shall comprise 2\textsuperscript{\textit{cache\_size\_p}} entries.  It will be direct mapped, 
-with each entry indexed by bits N:1 of the instruction address (or N+1:2 if compressed 
-instructions aren't supported).  
+The cache shall comprise 2\textsuperscript{\textit{cache\_size\_p}} entries, each of which can contain
+an instruction address.  It will be direct mapped, with each entry indexed by bits \textit{cache\_size\_p}:1 
+of the instruction address (or \textit{cache\_size\_p}+1:2 if compressed instructions aren't supported).   
 
 Each uninferable jump target is first compared with the entry at its index in the cache.  If it is 
 found in the cache, the index number is traced rather than the target address.  If it is not found in 
-the cache, the entry at that index is replaced.
+the cache, the entry at that index is replaced with the current instruction address.
+
+The cache entries are all invalidated when a synchronization packet is sent.  
 
 
