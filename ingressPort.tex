@@ -1,4 +1,4 @@
-\chapter{Ingress Port} \label{Interface}
+\chapter{Hart to encoder interface} \label{Interface}
 
 \section{Interface requirements}
 This section describes in general terms the information which must be passed from the RISC-V hart to the trace encoder,
@@ -129,6 +129,27 @@ Jumps may optionally be further classified according to the recommended calling 
     \end{itemize}
 \end{itemize}
 
+\subsection{Relationship betweem RISC-V core and the encoder} \label{sec:relationship}
+
+The encoder is intended to encode the instructions executed on a single hart.  
+
+It is however commonplace for a RISC-V core to contain multiple harts.  This can be 
+supported by the core in several different ways:
+
+\begin{itemize}
+  \item Implement a separate instance of the interface per hart.  Each instance can be connected
+    to a separate encoder instance, allowing all harts to be traced concurrently.  Alternatively,
+    external muxing may be used in conjunction with a single encoder in order to trace one particular 
+    hart at a time;
+  \item Implement a singe interface for the core, with muxing inside the core to select which hart to 
+  connect to the interface.
+\end{itemize}
+
+(Whilst it is technically feasible to use a single encoder with multiple harts operating 
+in a fine-grained multi-threaded configuration, the frequent context changes that would occur
+as a result of thread-switching would result in extremely poor encoding efficiency, and so
+this configuration is not recommended.)
+
 \section{Instruction interface}
 This section describes the interface between a RISC-V hart and the
 trace encoder that conveys the information described in the previous section.  
@@ -158,9 +179,9 @@ Signals are assigned to one of the  following groups:
         \hline
         \textbf{itype}[\textit{itype\_width\_p}-1:0] & MR & Termination type of the instruction block (see Section~\ref{Jump Classes} for definitions of codes 6 - 15):\newline
         0: Final instruction in the block is none of the other named \textbf{itype} codes;\newline
-        1: Exception. An exception occurred following the final retired instruction in the block;\newline
-        2: Interrupt. An interrupt occurred following the final retired instruction in the block;\newline
-        3: Exception return;\newline
+        1: Exception. An exception that traps occurred following the final retired instruction in the block;\newline
+        2: Interrupt. An interrupt that traps occurred following the final retired instruction in the block;\newline
+        3: Exception or interrupt return;\newline
         4: Nontaken branch;\newline
         5: Taken branch;\newline
         6: reserved;\newline
@@ -183,12 +204,12 @@ Signals are assigned to one of the  following groups:
         to provide ancillary information in cases where it currently supplies zero.
         Ignored unless \textbf{itype}=1 or 2.\\
         \hline
-        \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions in this block.\\
+        \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions retired on this cycle.\\
         \hline
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.
         Invalid if \textbf{iretire}=0 \\
         \hline
-        \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context for all instructions in this block.\\
+        \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context for all instructions retired on this cycle.\\
         \hline
         \textbf{ctype}[\textit{ctype\_width\_p}-1:0] & O & Reporting behavior for \textbf{context}:\newline
         0: Don't report; \newline
@@ -238,7 +259,7 @@ instructions per cycle.  The following discussion describes the multiple-retirem
 However, for harts that can only retire one instruction at a time, the signalling can be 
 simplified, and this is discussed subsequently in Section~\ref{sec:single-retire}.  
 
-The information presented on the ingress port represents a contiguous
+The information presented in a block represents a contiguous
 block of instructions starting at \textbf{iaddr}, all of which retired
 in the same cycle. Note if \textbf{itype} is 1 or 2 (indicating an
 exception or an interrupt), the number of instructions retired may be
@@ -252,13 +273,10 @@ instruction.  Half-words rather than instruction count enables the encoder to ea
 the last instruction in the block without having access to the size of every 
 instruction in the block.  
 
-If address translation is enabled, \textbf{iaddr} is a virtual
-address, else it is a physical address. Virtual addresses narrower
-than \textit{iaddress\_width\_p} bits must be sign-extended to make
-computation of differential addresses easier, and physical addresses
-narrower than \textit{iaddress\_width\_p} bits must be zero-extended.
+Whilst \textbf{iaddr} is typically a virtual address, it does not affect the encoder's behavior
+if it is a phyical address.
 
-For harts that can retire a maximum of N taken branches per clock
+For harts that can retire a maximum of N branches per clock
 cycle, the signal groups MR, OR and either BR or SR must be replicated N times. 
 Signal group 0 represents information about the oldest instruction block, and group N-1
 represents the newest instruction block. The interface supports no more
@@ -266,11 +284,11 @@ than one privilege, context, exception or interrupt per cycle and so signals in
 groups M and O are not replicated. Furthermore, \textbf{itype} can only
 take the value 1 or 2 in one of the signal groups, and this must be
 the newest valid group (i.e. \textbf{iretire} and \textbf{itype} must
-be zero for higher numbered groups). If fewer than N taken branches
+be zero for higher numbered groups). If fewer than N branches
 are retired in a cycle, then lower numbered groups must be used
-first. For example, if there is one taken branch, use only group 0, if
-there are two taken branches, instructions up to the 1st taken branch
-must be reported in group 0 and instructions up to the 2nd taken branch
+first. For example, if there is one branch, use only group 0, if
+there are two branches, instructions up to the 1st branch
+must be reported in group 0 and instructions up to the 2nd branch
 must be reported in group 1 and so on.
 
 \textbf{sijump} is optional and may be omitted if the hart does not implement the logic to detect
@@ -283,10 +301,13 @@ prevent correct reconstruction by the decoder.
 The \textbf{context} field can be used to convey any additional information to the decoder.  For example:
 
 \begin{itemize}
-  \item The hart ID;
   \item The software thread ID;
+  \item The process ID from an operating system;
   \item It could be used to convey the values of CSRs to the decoder by setting \textbf{context} to the 
-    CSR number and value when a CSR is written.
+    CSR number and value when a CSR is written;
+  \item In cases where a single encoder is being shared amongst multiple harts 
+  (see section~\ref{sec:relationship}), it could also be used to indicate the hart ID, in cases where the 
+  hart ID can be changed dynamically.
 \end{itemize}
 
 Table~\ref{tab:context-type} specifies the actions for the various \textbf{ctype} values.  A typical 
@@ -302,7 +323,7 @@ behaviour would be for this signal to remain zero except on the 1st retirement a
         \hline
         Unreported & 0 & No action (don't report context).\\
         \hline
-        Report context imprecisely & 1 & An example would be a SW thread change.\newline
+        Report context imprecisely & 1 & An example would be a SW thread or operating system process change.\newline
         Report the new context value at the earliest convenient opportunity.\newline
         It is reported without any address information, and the assumption is that the precise 
         point of context change can be deduced from the source code (e.g. a CSR write). \\
@@ -342,10 +363,14 @@ hart that does not provide these outputs.
 
 \subsection{Alternative multiple-retirement interface configurations} \label{sec:alt-multi}
 
-For a hart that can retire multiple instructions per cycle, but no more than one taken branch, the preferred 
-solution is to use one instance of signals from groups BR, MR and OR.  However, an alternative approach would 
-be to provide explicit details of every instruction retired by using N instances of signals from groups
-SR, MR and OR (replicating the single retirement example N times).  
+For a hart that can retire multiple instructions per cycle, but no more than one branch, the preferred 
+solution is to use one instance of signals from groups BR, MR and OR.  However, if the hart can retire 
+N branches in a cycle, N instances of signals from groups MR, OR and either SR or BR must be used 
+(each instance can be either a single instruction or a block).
+
+If the hart can retire N instructions per cycle, but only one branch, it is allowed (though not recommmended)
+to provide explicit details of every instruction retired by using N instances of signals from groups
+SR, MR and OR.
 
 \subsection{Optional sideband signals}
 
@@ -357,7 +382,7 @@ will need to be applied via the \textbf{context} input.
 
 \begin{table}[htp]
     \centering
-    \caption{Optional sideband encoder ingress signals}
+    \caption{Optional sideband encoder input signals}
     \label{tab:ingress-side-band}
     \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
         \hline
@@ -383,7 +408,7 @@ will need to be applied via the \textbf{context} input.
 
 \begin{table}[htp]
     \centering
-    \caption{Optional sideband encoder egress signals}
+    \caption{Optional sideband encoder output signals}
     \label{tab:egress-side-band}
     \begin{tabulary}{\textwidth}{|l|l|p{130mm}|}
         \hline
