@@ -15,7 +15,7 @@ global       branch_map = 0              # Bit vector of not taken/taken (1/0) s
 global bool  stop_at_last_branch = FALSE # Flag to indicate reconstruction is to end at
                                          #   the final branch
 global bool  inferred_address = FALSE    # Flag to indicate that reported address from
-                                         #   format 0/1/2 was not following an uninferrable
+                                         #   format 0/1/2 was not following an uninferable
                                          #   jump (and is therefore inferred)
 global bool  start_of_trace = TRUE       # Flag indicating 1st trace packet still
                                          #   to be processed
@@ -98,7 +98,7 @@ function follow_execution_path(address, te_inst)
         stop_at_last_branch = FALSE
         return
       if (stop_here))
-        # Reached reported address following an uninferrable discontinuity - stop here
+        # Reached reported address following an uninferable discontinuity - stop here
         if (branches > (is_branch(get_instr(pc)) ? 1 : 0))
           # Check all branches processed (except 1 if this instruction is a branch)
           ERROR: unprocessed branches
@@ -107,14 +107,14 @@ function follow_execution_path(address, te_inst)
         (te_inst.notify != get_previous_bit(te_inst, "notify")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
           # All branches processed, and reached reported address due to notification,
-          # not as an uninferrable jump target
+          # not as an uninferable jump target
         return
       if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
-        !is_uninferrable_discon(get_instr(last_pc)) and 
+        !is_uninferable_discon(get_instr(last_pc)) and 
         (te_inst.updiscon == get_previous_bit(te_inst, "updiscon")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
           # All branches processed, and reached reported address, but not as an
-          #   uninferrable jump target
+          #   uninferable jump target
           # Stop here for now, though flag indicates this may not be
           #  final retired instruction
         inferred_address = TRUE
@@ -134,16 +134,16 @@ function next_pc (address)
   local instr   = get_instr(pc)
   local this_pc = pc
 
-  if (is_inferrable_jump(instr))
+  if (is_inferable_jump(instr))
     pc += instr.imm
   else if (is_sequential_jump(instr, last_pc)) # lui/auipc followed by
                                                #  jump using same register
     pc = sequential_jump_target(pc, last_pc)
   else if (is_implicit_return(instr))
     pc = pop_return_stack()
-  else if (is_uninferrable_discon(instr))
+  else if (is_uninferable_discon(instr))
     if (stop_at_last_branch)
-      ERROR: unexpected uninferrable discontinuity
+      ERROR: unexpected uninferable discontinuity
     else
       pc = address
   else if (is_taken_branch(instr))
@@ -210,8 +210,8 @@ function is_branch (instr)
 
   return FALSE
 
-# Determine if instruction is an inferrable jump #
-function is_inferrable_jump (instr)
+# Determine if instruction is an inferable jump #
+function is_inferable_jump (instr)
 
   if ((instr.opcode == JAL)   or
       (instr.opcode == C.JAL) or
@@ -225,8 +225,8 @@ function is_inferrable_jump (instr)
 \pagebreak
 
 \begin{alltt}
-# Determine if instruction is an uninferrable jump #
-function is_uninferrable_jump (instr)
+# Determine if instruction is an uninferable jump #
+function is_uninferable_jump (instr)
 
   if ((instr.opcode == JALR and instr.rs1 != 0) or
       (instr.opcode == C.JALR)                  or
@@ -235,10 +235,10 @@ function is_uninferrable_jump (instr)
 
   return FALSE
 
-# Determine if instruction is an uninferrable discontinuity #
-function is_uninferrable_discon (instr)
+# Determine if instruction is an uninferable discontinuity #
+function is_uninferable_discon (instr)
 
-  if (is_uninferrable_jump(instr) or
+  if (is_uninferable_jump(instr) or
       (instr.opcode == URET)      or
       (instr.opcode == SRET)      or
       (instr.opcode == MRET)      or
@@ -250,10 +250,10 @@ function is_uninferrable_discon (instr)
 
   return FALSE
 
-# Determine if instruction is a sequentially inferrable jump #
+# Determine if instruction is a sequentially inferable jump #
 function is_sequential_jump (instr, prev_addr)
 
-  if (not (is_uninferrable_jump(instr) and options.sijump))
+  if (not (is_uninferable_jump(instr) and options.sijump))
     return FALSE
 
   local prev_instr = get_instr(prev_addr)
@@ -269,7 +269,7 @@ function is_sequential_jump (instr, prev_addr)
 \pagebreak
 
 \begin{alltt}
-# Find the target of a sequentially inferrable jump #
+# Find the target of a sequentially inferable jump #
 function sequential_jump_target (addr, prev_addr)
 
   local instr      = get_instr(addr)
