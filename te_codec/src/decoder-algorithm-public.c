@@ -29,12 +29,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "decoder-algorithm-public.h"
-
-
-/*
- * Extract the most-significant bit of an integer.
- */
-#define MSB(x)  (((x)>>(8*(sizeof(x))-1)) & 0x1)
+#include "te-codec-utilities.h"
 
 
 /*
@@ -54,6 +49,7 @@ static const te_discovery_response_t default_discovery_response =
     .call_counter_width = 7,    /* maximum of 512 calls on return_stack[] */
     .iaddress_lsb = 1,          /* 1 == compressed instructions supported */
     .jump_target_cache_size = TE_CACHE_SIZE_P,
+    .branch_prediction_size = TE_BPRED_SIZE_P,
 };
 
 
@@ -65,6 +61,7 @@ static const te_options_t default_support_options =
     .full_address = false,      /* use differential addresses */
     .implicit_return = false,   /* disable using return_stack[] */
     .jump_target_cache = false, /* disable using jump_target[] */
+    .branch_prediction = false, /* disable using a branch predictor */
 };
 
 
@@ -230,7 +227,7 @@ static void disseminate_pc(
     if ((decoder->debug_stream) && (decoder->debug_flags & TE_DEBUG_PC_TRANSITIONS))
     {
         fprintf(decoder->debug_stream,
-            "%s\t[%2u] set_pc %8" PRIx64 " -> %8" PRIx64 ":\t%s\n",
+            "%s\t[%2lu] set_pc %8" PRIx64 " -> %8" PRIx64 ":\t%s\n",
             (decoder->pc == decoder->last_sent_addr) ? "---->" : "",
             decoder->branches,
             decoder->last_pc,
@@ -285,6 +282,9 @@ static bool is_taken_branch(
     const te_decoded_instruction_t * const instr)
 {
     bool taken = false;     /* assume branch not taken */
+    size_t bpred_index = 0;
+    bool predicted_outcome = false;
+    const char * source = NULL;
 
     assert(decoder);
     assert(instr);
@@ -298,12 +298,99 @@ static bool is_taken_branch(
     {
         unrecoverable_error(instr,
             "cannot resolve branch (branch-map depleted)!");
+        return false;
+    }
+
+    /* this branch will be processed, decrement remaining branches */
+    decoder->branches--;
+
+    /*
+     * retrieve the prediction from the branch predictor,
+     * if it is enabled.
+     */
+    if (decoder->options.branch_prediction)
+    {
+        /* find the (direct-mapped) index into the branch predictor table */
+        bpred_index = te_get_bpred_index(instr->decode.pc, &decoder->discovery_response);
+        /* retrieve the extant state from the branch predictor table */
+        const te_bpred_state_t old_state =
+            (te_bpred_state_t)(decoder->bpred.table[bpred_index]);
+        /* decode the predicted state */
+        predicted_outcome = !!(old_state & 0x2u);
+    }
+
+    /*
+     * work out if the current branch will be taken or not ...
+     *
+     * This can come from several different sources!
+     * e.g. if we are using a branch-count, then use that and not
+     * the branch-map to determine if the branch is taken or not.
+     */
+    assert(!decoder->bpred.use_bmap_first || !decoder->bpred.miss_predict_carry_in);
+    if (decoder->bpred.use_bmap_first)
+    {
+        /* the branch_map still has one valid bit to be consumed */
+        taken = !(decoder->branch_map & 1);  /* bit [0] */
+        decoder->branch_map >>= 1;   /* right-shift one bit */
+        decoder->bpred.use_bmap_first = false;
+        source = "bmap[0]";
+    }
+    else if (decoder->bpred.miss_predict_carry_in)
+    {
+        /* this branch is a miss-predict from the previous packet */
+        taken = !predicted_outcome; /* miss-prediction */
+        decoder->bpred.miss_predict_carry_in = false;
+        source = "carry-in";
+    }
+    else if (decoder->bpred.correct_predictions)
+    {
+        /* use the branch predictor for the next branch */
+        taken = predicted_outcome;  /* correct prediction */
+        source = "bpred";
     }
     else
     {
+        /* use and then shift the branch-map[] */
         taken = !(decoder->branch_map & 1);  /* bit [0] */
-        decoder->branches--;
         decoder->branch_map >>= 1;   /* right-shift one bit */
+        source = "bmap";
+    }
+
+    /*
+     * update the branch prediction lookup table, for the branch predictor,
+     * if it is enabled.
+     */
+    if (decoder->options.branch_prediction)
+    {
+        /* retrieve the extant state from the branch predictor table */
+        const te_bpred_state_t old_state =
+            (te_bpred_state_t)(decoder->bpred.table[bpred_index]);
+        /* calculate the next value of the branch predictor state */
+        const te_bpred_state_t new_state = te_next_bpred_state(old_state, taken);
+
+        /* optionally, print out what we have done */
+        if ( (decoder->debug_stream) &&
+             (decoder->debug_flags & TE_DEBUG_BRANCH_PREDICTION) )
+        {
+            const bool previous_outcome = !!(old_state & 0x1u);
+            fprintf(decoder->debug_stream,
+                "bpred-%u: %" PRIx64 ", bpred_table[%02" PRIx64 "] = %u%u -> %u%u,"
+                "  branches = %2lu,  %-8s  %-9s  %s\n",
+                ++decoder->bpred.serial,
+                instr->decode.pc,
+                bpred_index,
+                predicted_outcome,      /* MSB */
+                previous_outcome,       /* LSB */
+                !!(new_state & 0x2u),   /* MSB */
+                !!(new_state & 0x1u),   /* LSB */
+                decoder->branches,
+                source,
+                taken ? "TAKEN" : "not taken",
+                (predicted_outcome == taken) ? "CORRECTLY PREDICATED" : "miss-predicted");
+        }
+
+        /* finally update the lookup table with the new state */
+        decoder->bpred.table[bpred_index] = (uint8_t)new_state;
     }
 
     return taken;
@@ -813,6 +900,7 @@ static void process_support(
         PRINT_CHANGES_FLAG(implicit_return);
         PRINT_CHANGES_FLAG(full_address);
         PRINT_CHANGES_FLAG(jump_target_cache);
+        PRINT_CHANGES_FLAG(branch_prediction);
     }
 
     /*
@@ -870,8 +958,7 @@ void te_process_te_inst(
 
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
     {
-        decoder->inferred_address = false;
-        decoder->last_sent_addr = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+        decoder->non_sync_packets = 0;
 
         /* is it a te_inst synchronization support packet ? */
         if (TE_INST_SUBFORMAT_SUPPORT == te_inst->subformat)
@@ -879,6 +966,17 @@ void te_process_te_inst(
             process_support(decoder, te_inst);
             return; /* all done ... nothing more to do */
         }
+
+        /* is it a te_inst synchronization context packet ? */
+        if (TE_INST_SUBFORMAT_CONTEXT == te_inst->subformat)
+        {
+            return; /* all done ... nothing more to do */
+        }
+
+        /* copy any common fields from the te_inst packet */
+        decoder->inferred_address = false;
+        decoder->last_sent_addr = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+        decoder->privilege = te_inst->privilege;
 
         if ( (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat) ||
              (decoder->start_of_trace) )
@@ -888,7 +986,13 @@ void te_process_te_inst(
             decoder->branch_map = 0;
         }
 
-        if (is_branch(get_instr(decoder, decoder->last_sent_addr, &instr)))
+        if (decoder->bpred.miss_predict_carry_out)
+        {
+            /* carry in any miss-predict from the previous packet */
+            decoder->bpred.miss_predict_carry_out = false;
+            decoder->bpred.miss_predict_carry_in = true;
+        }
+        else if (is_branch(get_instr(decoder, decoder->last_sent_addr, &instr)))
         {
             /* 1 unprocessed branch if this instruction is a branch */
             const uint32_t branch = te_inst->branch ? 1 : 0;
@@ -949,16 +1053,60 @@ void te_process_te_inst(
     }
     else
     {
+        decoder->non_sync_packets++;
+
+        /* carry in any miss-predict from the previous packet */
+        decoder->bpred.miss_predict_carry_in = decoder->bpred.miss_predict_carry_out;
+        decoder->bpred.miss_predict_carry_out = false;
+
         if (decoder->start_of_trace)
         {
             /* This should not be possible! */
             unrecoverable_error(NULL,
                 "Expecting trace to start with a format 3 packet");
         }
-        if ( (decoder->options.jump_target_cache) &&
-             (TE_INST_FORMAT_0_EXTN == te_inst->format) &&
-             (TE_INST_EXTN_JUMP_TARGET_CACHE == te_inst->extension) )
+
+        /* extract the latest address, and update last_sent_addr */
+        if (te_inst->with_address)
         {
+            if (decoder->options.full_address)
+            {
+                decoder->last_sent_addr  = (te_inst->address << decoder->discovery_response.iaddress_lsb);
+            }
+            else
+            {
+                decoder->last_sent_addr += (te_inst->address << decoder->discovery_response.iaddress_lsb);
+            }
+        }
+
+        /* assume we do not have a branch_count */
+        decoder->bpred.correct_predictions = 0;
+
+        if ( (TE_INST_FORMAT_0_EXTN == te_inst->format) &&
+             (TE_INST_EXTN_BRANCH_PREDICTOR == te_inst->extension) )
+        {
+            assert(decoder->options.branch_prediction);
+            assert(te_inst->correct_predictions);
+            assert(decoder->branches <= 1u);
+            decoder->statistics.num_extention[te_inst->extension]++;
+            decoder->bpred.use_bmap_first =
+                (!!decoder->branches) &&
+                (!decoder->bpred.miss_predict_carry_in);
+            decoder->bpred.correct_predictions = te_inst->correct_predictions;
+            decoder->branches += te_inst->correct_predictions;
+            /* if no address, then one additional miss-predict too */
+            if (!te_inst->with_address)
+            {
+                decoder->branches++;
+                decoder->stop_at_last_branch = true;
+                decoder->bpred.miss_predict_carry_out = true;
+            }
+        }
+        else if ( (TE_INST_FORMAT_0_EXTN == te_inst->format) &&
+                  (TE_INST_EXTN_JUMP_TARGET_CACHE == te_inst->extension) )
+        {
+            assert(decoder->options.jump_target_cache);
+            decoder->statistics.num_extention[te_inst->extension]++;
             decoder->stop_at_last_branch = false;
             /* use the address in the jump target cache */
             assert(te_inst->jtc_index < elements_of(decoder->jump_target));
@@ -967,46 +1115,35 @@ void te_process_te_inst(
                  (decoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
             {
                 fprintf(decoder->debug_stream,
-                    "jump-cache: using jump_target[%x] = %lx\n",
+                    "jump-cache: using jump_target[%x] = %" PRIx64 "\n",
                     te_inst->jtc_index,
                     decoder->last_sent_addr);
             }
             /* is there also a branch-map included ? */
             if (te_inst->branches)
             {
-                decoder->branch_map |= te_inst->branch_map << decoder->branches;
+                decoder->branch_map |= te_inst->branch_map << (decoder->bpred.miss_predict_carry_in ? 0 : decoder->branches);
                 decoder->branches += te_inst->branches;
             }
         }
         else
         {
             if ( (TE_INST_FORMAT_2_ADDR == te_inst->format) ||
-                 (0 != te_inst->branches) )
+                 (te_inst->with_address) )
             {
                 decoder->stop_at_last_branch = false;
-                if (decoder->options.full_address)
-                {
-                    decoder->last_sent_addr  = (te_inst->address << decoder->discovery_response.iaddress_lsb);
-                }
-                else
-                {
-                    decoder->last_sent_addr += (te_inst->address << decoder->discovery_response.iaddress_lsb);
-                }
                 if (decoder->options.jump_target_cache)
                 {
                     /* find the (direct-mapped) index into the jump target cache */
-                    const size_t mask =
-                        (1u << decoder->discovery_response.jump_target_cache_size) - 1u;
-                    assert(mask < elements_of(decoder->jump_target));
-                    const size_t index =
-                        (decoder->last_sent_addr >> decoder->discovery_response.iaddress_lsb) & mask;
+                    const size_t jtc_index =
+                        te_get_jtc_index(decoder->last_sent_addr, &decoder->discovery_response);
                     /* add the current address to the jump target cache */
-                    decoder->jump_target[index] = decoder->last_sent_addr;
+                    decoder->jump_target[jtc_index] = decoder->last_sent_addr;
                     if ( (decoder->debug_stream) &&
                          (decoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
                     {
                         fprintf(decoder->debug_stream,
-                            "jump-cache: writing %lx to jump_target[%x]\n",
+                            "jump-cache: writing %" PRIx64 " to jump_target[%x]\n",
                             decoder->last_sent_addr,
                             te_inst->jtc_index);
                     }
@@ -1014,12 +1151,19 @@ void te_process_te_inst(
             }
             if (TE_INST_FORMAT_1_DIFF == te_inst->format)
             {
-                decoder->stop_at_last_branch = (te_inst->branches == 0);
+                decoder->stop_at_last_branch = !te_inst->with_address;
                 /*
                  * Branch map will contain <= 1 branch
                  * (1 if last reported instruction was a branch)
                  */
-                decoder->branch_map |= te_inst->branch_map << decoder->branches;
+                if (decoder->bpred.miss_predict_carry_in)
+                {
+                    decoder->branch_map = te_inst->branch_map;
+                }
+                else
+                {
+                    decoder->branch_map |= te_inst->branch_map << decoder->branches;
+                }
                 if (0 == te_inst->branches)
                 {
                     decoder->branches += TE_MAX_NUM_BRANCHES;
@@ -1074,6 +1218,9 @@ te_decoder_state_t * te_open_trace_decoder(
     decoder->last_pc = TE_SENTINEL_BAD_ADDRESS;
     decoder->last_sent_addr = TE_SENTINEL_BAD_ADDRESS;
     decoder->start_of_trace = true;
+
+    /* initialize the branch predictor lookup table */
+    te_initialize_bpred_table(&decoder->bpred);
 
     /*
      * finally, copy some default fields into the decoder's state,

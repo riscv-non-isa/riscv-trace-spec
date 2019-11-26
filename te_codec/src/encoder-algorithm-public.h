@@ -99,7 +99,7 @@ typedef struct
     /* Reconstructed program counter, on the (peer) decoder */
     te_address_t decoders_pc;
     /* Number of branches to process */
-    unsigned int branches;
+    uint64_t branches;
     /* Bit vector of not taken/taken (1/0) status for branches */
     uint32_t branch_map;    /* a maximum of 31 such taken bits */
     /* flag to indicate this not the first qualified instruction */
@@ -148,6 +148,9 @@ typedef struct
     /* allocate memory for a "jump target cache" */
     te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
 
+    /* following used only if we enable a branch predictor */
+    te_bpred_t bpred;
+
     /* collection of various counters, to generate statistics */
     te_statistics_t statistics;
 
@@ -185,9 +188,12 @@ extern void te_send_te_inst_sync_support(
 
 
 /*
- * The following is an external functions USED by this code to:
+ * The following are external functions USED by this code to:
  *
- *  notify the user that the PC has been updated
+ *  1) notify the user that the PC has been updated
+ *
+ *  2) determine if a jump target cache extension packet
+ *    format #0 is preferred over a format #1 or #2 packet.
  *
  * Users of this code are expected to implement each of
  * these functions as appropriate, as they will be called
@@ -197,6 +203,10 @@ extern void te_send_te_inst_sync_support(
  * which is whatever was passed to te_open_trace_encoder().
  */
 extern void te_send_te_inst(
+    void * const user_data,
+    te_inst_t * const te_inst);
+
+extern bool te_prefer_jtc_extension(
     void * const user_data,
     te_inst_t * const te_inst);
 

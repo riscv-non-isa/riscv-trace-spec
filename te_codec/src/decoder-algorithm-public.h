@@ -70,11 +70,12 @@ extern "C" {
  * These should be OR-ed together, and stored in the "debug_flags" field.
  * Note: if debug_stream == NULL then all enabled flags are ignored.
  */
-#define TE_DEBUG_PC_TRANSITIONS     (1u << 0)
+#define TE_DEBUG_PC_TRANSITIONS     (1u)
 #define TE_DEBUG_CALL_STACK         (1u << 1)
 #define TE_DEBUG_FOLLOW_PATH        (1u << 2)
 #define TE_DEBUG_PACKETS            (1u << 3)
 #define TE_DEBUG_JUMP_TARGET_CACHE  (1u << 4)
+#define TE_DEBUG_BRANCH_PREDICTION  (1u << 5)
 
 
 /*
@@ -100,8 +101,20 @@ extern "C" {
 
 
 /*
- * Define the maximum number of branches in a te_inst packet.
- * This is the maximum length of the branch-map (in bits).
+ * Define "bpred_size_p", the number of bits used to dimension
+ * the size of the "branch predictor lookup table".
+ * This table is only used when the run-time option "branch_prediction" is true.
+ * If not defined elsewhere, define TE_BPRED_SIZE_P here.
+ */
+#if !defined(TE_BPRED_SIZE_P)
+#   define TE_BPRED_SIZE_P  (7u)    /* 2^7 = 128 entries */
+#endif  /* TE_BPRED_SIZE_P */
+#define TE_BRANCH_PREDICTOR_SIZE (1u<<TE_BPRED_SIZE_P)
+
+
+/*
+ * Define the maximum number of branches in a branch-map.
+ * This is the maximum length of a branch-map (in bits).
  */
 #define TE_MAX_NUM_BRANCHES     31u
 
@@ -168,7 +181,8 @@ typedef enum
 /* enumerate the optional efficiency extensions */
 typedef enum
 {
-    TE_INST_EXTN_JUMP_TARGET_CACHE = 0, /* jump target cache */
+    TE_INST_EXTN_BRANCH_PREDICTOR = 0,  /* branch predictor */
+    TE_INST_EXTN_JUMP_TARGET_CACHE = 1, /* jump target cache */
 } te_inst_extensions_t;
 
 /* enumerate the 2-bit qualification status */
@@ -179,6 +193,23 @@ typedef enum
     TE_QUAL_STATUS_LOST = 2,        /* 10 (packet_lost) */
     TE_QUAL_STATUS_ENDED_UPD = 3    /* 11 (updiscon) */
 } te_qual_status_t;
+
+/* enumerate the 2-bit branch prediction state */
+typedef enum
+{
+    TE_BPRED_00 = 0,    /* 00: predict not taken, transition to 01 if prediction fails. */
+    TE_BPRED_01 = 1,    /* 01: predict not taken, transition to 00 if prediction succeeds, else 11. */
+    TE_BPRED_10 = 2,    /* 10: predict taken, transition to 11 if prediction succeeds, else 00. */
+    TE_BPRED_11 = 3     /* 11: predict taken, transition to 10 if prediction fails. */
+} te_bpred_state_t;
+
+/* enumerate the 2-bit branch_fmt field, for format 0 packets with a branch_count field */
+typedef enum
+{
+    TE_BRANCH_FMT_00_NO_ADDR = 0,       /* 00: packet has no address field */
+    TE_BRANCH_FMT_10_ADDR = 2,          /* 10: packet has an address field */
+    TE_BRANCH_FMT_11_ADDR_FAIL = 3      /* 11: packet contains an address of a branch which was a miss-prediction */
+} te_branch_fmt_t;
 
 
 /*
@@ -203,6 +234,7 @@ typedef struct
     unsigned int call_counter_width;    /* 3-bits */
     unsigned int iaddress_lsb;          /* 2-bits */
     unsigned int jump_target_cache_size;/* 3-bits */
+    unsigned int branch_prediction_size;/* 3-bits */
 } te_discovery_response_t;
 
 
@@ -216,6 +248,7 @@ typedef struct
     bool        implicit_return;        /* 1-bit */
     bool        full_address;           /* 1-bit */
     bool        jump_target_cache;      /* 1-bit */
+    bool        branch_prediction;      /* 1-bit */
 } te_options_t;
 
 
@@ -243,6 +276,8 @@ typedef struct
 {
     /* counters for each type of te_inst format */
     size_t num_format[4];       /* index is two bits */
+    /* counters for each type of te_inst format 0 sub-format */
+    size_t num_extention[2];    /* index is one bit */
     /* counters for each type of te_inst format 3 sub-format */
     size_t num_subformat[4];    /* index is two bits */
 
@@ -272,9 +307,50 @@ typedef struct
     size_t num_returns;
 
     /* counters for the jump target cache, jump_target[] */
-    size_t jtc_lookups;
-    size_t jtc_hits;
+    struct
+    {
+        size_t lookups;
+        size_t hits;
+        size_t with_bmap;    /* total number of packets with a branch-map */
+        size_t without_bmap; /* total number of packets without a branch-map */
+    }   jtc;
+
+    /* counters for the branch predictor table, bpred_table[] */
+    struct
+    {
+        size_t correct;         /* number of correct predictions */
+        size_t incorrect;       /* number of incorrect predictions */
+        size_t shortest_sent;   /* shortest correct predictions sent */
+        size_t longest_sent;    /* longest correct predictions sent */
+        size_t sum_sent;        /* sum of correct predictions sent */
+        size_t with_address;    /* total number of packets with an address */
+        size_t without_address; /* total number of packets without an address */
+    }   bpred;
 } te_statistics_t;
+
+
+/*
+ * The following structure is used to hold the relevant information
+ * pertaining to a single branch predictor, which is an optional feature.
+ */
+typedef struct
+{
+    /* the total number of correctly predicted branches */
+    uint64_t correct_predictions;  /* maximum value is 2^32 - 1 + 31 */
+
+    /* the following is actually of type te_bpred_state_t */
+    uint8_t table[TE_BRANCH_PREDICTOR_SIZE];
+
+    /* should the branch predictor use branch-map[0] first ? */
+    bool use_bmap_first;
+
+    /* do we "carry" a branch miss-predict from one packet to the next ? */
+    bool miss_predict_carry_in;   /* carry in from previous packet */
+    bool miss_predict_carry_out;  /* carry out to next packet */
+
+    /* a serial number for each branch ... used only for debugging */
+    unsigned int serial;
+} te_bpred_t;
 
 
 /*
@@ -291,7 +367,7 @@ typedef struct
     /* PC of previously retired instruction */
     te_address_t last_pc;
     /* Number of branches to process */
-    unsigned int branches;
+    uint64_t branches;
     /* Bit vector of not taken/taken (1/0) status for branches */
     uint32_t branch_map;    /* a maximum of 32 such taken bits */
     /* Flag to indicate reconstruction is to end at the final branch */
@@ -322,6 +398,9 @@ typedef struct
      */
     te_options_t options;
 
+    /* the most recent privilege level reported */
+    uint8_t privilege;      /* up to 4-bits */
+
     /* pointer to user-data, whatever was passed to te_open_trace_decoder() */
     void * user_data;
 
@@ -331,8 +410,14 @@ typedef struct
     /* allocate memory for a "jump target cache" */
     te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
 
+    /* following used only if we enable a branch predictor */
+    te_bpred_t bpred;
+
     /* collection of various counters, to generate statistics */
     te_statistics_t statistics;
+
+    /* number of non-sync packets received, since last sync packet */
+    uint32_t non_sync_packets;
 
     /* see comment above for an explanation of this decode cache */
     te_decoded_instruction_t decoded_cache[TE_DECODED_CACHE_SIZE];
@@ -359,6 +444,12 @@ typedef struct
     /* following used by all formats */
     te_inst_format_t format;/* 2-bits */
     te_address_t address;   /* width of instruction address bus */
+
+    /*
+     * the following flag is not transmitted directly in a packet, but
+     * it is used to help qualify fields that are.
+     */
+    bool with_address;      /* true if the "address" field is valid */
 
     /* following not used by TE_INST_FORMAT_3_SYNC */
     unsigned branches;      /* 5-bits */
@@ -398,7 +489,7 @@ typedef struct
     /* following only used by TE_INST_FORMAT_3_SYNC */
     te_inst_subformat_t subformat;  /* 2-bits */
     uint32_t context;       /* up to 32-bits */
-    unsigned privilege;     /* up to 4-bits */
+    uint8_t privilege;      /* up to 4-bits */
     bool branch;            /* 1-bit */
     uint16_t ecause;        /* up to 16-bits */
     bool interrupt;         /* up to 1-bit */
@@ -408,6 +499,7 @@ typedef struct
     /* following only used by TE_INST_FORMAT_0_EXTN */
     te_inst_extensions_t extension; /* sub-format for optional efficiency extensions */
     unsigned jtc_index;     /* cache_size_p-bits, index for the jump target cache */
+    uint64_t correct_predictions;  /* maximum value is 2^32 - 1 + 31 */
 } te_inst_t;
 
 

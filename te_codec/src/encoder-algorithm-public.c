@@ -42,12 +42,8 @@
 #include <stdlib.h>
 #include "encoder-algorithm-public.h"
 #include "decoder-algorithm-internal.h"
+#include "te-codec-utilities.h"
 
-
-/*
- * Extract the most-significant bit of an integer.
- */
-#define MSB(x)  (((x)>>(8*(sizeof(x))-1)) & 0x1)
 
 /*
  * evaluate the number of elements in an array
@@ -64,6 +60,7 @@ static const te_discovery_response_t default_discovery_response =
     .call_counter_width = 7,    /* maximum of 512 calls on return_stack[] */
     .iaddress_lsb = 1,          /* 1 == compressed instructions supported */
     .jump_target_cache_size = TE_CACHE_SIZE_P,
+    .branch_prediction_size = TE_BPRED_SIZE_P,
 };
 
 
@@ -75,6 +72,7 @@ static const te_options_t default_support_options =
     .full_address = false,      /* use differential addresses */
     .implicit_return = false,   /* disable using return_stack[] */
     .jump_target_cache = false, /* disable using jump_target[] */
+    .branch_prediction = false, /* disable using a branch predictor */
 };
 
 
@@ -227,16 +225,8 @@ static void send_te_inst(
     /*
      * Keep a note of the most recently sent address.
      * Both the encoder and decoder need to keep this in step.
-     *
-     * As a special case, this is *not* updated when a packet is only
-     * sent due to the branch-map being full.
      */
-    if ( (TE_INST_FORMAT_2_ADDR==te_inst->format) ||
-         (TE_INST_FORMAT_3_SYNC==te_inst->format) ||
-         (te_inst->branches)                      ||
-         ( (encoder->options.jump_target_cache)     &&
-           (TE_INST_FORMAT_0_EXTN==te_inst->format) &&
-           (TE_INST_EXTN_JUMP_TARGET_CACHE==te_inst->extension) ) )
+    if (te_inst->with_address)
     {
         encoder->last_sent_addr = address;
     }
@@ -273,6 +263,12 @@ static void send_te_inst(
      * the heart of the trace-encoder algorithm.
      */
     te_send_te_inst(encoder->user_data, te_inst);
+
+    /*
+     * re-initialize the counter of the number of correctly
+     * predicted branches for the branch predictor
+     */
+    encoder->bpred.correct_predictions = 0;
 }
 
 
@@ -328,6 +324,7 @@ static void send_te_inst_sync(
             /*lint -fallthrough */ /* no break */
         case TE_INST_SUBFORMAT_START:
             assert(irecord);
+            te_inst.with_address = true;
             /*
              * Set to 0 if the address points to a branch
              * instruction, and the branch was taken.
@@ -353,6 +350,12 @@ static void send_te_inst_sync(
 
         default:
             assert(0);  /* should never get here! */
+    }
+
+    /* invalidate the entire jump target cache, if enabled */
+    if (encoder->options.jump_target_cache)
+    {
+        memset(encoder->jump_target, 0, sizeof(encoder->jump_target));
     }
 
     /* send the completed te_inst packet downstream */
@@ -401,12 +404,6 @@ static void send_te_inst_sync(
             }
             encoder->call_counter = 0;  /* drop them all */
         }
-
-        /* invalidate the entire jump target cache, if enabled */
-        if (encoder->options.jump_target_cache)
-        {
-            memset(encoder->jump_target, 0, sizeof(encoder->jump_target));
-        }
     }
 }
 
@@ -439,8 +436,7 @@ static void send_te_inst_non_sync(
     te_encoder_state_t * const encoder,
     const bool with_address)
 {
-    te_inst_t te_inst = {0};
-
+    bool jump_cache_hit = false;    /* PC is in jump_target[] ? */
     assert(encoder);
 
     /*
@@ -458,76 +454,149 @@ static void send_te_inst_non_sync(
      * fill in the fields for a single te_inst packet
      * ... specifically for a NON-format 3 (SYNC) te_packet.
      */
-    te_inst.branches = encoder->branches;
-    te_inst.branch_map = encoder->branch_map;
-    te_inst.address = curr->pc;
-    if (with_address)
+    te_inst_t te_inst =
     {
-        bool jump_cache_hit = false;    /* PC is in jump_target[] ? */
-        if (encoder->options.jump_target_cache)
+        .with_address = with_address,
+        .address = curr->pc,
+        .branches = encoder->branches,
+        .branch_map = encoder->branch_map,
+    };
+
+    /*
+     * do we need to update the jump target cache ?
+     */
+    if ( (with_address) &&
+         (encoder->options.jump_target_cache) )
+    {
+        /* find the (direct-mapped) index into the jump target cache */
+        const size_t jtc_index =
+            te_get_jtc_index(curr->pc, &encoder->discovery_response);
+        /* have we just performed an uninferrable updiscon ? */
+        if (prev->is_updiscon)
         {
-            /* find the (direct-mapped) index into the jump target cache */
-            const size_t mask =
-                (1u << encoder->discovery_response.jump_target_cache_size) - 1u;
-            assert(mask < elements_of(encoder->jump_target));
-            const size_t index =
-                (curr->pc >> encoder->discovery_response.iaddress_lsb) & mask;
-            /* have we just performed an uninferrable updiscon ? */
-            if (prev->is_updiscon)
+            /* is it in the jump target cache ? */
+            if (encoder->jump_target[jtc_index] == curr->pc)
             {
-                /* is it in the jump target cache ? */
-                if (encoder->jump_target[index] == curr->pc)
-                {
-                    jump_cache_hit = true;   /* yes it is! */
-                    encoder->statistics.jtc_hits++;
-                }
-                encoder->statistics.jtc_lookups++;
+                jump_cache_hit = true;   /* yes it is! */
+                encoder->statistics.jtc.hits++;
             }
-            if ( (encoder->debug_stream) &&
-                 (encoder->statistics.jtc_lookups) &&
-                 (encoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
+            encoder->statistics.jtc.lookups++;
+        }
+        if ( (encoder->debug_stream) &&
+             (encoder->statistics.jtc.lookups) &&
+             (encoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
+        {
+            fprintf(encoder->debug_stream,
+                "jump-cache: %" PRIx64 " -> %" PRIx64 ", jump_target[%" PRIx64 "] = %5s,"
+                " hit-rate = %" PRIu64 "/%" PRIu64 " (%.2f%%)\n",
+                prev->pc,
+                curr->pc,
+                jtc_index,
+                (!prev->is_updiscon) ? "write" : jump_cache_hit ? "HIT" : "miss",
+                encoder->statistics.jtc.hits,
+                encoder->statistics.jtc.lookups,
+                (double)(encoder->statistics.jtc.hits)/((double)encoder->statistics.jtc.lookups)*100.0);
+        }
+        /*
+         * unconditionally update the jump target cache with
+         * the current target ... do this for ALL non-sync packets,
+         * if the jump target cache is enabled.
+         */
+        encoder->jump_target[jtc_index] = curr->pc;
+        te_inst.jtc_index = jtc_index;
+        /*
+         * finally, is a jump target cache extension packet #0 legal,
+         * and is it really the best (most efficient) option ?
+         * If not, then treat it as if we did not get a hit.
+         */
+        if (jump_cache_hit) /* got a hit ? */
+        {
+            if (encoder->branches > TE_MAX_NUM_BRANCHES)
             {
-                fprintf(encoder->debug_stream,
-                    "jump-cache: %lx -> %lx, jump_target[%lx] = %5s, hit-rate = %lu/%lu (%.2f%%)\n",
-                    prev->pc,
-                    curr->pc,
-                    index,
-                    (!prev->is_updiscon) ? "write" : jump_cache_hit ? "HIT" : "miss",
-                    encoder->statistics.jtc_hits,
-                    encoder->statistics.jtc_lookups,
-                    (double)(encoder->statistics.jtc_hits)/((double)encoder->statistics.jtc_lookups)*100.0);
+                /* hit, but no legal format #0 packet is possible */
+                jump_cache_hit = false;
             }
-            /*
-             * finally, unconditionally update the jump target cache with
-             * the current target ... do this for ALL non-sync packets,
-             * if the jump target cache is enabled.
-             */
-            encoder->jump_target[index] = curr->pc;
-            te_inst.jtc_index = index;
+            else
+            {
+                /* hit, but ask helper function which is best */
+                jump_cache_hit = te_prefer_jtc_extension(encoder->user_data, &te_inst);
+            }
         }
-        if (jump_cache_hit)
+    }
+
+    /*
+     * now work out exactly what format packet to use ...
+     */
+    if (encoder->branches > TE_MAX_NUM_BRANCHES)
+    {
+        /*
+         * send a branch predictor efficiency extension packet
+         * i.e. a branch-count, optionally with an address
+         */
+        te_inst.format = TE_INST_FORMAT_0_EXTN;
+        te_inst.extension = TE_INST_EXTN_BRANCH_PREDICTOR;
+        encoder->statistics.num_extention[te_inst.extension]++;
+        te_inst.correct_predictions = encoder->bpred.correct_predictions;
+        te_inst.branches = 0;
+        te_inst.branch_map = 0;
+        assert(encoder->branches - ((with_address) ? 0u : 1u) == encoder->bpred.correct_predictions);
+
+        /* update min, max, and accumulators for the branch-predictor */
+        if (encoder->bpred.correct_predictions > encoder->statistics.bpred.longest_sent)
         {
-            /* send a jump target cache efficiency extension packet */
-            te_inst.format = TE_INST_FORMAT_0_EXTN;
-            te_inst.extension = TE_INST_EXTN_JUMP_TARGET_CACHE;
+            encoder->statistics.bpred.longest_sent = encoder->bpred.correct_predictions;
         }
-        else if (te_inst.branches)
+        if ( (!encoder->statistics.bpred.shortest_sent) ||
+             (encoder->bpred.correct_predictions < encoder->statistics.bpred.shortest_sent) )
         {
-            /* send a differential address, with a branch-map */
-            te_inst.format = TE_INST_FORMAT_1_DIFF;
+            encoder->statistics.bpred.shortest_sent = encoder->bpred.correct_predictions;
+        }
+        encoder->statistics.bpred.sum_sent += encoder->bpred.correct_predictions;
+        if (with_address)
+        {
+            encoder->statistics.bpred.with_address++;
         }
         else
         {
-            /* send an address, without a branch-map */
-            te_inst.format = TE_INST_FORMAT_2_ADDR;
+            encoder->statistics.bpred.without_address++;
         }
+    }
+    else if (jump_cache_hit)
+    {
+        /*
+         * send a jump target cache efficiency extension packet
+         * i.e. a jump target index, optionally with a branch-map
+         */
+        te_inst.format = TE_INST_FORMAT_0_EXTN;
+        te_inst.extension = TE_INST_EXTN_JUMP_TARGET_CACHE;
+        encoder->statistics.num_extention[te_inst.extension]++;
+        if (te_inst.branches)
+        {
+            encoder->statistics.jtc.with_bmap++;
+        }
+        else
+        {
+            encoder->statistics.jtc.without_bmap++;
+        }
+    }
+    else if (!with_address)
+    {
+        /* send a branch-map, without an address */
+        te_inst.format = TE_INST_FORMAT_1_DIFF;
+        if (TE_MAX_NUM_BRANCHES == te_inst.branches) /* is the branch-map full? */
+        {
+            te_inst.branches = 0;   /* special-case: full is mapped to 0 */
+        }
+    }
+    else if (te_inst.branches)
+    {
+        /* send an address, with a branch-map */
+        te_inst.format = TE_INST_FORMAT_1_DIFF;
     }
     else
     {
-        /* do not send an address ... but the branch-map is full */
-        te_inst.format = TE_INST_FORMAT_1_DIFF;
-        assert(TE_MAX_NUM_BRANCHES == te_inst.branches);
-        te_inst.branches = 0;   /* special-case: full is mapped to 0 */
+        /* send an address, without a branch-map */
+        te_inst.format = TE_INST_FORMAT_2_ADDR;
     }
 
     /*
@@ -609,12 +678,65 @@ static void clock_the_encoder(
      */
     if (curr->is_branch)
     {
+        const bool branch_taken = !curr->cond_code_fail;
+
         /*
          * Update the branch map, with the current branch.
          * Note: bit 0 represents the oldest branch instruction executed.
          */
-        encoder->branch_map |= (curr->cond_code_fail ? 1u : 0u) << encoder->branches++;
-        assert(encoder->branches <= TE_MAX_NUM_BRANCHES);
+        encoder->branch_map |= (branch_taken ? 0u : 1u) << encoder->branches++;
+        assert( (encoder->options.branch_prediction) ||
+                (encoder->branches <= TE_MAX_NUM_BRANCHES) );
+
+        if (encoder->options.branch_prediction)
+        {
+            /* find the (direct-mapped) index into the branch predictor table */
+            const size_t bpred_index =
+                te_get_bpred_index(curr->pc, &encoder->discovery_response);
+            /* retrieve the extant state from the branch predictor table */
+            const te_bpred_state_t old_state =
+                (te_bpred_state_t)(encoder->bpred.table[bpred_index]);
+            const bool predicted_outcome = !!(old_state & 0x2u);
+            const bool previous_outcome  = !!(old_state & 0x1u);
+
+            /* calculate the next value of the branch predictor state */
+            const te_bpred_state_t new_state = te_next_bpred_state(old_state, branch_taken);
+
+            /* act appropriately if we predicted correctly or not */
+            if (predicted_outcome == branch_taken)
+            {
+                encoder->bpred.correct_predictions++;
+                encoder->statistics.bpred.correct++;
+            }
+            else
+            {
+                encoder->statistics.bpred.incorrect++;
+            }
+
+            /* optionally, print out what we have done */
+            if ( (encoder->debug_stream) &&
+                 (encoder->debug_flags & TE_DEBUG_BRANCH_PREDICTION) )
+            {
+                fprintf(encoder->debug_stream,
+                    "bpred-%u: %" PRIx64 ", bpred_table[%02" PRIx64 "] = %u%u -> %u%u,  "
+                    "%9s  %" PRIx64 "/%" PRIx64 "  run=%" PRIu64 "  %s\n",
+                    ++encoder->bpred.serial,
+                    curr->pc,
+                    bpred_index,
+                    predicted_outcome,      /* MSB */
+                    previous_outcome,       /* LSB */
+                    !!(new_state & 0x2u),   /* MSB */
+                    !!(new_state & 0x1u),   /* LSB */
+                    branch_taken ? "TAKEN" : "not taken",
+                    encoder->statistics.bpred.correct,
+                    encoder->statistics.bpred.correct + encoder->statistics.bpred.incorrect,
+                    encoder->bpred.correct_predictions,
+                    (predicted_outcome == branch_taken) ? "CORRECTLY PREDICATED" : "miss-predicted");
+            }
+
+            /* finally update the lookup table with the new state */
+            encoder->bpred.table[bpred_index] = (uint8_t)new_state;
+        }
     }
 
     /*
@@ -800,7 +922,7 @@ static void clock_the_encoder(
     }
 
     /*
-     * resync_count == max_resync and branch is map not empty
+     * resync_count == max_resync and branch map is not empty
      */
     if ( (encoder->branches) &&
          (encoder->resync_count == get_max_resync(encoder)) )
@@ -864,9 +986,33 @@ static void clock_the_encoder(
 
     /*
      * is the branch map full?
+     * and if the branch-predictor is enabled, then there
+     * is also at least one branch that was miss-predicted
+     * ... if so, then send a full branch-map now.
      */
-    if (TE_MAX_NUM_BRANCHES == encoder->branches)
+    if ( (TE_MAX_NUM_BRANCHES == encoder->branches) &&
+         (TE_MAX_NUM_BRANCHES != encoder->bpred.correct_predictions) )
     {
+        /* send a te_inst packet without an address */
+        send_te_inst_non_sync(encoder,
+            false);     /* te_inst packet WITHOUT an address */
+
+        /* end of cycle ... all done */
+        return;
+    }
+
+    /*
+     * if the branch predictor is enabled, and the current instruction
+     * is a branch that was miss-predicted, and we have at least 32
+     * branches (of which this branch is the only miss-prediction),
+     * then send a te_inst packet with a branch-count now.
+     */
+    if ( (encoder->branches > TE_MAX_NUM_BRANCHES) &&
+         (encoder->branches != encoder->bpred.correct_predictions) )
+    {
+        assert(curr->is_branch);
+        assert(encoder->branches == encoder->bpred.correct_predictions + 1u);
+
         /* send a te_inst packet without an address */
         send_te_inst_non_sync(encoder,
             false);     /* te_inst packet WITHOUT an address */
@@ -930,6 +1076,9 @@ te_encoder_state_t * te_open_trace_encoder(
     encoder->last_sent_addr = TE_SENTINEL_BAD_ADDRESS;
     encoder->decoders_pc = TE_SENTINEL_BAD_ADDRESS;
 
+    /* initialize the branch predictor lookup table */
+    te_initialize_bpred_table(&encoder->bpred);
+
     /*
      * finally, copy some default fields into the encoder's state,
      * faking-up initial support, discovery_response and
@@ -973,6 +1122,9 @@ void te_encode_one_irecord(
     if (encoder->second &&              /* 2nd stage is filled */
         encoder->second->is_qualified)  /* ... and qualified ? */
     {
+        /* advance the count of PC transitions */
+        encoder->statistics.num_instructions++;
+
         clock_the_encoder(encoder);
     }
 }
