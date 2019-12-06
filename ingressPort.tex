@@ -184,8 +184,8 @@ Signals are assigned to one of the  following groups:
         3: Exception or interrupt return;\newline
         4: Nontaken branch;\newline
         5: Taken branch;\newline
-        6: reserved;\newline
-        7: Co-routine swap;\newline
+        6: Uninferable jump if \textit{itype\_width\_p} is 3, reserved otherwise;\newline
+        7: Co-routine swap if \textit{itype\_width\_p} is 4, reserved otherwise;\newline
         8: Uninferable call;\newline
         9: Inferrable call;\newline
         10: Uninferable tail-call;\newline
@@ -273,6 +273,10 @@ instruction.  Half-words rather than instruction count enables the encoder to ea
 the last instruction in the block without having access to the size of every 
 instruction in the block.  
 
+\textbf{itype} can be 3 or 4 bits wide.  If \textit{itype\_width\_p} is 3, a single code (6) is used to 
+indicate all uninferable jumps.  This is simpler to implement, but precludes use of the implicit return mode
+(see section~\ref{sec:implicit-return}), which requires jump types to be fully classified.
+
 Whilst \textbf{iaddr} is typically a virtual address, it does not affect the encoder's behavior
 if it is a phyical address.
 
@@ -312,6 +316,8 @@ The \textbf{context} field can be used to convey any additional information to t
 
 Table~\ref{tab:context-type} specifies the actions for the various \textbf{ctype} values.  A typical 
 behaviour would be for this signal to remain zero except on the 1st retirement after a context change.
+\textit{ctype\_width\_p} may be 1 or 2.  The reduced width option only provides support for reporting
+context changes imprecisely.
 
 \begin{table}[htp]
     \centering

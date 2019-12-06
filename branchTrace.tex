@@ -53,9 +53,14 @@ that can not be inferred from the program binary alone. For these cases,
 the instruction delta trace must include a destination address: the
 address of the next valid instruction.
 
-Examples of this are indirect jumps, where
+Indirect jumps are an example of this, where
 the next instruction address is determined by the contents of a
-register rather than a constant embedded in the program binary.
+register rather than a constant embedded in the program binary.  In this 
+case, the address of the instruction following the jump (also known as the
+jump target) must be traced.
+
+Interrupts and exceptions are another form of uninferable PC discontinuity;
+these are discussed in detail below.
 
 \subsection{Branches} \label{branches}
 
@@ -82,9 +87,8 @@ where an interrupt occured in the instruction sequence, so the trace
 must report the address where normal program flow ceased, as well as
 give an indication of the asynchronous destination which may be as
 simple as reporting the exception type.  When an interrupt or
-exception occurs, or the processor is halted, the final instruction
-retired beforehand must be traced.  Following this, for an interrupt
-or exception, the next valid instruction address (the first of the
+exception occurs, the final instruction retired beforehand must be traced.  
+Following this the next valid instruction address (the first of the
 trap handler) must be traced.
 
 Note: not all exceptions and interrupts cause traps (see 
@@ -113,6 +117,19 @@ The instruction trace encoder needs to synchronise fully:
 \item If the instruction is the first of an interrupt service routine or
 exception handler.
 \item After a prolonged period of time.
+\end{itemize}
+
+\subsection{End of trace} \label{sec:endoftrace}
+
+If tracing stops for any reason, the address of the final traced instruction must be output.
+
+Some examples of why tracing may stop are: 
+\begin{itemize}
+  \item The hart may be halted (entered debug mode);
+  \item The hart may be reset;
+  \item Encoding may be stopped (for example via a \textit{Trace-off} trigger - see section~\ref{sec:trigger});
+  \item The matching criteria for any filtering capabilities implemented by the encoder may no longer be met;
+  \item The encoder may be disabled.
 \end{itemize}
 
 \section{Optional and run-time configurable modes} \label{optional}
@@ -179,7 +196,7 @@ the \textbf{\textit{ucause/scause/mcause}} CSR registers.
 By default, both the \textbf{\textit{*tvec}} and \textbf{\textit{*cause}} 
 values are reported when an exception or interrupt occurs.
 
-The implicit exception mode omits \textbf{\textit{*vec}} (the trap handler address), 
+The implicit exception mode omits \textbf{\textit{*tvec}} (the trap handler address), 
 from the trace and thus improves efficiency.
 
 This mode can only be used if the decoder can infer the address of the trap handler
@@ -200,7 +217,7 @@ inferable jump.
 
 \subsection{Implicit return mode} \label{sec:implicit-return}
 
-Related parameters: \textit{call\_counter\_size\_p}, \textit{return\_stack\_size\_p}.
+Related parameters: \textit{call\_counter\_size\_p}, \textit{return\_stack\_size\_p}, \textit{itype\_width\_p}.
 
 Although a function return is usually an indirect jump, well behaved programs return to the
 point in the program from which the function was called using a standard calling convention.
