@@ -71,7 +71,7 @@ extern "C" {
  * Note: if debug_stream == NULL then all enabled flags are ignored.
  */
 #define TE_DEBUG_PC_TRANSITIONS     (1u)
-#define TE_DEBUG_CALL_STACK         (1u << 1)
+#define TE_DEBUG_IMPLICIT_RETURN    (1u << 1)
 #define TE_DEBUG_FOLLOW_PATH        (1u << 2)
 #define TE_DEBUG_PACKETS            (1u << 3)
 #define TE_DEBUG_JUMP_TARGET_CACHE  (1u << 4)
@@ -79,13 +79,38 @@ extern "C" {
 
 
 /*
- * Define the maximum size of the "return-stack" (must be a power of 2),
- * which is only used when "implicit_return" is true.
- * If not defined elsewhere, define TE_MAX_CALL_DEPTH here.
+ * Define the maximum size of the implicit-return (IR) stack,
+ * which must be a power of 2.
+ * This "irstack" is only used when the implicit return mode
+ * is enabled, i.e. "implicit_return" is true.
+ *
+ * Note, this IR "stack" is implementation dependent, and it
+ * may be implemented on the trace-encoder H/W as any of
+ * the following three distinct alternatives:
+ *
+ *  1) A saturating "call-counter" (and not a real stack), which
+ *     will never over-flow nor under-flow.
+ *     Such a scheme is low cost, and will work as long as
+ *     traced programs are "well behaved".
+ *     In this case call_counter_size shall be non-zero, and
+ *     return_stack_size shall be zero.
+ *
+ *  2) A real stack, with each function return address being
+ *     stored in it as each new function call is made.
+ *     This is fully robust for all programs, but is more
+ *     expensive to implement.
+ *     In this case return_stack_size shall be non-zero, and
+ *     call_counter_size shall be zero.
+ *
+ *  3) Not implemented at all.
+ *     In this case both return_stack_size and
+ *     call_counter_size shall be zero.
+ *
+ * If not defined elsewhere, define TE_MAX_IRSTACK_DEPTH here.
  */
-#if !defined(TE_MAX_CALL_DEPTH)
-#   define TE_MAX_CALL_DEPTH (1u<<9)   /* 2^9 = 512 slots */
-#endif  /* TE_MAX_CALL_DEPTH */
+#if !defined(TE_MAX_IRSTACK_DEPTH)
+#   define TE_MAX_IRSTACK_DEPTH (1u<<9)   /* 2^9 = 512 slots */
+#endif  /* TE_MAX_IRSTACK_DEPTH */
 
 
 /*
@@ -189,9 +214,9 @@ typedef enum
 typedef enum
 {
     TE_QUAL_STATUS_NO_CHANGE = 0,   /* 00 (no_change) */
-    TE_QUAL_STATUS_ENDED_REP = 1,   /* 01 (reported) */
-    TE_QUAL_STATUS_LOST = 2,        /* 10 (packet_lost) */
-    TE_QUAL_STATUS_ENDED_UPD = 3    /* 11 (updiscon) */
+    TE_QUAL_STATUS_ENDED_REP = 1,   /* 01 (ended_reported) */
+    TE_QUAL_STATUS_TRACE_LOST = 2,  /* 10 (trace_lost) */
+    TE_QUAL_STATUS_ENDED_UPD = 3    /* 11 (ended_updiscon) */
 } te_qual_status_t;
 
 /* enumerate the 2-bit branch prediction state */
@@ -210,6 +235,34 @@ typedef enum
     TE_BRANCH_FMT_10_ADDR = 2,          /* 10: packet has an address field */
     TE_BRANCH_FMT_11_ADDR_FAIL = 3      /* 11: packet contains an address of a branch which was a miss-prediction */
 } te_branch_fmt_t;
+
+/*
+ * enumerate the known set of trace algorithms, used to indicate
+ * which "operating mode" the trace-encoder is currently using.
+ *
+ * The initial focus is with the "compressed branch trace", hence
+ * there is initially only a single possible algorithm listed here
+ * ... more may be added in the future.
+ *
+ * Note: TE_ALGORITHM_NUM_BITS should be the minimum number of bits
+ * required to encode the largest value of type te_trace_algorithm_t.
+ */
+typedef enum
+{
+    TE_ALGORITHM_COMPRESSED_BRANCH = 0, /* compressed branch trace algorithm */
+} te_trace_algorithm_t;
+#define TE_ALGORITHM_NUM_BITS      (0u) /* number of bits to send te_trace_algorithm_t */
+
+/*
+ * enumerate the sub-set of "exception causes" (ecause) used
+ */
+typedef enum
+{
+    TE_ECAUSE_ILLEGAL_INSTRUCTION = 2,  /* illegal instruction exception */
+    TE_ECAUSE_ECALL_U_MODE = 8,         /* environment call from U-mode */
+    TE_ECAUSE_ECALL_S_MODE = 9,         /* environment call from S-mode */
+    TE_ECAUSE_ECALL_M_MODE = 11,        /* environment call from M-mode */
+} te_ecause_t;
 
 
 /*
@@ -231,7 +284,8 @@ typedef struct
 typedef struct
 {
     unsigned int version;               /* 9-bits */
-    unsigned int call_counter_width;    /* 3-bits */
+    unsigned int call_counter_size;     /* 4-bits */
+    unsigned int return_stack_size;     /* 4-bits */
     unsigned int iaddress_lsb;          /* 2-bits */
     unsigned int jump_target_cache_size;/* 3-bits */
     unsigned int branch_prediction_size;/* 3-bits */
@@ -246,10 +300,24 @@ typedef struct
 typedef struct
 {
     bool        implicit_return;        /* 1-bit */
+    bool        implicit_exception;     /* 1-bit */
     bool        full_address;           /* 1-bit */
     bool        jump_target_cache;      /* 1-bit */
     bool        branch_prediction;      /* 1-bit */
 } te_options_t;
+
+/*
+ * The following may be used to "serialize" the above
+ * run-time configuration options, when they are to be
+ * sent in a format 3, sub-format 3 "support" packet.
+ * However, these values are all implementation defined!
+ */
+#define TE_OPTIONS_IMPLICIT_RETURN      (1u)
+#define TE_OPTIONS_IMPLICIT_EXCEPTION   (1u << 1)
+#define TE_OPTIONS_FULL_ADDRESS         (1u << 2)
+#define TE_OPTIONS_JUMP_TARGET_CACHE    (1u << 3)
+#define TE_OPTIONS_BRANCH_PREDICTION    (1u << 4)
+#define TE_OPTIONS_NUM_BITS             (5u)    /* number of bits to send te_options_t */
 
 
 /*
@@ -377,10 +445,12 @@ typedef struct
     bool inferred_address;
     /* true if 1st trace packet still to be processed */
     bool start_of_trace;
-    /* top of stack, zero == call stack is empty */
-    size_t call_counter;
-    /* memory for the "call-stack" (only when "implicit_return" is 1) */
-    te_address_t return_stack[TE_MAX_CALL_DEPTH];
+
+    /* array holding return address stack (only when "implicit_return" is 1) */
+    te_address_t return_stack[TE_MAX_IRSTACK_DEPTH];
+    /* depth of the return address stack, zero == stack is empty */
+    size_t irstack_depth;
+
     /*
      * Following is the "normalized" (i.e. un-shifted, non-differential) address
      * corresponding to the "address" field in the most recent te_inst packet.
@@ -454,9 +524,12 @@ typedef struct
     /* following not used by TE_INST_FORMAT_3_SYNC */
     unsigned branches;      /* 5-bits */
     uint32_t branch_map;    /* up to 31-bits */
+    bool notify;            /* 1-bit */
     bool updiscon;          /* 1-bit */
+    bool irfail;            /* 1-bit */
+    uint16_t irdepth;       /* up to 9-bits */
     /*
-     * Warning: The "updison" field above has "odd" semantics!
+     * Warning: The "updiscon" field above has "odd" semantics!
      *
      * Originally, this code mapped the value of this field to
      * be the same as the value of the appropriate bit that was
@@ -477,13 +550,20 @@ typedef struct
      * corollary, a value of TRUE means that updiscon field should be
      * transmitted as the INVERTED value of the previous bit.
      * With the "previous bit" meaning the bit physically transmitted
-     * immediately before the updison field, and that bit is the
+     * immediately before the updiscon field, and that bit is the
      * most-significant-bit of either the address or the branch-map
      * fields, i.e. address[MSB], or branch-map[30].
      *
      * In most cases, this value will be false, and the updiscon
      * field will be transmitted as the same value as the previous
      * bit, which should in most cases should be compressed away.
+     *
+     * In addition, the fields "notify", and "irfail" also have similarly
+     * odd semantics, inasmuch as a value of FALSE means these fields
+     * should be transmitted with the SAME value as the previous bit.
+     * And as a corollary, a value of TRUE means that these fields should
+     * be transmitted as the INVERTED value of the previous bit. Again
+     * the serializer and the de-serializer should perform these XORs.
      */
 
     /* following only used by TE_INST_FORMAT_3_SYNC */
@@ -493,7 +573,7 @@ typedef struct
     bool branch;            /* 1-bit */
     uint16_t ecause;        /* up to 16-bits */
     bool interrupt;         /* up to 1-bit */
-    te_address_t tval;      /* width of instruction address bus */
+    te_address_t tvalepc;   /* either tval or epc (if an illegal instruction) */
     te_support_t support;   /* for a synchronization support packet */
 
     /* following only used by TE_INST_FORMAT_0_EXTN */

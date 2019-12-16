@@ -104,8 +104,10 @@ typedef struct
     uint32_t branch_map;    /* a maximum of 31 such taken bits */
     /* flag to indicate this not the first qualified instruction */
     bool start_sent;
-    /* top of stack, zero == call stack is empty */
-    size_t call_counter;
+
+    /* depth of the return address stack, zero == stack is empty */
+    size_t irstack_depth;
+
     /* flag to indicate if we need to notify due to a new context */
     bool context_pending;
 

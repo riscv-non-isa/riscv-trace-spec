@@ -54,6 +54,13 @@ extern void te_initialize_bpred_table(
     te_bpred_t * const bpred);
 
 
+extern bool te_is_illegal_instruction(
+    const te_inst_t * const te_inst);
+
+extern bool te_is_ecall_exception(
+    const te_inst_t * const te_inst);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

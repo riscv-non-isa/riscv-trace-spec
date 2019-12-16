@@ -153,3 +153,53 @@ void te_initialize_bpred_table(
         TE_BPRED_01,
         sizeof(bpred->table));
 }
+
+
+/*
+ * predicate: does the te_inst structure correspond to
+ * an illegal instruction exception?
+ */
+bool te_is_illegal_instruction(
+    const te_inst_t * const te_inst)
+{
+    assert(te_inst);
+
+    /*
+     * if it is an interrupt, it is not an illegal instruction exception
+     */
+    if (te_inst->interrupt)
+    {
+        return false;
+    }
+
+    /*
+     * is it an illegal instruction exception ?
+     */
+    return TE_ECAUSE_ILLEGAL_INSTRUCTION == te_inst->ecause;
+}
+
+
+/*
+ * predicate: does the te_inst structure correspond to
+ * an environment call (ecall) exception?
+ */
+bool te_is_ecall_exception(
+    const te_inst_t * const te_inst)
+{
+    assert(te_inst);
+
+    /*
+     * if it is an interrupt, it is not an ecall exception
+     */
+    if (te_inst->interrupt)
+    {
+        return false;
+    }
+
+    /*
+     * is it an environment call exception ?
+     */
+    return (TE_ECAUSE_ECALL_U_MODE == te_inst->ecause) ||
+           (TE_ECAUSE_ECALL_S_MODE == te_inst->ecause) ||
+           (TE_ECAUSE_ECALL_M_MODE == te_inst->ecause);
+}
