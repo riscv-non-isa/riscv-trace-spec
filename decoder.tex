@@ -97,7 +97,7 @@ function follow_execution_path(address, te_inst)
         #  we do not yet know whether it retires)
         stop_at_last_branch = FALSE
         return
-      if (stop_here))
+      if (stop_here)
         # Reached reported address following an uninferable discontinuity - stop here
         if (branches > (is_branch(get_instr(pc)) ? 1 : 0))
           # Check all branches processed (except 1 if this instruction is a branch)
@@ -112,7 +112,9 @@ function follow_execution_path(address, te_inst)
       if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
         !is_uninferable_discon(get_instr(last_pc)) and 
         (te_inst.updiscon == get_previous_bit(te_inst, "updiscon")) and 
-        (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
+        (branches == (is_branch(get_instr(pc)) ? 1 : 0)) and
+        ((te_inst.irreport == get_previous_bit(te_inst, "irreport")) or 
+         te_inst.irdepth == irstack_depth))
           # All branches processed, and reached reported address, but not as an
           #   uninferable jump target
           # Stop here for now, though flag indicates this may not be
@@ -131,8 +133,9 @@ function follow_execution_path(address, te_inst)
 # Compute next PC #
 function next_pc (address)
 
-  local instr   = get_instr(pc)
-  local this_pc = pc
+  local instr     = get_instr(pc)
+  local this_pc   = pc
+  local stop_here = FALSE
 
   if (is_inferable_jump(instr))
     pc += instr.imm
@@ -145,7 +148,8 @@ function next_pc (address)
     if (stop_at_last_branch)
       ERROR: unexpected uninferable discontinuity
     else
-      pc = address
+      pc        = address
+      stop_here = TRUE
   else if (is_taken_branch(instr))
     pc += instr.imm
   else
@@ -155,6 +159,8 @@ function next_pc (address)
     push_return_stack(this_pc)
 
   last_pc = this_pc
+  
+  return stop_here
 
 # Process support packet #
 function process_support (te_inst)
@@ -172,7 +178,6 @@ function process_support (te_inst)
         if (stop_here)
           return
     return
-
 \end{alltt}
 
 \pagebreak
@@ -304,8 +309,8 @@ function is_implicit_return (instr)
 
   if ((instr.opcode == JALR and instr.rs1 == 1 and instr.rd == 0) or
       (instr.opcode == C.JR and instr.rs1 == 1))
-    if (te_inst.irfail != get_previous_bit(te_inst, "irfail") and 
-        te_inst.irdepth == irstack_depth)
+    if ((te_inst.irreport != get_previous_bit(te_inst, "irreport")) and 
+         te_inst.irdepth == irstack_depth)
       return FALSE 
     return (irstack_depth > 0)
 
