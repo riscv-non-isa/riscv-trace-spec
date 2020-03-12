@@ -331,8 +331,8 @@ enabled (see section~\ref{sec:full-address}).
                 the current address stack depth or nested call count. \\
     \hline
     \textbf{irdepth}	& \textit {return\_stack\_size\_p + (return\_stack\_size\_p > 0 ? 1 : 0) + call\_counter\_size\_p} & 
-                If the value of either \textbf{irreport} bit is different from \textbf{updiscon}, this field 
-				indicates the number of entries on the return address stack (i.e. the entry number of the return that
+                If the value of \textbf{irreport} is different from \textbf{updiscon}, this field 
+		indicates the number of entries on the return address stack (i.e. the entry number of the return that
                 failed) or nested call count.  If \textbf{irreport} is the same value as \textbf{updiscon}, 
                 all bits in this field  will also be the same value as \textbf{updiscon}. \\
     \hline
@@ -507,8 +507,8 @@ address mode is enabled (see section~\ref{sec:full-address}).
                 the current address stack depth or nested call count. \\
     \hline
     \textbf{irdepth}	& \textit {return\_stack\_size\_p + (return\_stack\_size\_p > 0 ? 1 : 0) + call\_counter\_size\_p} & 
-                If the value of either \textbf{irreport} bit is different from \textbf{updiscon}, this field 
-				indicates the number of entries on the return address stack (i.e. the entry number of the return that
+                If the value of \textbf{irreport} is different from \textbf{updiscon}, this field 
+		indicates the number of entries on the return address stack (i.e. the entry number of the return that
                 failed) or nested call count.  If \textbf{irreport} is the same value as \textbf{updiscon}, 
                 all bits in this field  will also be the same value as \textbf{updiscon}. \\
     \hline
@@ -650,8 +650,8 @@ resulting packet is shorter.  This may occur if the differential address is zero
                 the current address stack depth or nested call count. \\
     \hline
     \textbf{irdepth}	& \textit {return\_stack\_size\_p + (return\_stack\_size\_p > 0 ? 1 : 0) + call\_counter\_size\_p} & 
-                If the value of either \textbf{irreport} bit is different from \textbf{updiscon}, this field 
-				indicates the number of entries on the return address stack (i.e. the entry number of the return that
+                If the value of \textbf{irreport} is different from \textbf{updiscon}, this field 
+		indicates the number of entries on the return address stack (i.e. the entry number of the return that
                 failed) or nested call count.  If \textbf{irreport} is the same value as \textbf{updiscon}, 
                 all bits in this field  will also be the same value as \textbf{updiscon}. \\
     \hline
@@ -699,8 +699,8 @@ resulting packet is shorter.  This may occur if the differential address is zero
                 the current address stack depth or nested call count. \\
     \hline
     \textbf{irdepth}	& \textit {return\_stack\_size\_p + (return\_stack\_size\_p > 0 ? 1 : 0) + call\_counter\_size\_p} & 
-                If the value of either \textbf{irreport} bit is different from \textbf{branch\_map[MSB]}, this field 
-				indicates the number of entries on the return address stack (i.e. the entry number of the return that
+                If the value of \textbf{irreport} is different from \textbf{branch\_map[MSB]}, this field 
+		indicates the number of entries on the return address stack (i.e. the entry number of the return that
                 failed) or nested call count.  If \textbf{irreport} is the same value as \textbf{branch\_map[MSB]}, 
                 all bits in this field  will also be the same value as \textbf{branch\_map[MSB]}. \\
     \hline
@@ -735,8 +735,8 @@ resulting packet is shorter.  This may occur if the differential address is zero
                 the current address stack depth or nested call count. \\
     \hline
     \textbf{irdepth}	& \textit {return\_stack\_size\_p + (return\_stack\_size\_p > 0 ? 1 : 0) + call\_counter\_size\_p} & 
-                If the value of either \textbf{irreport} bit is different from \textbf{branches[MSB]}, this field 
-				indicates the number of entries on the return address stack (i.e. the entry number of the return that
+                If the value of \textbf{irreport} is different from \textbf{branches[MSB]}, this field 
+		indicates the number of entries on the return address stack (i.e. the entry number of the return that
                 failed) or nested call count.  If \textbf{irreport} is the same value as \textbf{branches[MSB]}, 
                 all bits in this field  will also be the same value as \textbf{branches[MSB]}. \\
     \hline
@@ -767,7 +767,7 @@ that of the last correctly predicted branch.
 \subsection{Format 0 \textbf{irstatus} and \textbf{irdepth} fields}
 These bits are encoded so that most of the time they will take the same value as the immediately preceding bit
 (\textbf{updiscon}, \textbf{branch\_map[MSB]} or \textbf{branches[MSB]} depending on the specific packet format).  
-Purpose and behaviour is as described in section~\ref{sec:irxx}.
+Purpose and behavior is as described in section~\ref{sec:irxx}.
 
 For the jump target cache (subformat 1), they are included to allow return addresses that fail the implicit return 
 prediction but which reside in the jump target cache to be reported using this format.  An implementation
