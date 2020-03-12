@@ -105,7 +105,8 @@ Jumps may optionally be further classified according to the recommended calling 
       \item \textbf{\textit{jal}} x5;
       \item \textbf{\textit{jalr}} x1, rs  where rs != x5;
       \item \textbf{\textit{jalr}} x5, rs  where rs != x1;
-      \item \textbf{\textit{c.jalr}} rs1.
+      \item \textbf{\textit{c.jalr}} rs1 where rs1 != x5;
+      \item \textbf{\textit{c.jal}}.
     \end{itemize}
   \item \textit{Tail-calls}: 
     \begin{itemize}
@@ -122,7 +123,8 @@ Jumps may optionally be further classified according to the recommended calling 
   \item \textit{Co-routine swap}: 
     \begin{itemize}
       \item \textbf{\textit{jalr}} x1, x5;
-      \item \textbf{\textit{jalr}} x5, x1.
+      \item \textbf{\textit{jalr}} x5, x5;
+      \item \textbf{\textit{c.jalr}} x5.
     \end{itemize}
   \item \textit{Other}: 
     \begin{itemize}
