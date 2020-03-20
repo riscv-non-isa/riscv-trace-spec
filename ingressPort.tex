@@ -103,9 +103,10 @@ Jumps may optionally be further classified according to the recommended calling 
     \begin{itemize}
       \item \textbf{\textit{jal}} x1;
       \item \textbf{\textit{jal}} x5;
-      \item \textbf{\textit{jalr}} x1, rs  where rs != x1;
-      \item \textbf{\textit{jalr}} x5, rs  where rs != x5;
-      \item \textbf{\textit{c.jalr}} rs1.
+      \item \textbf{\textit{jalr}} x1, rs  where rs != x5;
+      \item \textbf{\textit{jalr}} x5, rs  where rs != x1;
+      \item \textbf{\textit{c.jalr}} rs1 where rs1 != x5;
+      \item \textbf{\textit{c.jal}}.
     \end{itemize}
   \item \textit{Tail-calls}: 
     \begin{itemize}
@@ -116,18 +117,19 @@ Jumps may optionally be further classified according to the recommended calling 
     \end{itemize}
   \item \textit{Returns}: 
     \begin{itemize}
-      \item \textbf{\textit{jalr}} x0, rs where rs == x1 or rs == x5;
+      \item \textbf{\textit{jalr}} rd, rs where (rs == x1 or rs == x5) and rd != x1 and rd != x5;
       \item \textbf{\textit{c.jr}} rs1 where rs1 == x1 or rs1 == x5.
     \end{itemize}
   \item \textit{Co-routine swap}: 
     \begin{itemize}
-      \item \textbf{\textit{jalr}} x1, x1;
-      \item \textbf{\textit{jalr}} x5, x5.
+      \item \textbf{\textit{jalr}} x1, x5;
+      \item \textbf{\textit{jalr}} x5, x1;
+      \item \textbf{\textit{c.jalr}} x5.
     \end{itemize}
   \item \textit{Other}: 
     \begin{itemize}
       \item \textbf{\textit{jal}} rd where rd != x1 and rd != x5;
-      \item \textbf{\textit{jalr}} rd, rs where rd != x0 and rd != x1 and rd != x5.
+      \item \textbf{\textit{jalr}} rd, rs where rs != x1 and rs != x5 and rd != x0 and rd != x1 and rd != x5.
     \end{itemize}
 \end{itemize}
 
