@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 UltraSoC Technologies Limited
+ * Copyright (c) 2019,2020 UltraSoC Technologies Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "encoder-algorithm-public.h"
-#include "decoder-algorithm-internal.h"
 #include "te-codec-utilities.h"
 
 
@@ -82,6 +81,7 @@ static const te_set_trace_t default_set_trace =
 {
     .max_resync = 1u,           /* resync timer expires at 16 times this value */
     .resync_cycles = false,     /* resync timer counts te_inst packets when false */
+    .encoder_mode = TE_ENCODER_MODE_DELTA,  /* use delta 1 mode, by default */
 };
 
 
@@ -279,9 +279,12 @@ static void send_te_inst_sync(
     const te_inst_subformat_t subformat,
     const te_qual_status_t qual_status)
 {
-    te_inst_t te_inst = {0};
-
     assert(encoder);
+
+    te_inst_t te_inst =
+    {
+        .icount = encoder->statistics.num_instructions,
+    };
 
     /*
      * Note: take care ... irecord might be NULL here!
@@ -366,8 +369,10 @@ static void send_te_inst_sync(
             /*
              * fill in the qualification status for instruction trace
              * te_inst synchronization support packets.
-             * also copy the current set of run-time "options" bits.
+             * also copy the current set of run-time "options" bits,
+             * and anything else we wish to sent in a support packet.
              */
+            te_inst.support.encoder_mode = encoder->encoder_mode;
             te_inst.support.options = encoder->options;
             te_inst.support.qual_status = qual_status;
             break;
@@ -484,6 +489,7 @@ static void send_te_inst_non_sync(
         .address = curr->pc,
         .branches = encoder->branches,
         .branch_map = encoder->branch_map,
+        .icount = encoder->statistics.num_instructions,
     };
 
     /*
@@ -527,7 +533,7 @@ static void send_te_inst_non_sync(
          * if the jump target cache is enabled.
          */
         encoder->jump_target[jtc_index] = curr->pc;
-        te_inst.jtc_index = jtc_index;
+        te_inst.u.jtc.index = jtc_index;
         /*
          * finally, is a jump target cache extension packet #0 legal,
          * and is it really the best (most efficient) option ?
@@ -560,10 +566,23 @@ static void send_te_inst_non_sync(
         te_inst.format = TE_INST_FORMAT_0_EXTN;
         te_inst.extension = TE_INST_EXTN_BRANCH_PREDICTOR;
         encoder->statistics.num_extention[te_inst.extension]++;
-        te_inst.correct_predictions = encoder->bpred.correct_predictions;
+        te_inst.u.bpred.correct_predictions = encoder->bpred.correct_predictions;
         te_inst.branches = 0;
         te_inst.branch_map = 0;
-        assert(encoder->branches - ((with_address) ? 0u : 1u) == encoder->bpred.correct_predictions);
+        if (!with_address)
+        {
+            te_inst.u.bpred.branch_fmt = TE_BRANCH_FMT_00_NO_ADDR;
+            assert(encoder->branches - 1u == encoder->bpred.correct_predictions);
+        }
+        else if (encoder->branches == encoder->bpred.correct_predictions)
+        {
+            te_inst.u.bpred.branch_fmt = TE_BRANCH_FMT_10_ADDR;
+        }
+        else
+        {
+            te_inst.u.bpred.branch_fmt = TE_BRANCH_FMT_11_ADDR_FAIL;
+            assert(encoder->branches - 1u == encoder->bpred.correct_predictions);
+        }
 
         /* update min, max, and accumulators for the branch-predictor */
         if (encoder->bpred.correct_predictions > encoder->statistics.bpred.longest_sent)
@@ -1129,6 +1148,7 @@ te_encoder_state_t * te_open_trace_encoder(
     encoder->discovery_response = default_discovery_response;
     encoder->options = default_support_options;
     encoder->set_trace = default_set_trace;
+    encoder->encoder_mode = default_set_trace.encoder_mode;
 
     return encoder;
 }
@@ -1136,7 +1156,7 @@ te_encoder_state_t * te_open_trace_encoder(
 
 /*
  * Process a single trace-encoder cycle.
- * Called each time an instruction retires.
+ * Called each time an instruction retires, or generates an exception.
  */
 void te_encode_one_irecord(
     te_encoder_state_t * const encoder,
@@ -1164,8 +1184,18 @@ void te_encode_one_irecord(
     if (encoder->second &&              /* 2nd stage is filled */
         encoder->second->is_qualified)  /* ... and qualified ? */
     {
-        /* advance the count of PC transitions */
-        encoder->statistics.num_instructions++;
+        /*
+         * advance the count of PC transitions ...
+         * or the number of exceptions if it raises an exception
+         */
+        if (encoder->second->is_exception)
+        {
+            encoder->statistics.num_exceptions++;
+        }
+        else
+        {
+            encoder->statistics.num_instructions++;
+        }
 
         clock_the_encoder(encoder);
     }
