@@ -189,6 +189,13 @@ static void send_te_inst(
 
     const te_address_t address = te_inst->address;
 
+    /* update statistics */
+    encoder->statistics.num_format[te_inst->format]++;
+    if (TE_INST_FORMAT_3_SYNC == te_inst->format)
+    {
+        encoder->statistics.num_subformat[te_inst->subformat]++;
+    }
+
     /*
      * adjust the "address", if it will be sent as a
      * differential-address, and not as a full-address.
@@ -259,12 +266,18 @@ static void send_te_inst(
      * Finally, send the filled-in "te_inst" packet data structure
      * downstream, typically to be consumed by a RISC-V trace-decoder.
      *
-     * Note: The called function is to be implemented by users,
+     * Note: The called function should be implemented by users,
      * as the encapsulation of the fields to be transmitted is
      * outwith the scope of this reference code, which codifies
      * the heart of the trace-encoder algorithm.
+     *
+     * Note: encoder->emit_te_inst may be NULL, in which
+     * case the te_inst packet is simply dropped.
      */
-    te_send_te_inst(encoder->user_data, te_inst);
+    if (encoder->emit_te_inst)
+    {
+        (encoder->emit_te_inst)(encoder->user_data, te_inst);
+    }
 
     /*
      * re-initialize the counter of the number of correctly
@@ -548,8 +561,18 @@ static void send_te_inst_non_sync(
             }
             else
             {
-                /* hit, but ask helper function which is best */
-                jump_cache_hit = te_prefer_jtc_extension(encoder->user_data, &te_inst);
+                /*
+                 * hit, but ask helper function which is best
+                 *
+                 * Note: encoder->prefer_jtc_extension may be NULL
+                 * in which case, we will use a format #0 optional
+                 * efficiency jump-target cache packet here.
+                 */
+                if (encoder->prefer_jtc_extension)
+                {
+                    jump_cache_hit = (encoder->prefer_jtc_extension)
+                        (encoder->user_data, &te_inst);
+                }
             }
         }
     }
@@ -803,14 +826,19 @@ static void clock_the_encoder(
      *      2)  a change in privilege levels
      *      3)  resumed from a HALT (i.e. first un-halted)
      *      4)  resync_count > max_resync
+     *
+     * But only if it does *not* raise an exception.
+     *
      * Warning: prev may be NULL here ... be careful! However,
      * it should only ever be NULL if encoder->start_sent == false.
      */
     assert(prev || !encoder->start_sent);
-    if ( (!encoder->start_sent)                         ||
-         (prev->priv != curr->priv)                     ||
-         ( (prev->is_halted) && (!curr->is_halted) )    ||
-         (encoder->resync_count > get_max_resync(encoder)) )
+    if ( (!curr->is_exception) &&
+         ( (!encoder->start_sent)                         ||
+           (prev->priv != curr->priv)                     ||
+           ( (prev->is_halted) && (!curr->is_halted) )    ||
+           (encoder->resync_count > get_max_resync(encoder)) )
+       )
     {
         /* send a start synchronization te_inst packet */
         send_te_inst_sync(encoder,
@@ -1113,6 +1141,8 @@ static void clock_the_encoder(
  */
 te_encoder_state_t * te_open_trace_encoder(
     te_encoder_state_t * encoder,
+    te_emit_te_inst_t * emit_te_inst,
+    te_prefer_jtc_extension_t * prefer_jtc_extension,
     void * const user_data)
 {
     if (encoder)
@@ -1126,6 +1156,10 @@ te_encoder_state_t * te_open_trace_encoder(
         encoder = calloc(1, sizeof(te_encoder_state_t));
         assert(encoder);
     }
+
+    /* copy all the call-back function pointers provided */
+    encoder->emit_te_inst = emit_te_inst;
+    encoder->prefer_jtc_extension = prefer_jtc_extension;
 
     /* bind the "user-data" to the allocated memory */
     encoder->user_data = user_data;

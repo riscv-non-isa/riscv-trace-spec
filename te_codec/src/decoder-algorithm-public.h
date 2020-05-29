@@ -76,6 +76,7 @@ extern "C" {
 #define TE_DEBUG_PACKETS            (1u << 3)
 #define TE_DEBUG_JUMP_TARGET_CACHE  (1u << 4)
 #define TE_DEBUG_BRANCH_PREDICTION  (1u << 5)
+#define TE_DEBUG_EXCEPTIONS         (1u << 6)
 
 
 /*
@@ -297,6 +298,7 @@ typedef struct
 {
     rv_decode   decode;     /* from the riscv-disassembler repo */
     unsigned    length;     /* instruction size (in bytes) */
+    bool        custom;     /* true if a custom instruction */
     char        line[88];   /* disassembly line for printing */
 } te_decoded_instruction_t;
 
@@ -353,6 +355,7 @@ typedef struct
 typedef struct
 {
     unsigned int        support_type;   /* 4-bits */
+    bool                enable;         /* 1-bit */
     te_encoder_mode_t   encoder_mode;   /* TE_ENCODER_MODE_BITS-bits */
     te_qual_status_t    qual_status;    /* 2-bits */
     te_options_t        options;        /* run-time configuration bits */
@@ -548,6 +551,48 @@ typedef struct te_inst_t
 
 
 /*
+ * The following are the function pointers called-back,
+ * and used by this trace-decoder algorithm to:
+ *
+ *  1) retrieve the raw binary instruction value,
+ *     and its length, at a given address
+ *     [This is NOT optional, and must be provided.]
+ *
+ *  2) provide any required support for using custom RISC-V
+ *     instructions. For non-custom instruction, this does
+ *     nothing. For custom instructions, it can overwrite
+ *     both the disassemble line, and the decoded state.
+ *     [This is optional, and need not be provided.]
+ *
+ *  3) notify the user that the PC has been updated
+ *     [This is optional, and need not be provided.]
+ *
+ * Users of this code are expected to implement each of
+ * the (non-optional) functions as appropriate, and pass
+ * pointers to them when te_open_trace_decoder() is called.
+ * These functions will be called-back (via function pointers)
+ * from this trace-decoder algorithm, from time to time.
+ *
+ * All of these functions are passed a "user_data" void pointer,
+ * which is whatever was passed to te_open_trace_decoder().
+ */
+typedef unsigned (te_get_instruction_t)(
+    void * const user_data,
+    const te_address_t address,
+    rv_inst * const instruction);
+
+typedef void (te_do_custom_instruction_t)(
+    void * const user_data,
+    te_decoded_instruction_t * const instr);
+
+typedef void (te_advance_decoded_pc_t)(
+    void * const user_data,
+    const te_address_t old_pc,
+    const te_address_t new_pc,
+    const te_decoded_instruction_t * const new_instruction);
+
+
+/*
  * The following structure is used to hold all the state
  * for a single instance of a trace-decoder ... this allows
  * a plurality of trace-decoders to be running simultaneously,
@@ -601,6 +646,11 @@ typedef struct te_decoder_state_t
     /* pointer to user-data, whatever was passed to te_open_trace_decoder() */
     void * user_data;
 
+    /* set of function pointers for call-backs */
+    te_get_instruction_t       * get_instruction;
+    te_do_custom_instruction_t * do_custom_instruction;
+    te_advance_decoded_pc_t    * advance_decoded_pc;
+
     /* the ISA to use (for riscv-disassembler) */
     rv_isa isa;
 
@@ -645,6 +695,9 @@ extern void te_process_te_inst(
 
 extern te_decoder_state_t * te_open_trace_decoder(
     te_decoder_state_t * decoder,
+    te_get_instruction_t * const get_instruction,
+    te_do_custom_instruction_t * const do_custom_instruction,
+    te_advance_decoded_pc_t * const advance_decoded_pc,
     void * const user_data,
     const rv_isa isa);
 
@@ -655,33 +708,6 @@ extern te_decoded_instruction_t * te_get_and_disassemble_instr(
     te_decoder_state_t * const decoder,
     const te_address_t address,
     te_decoded_instruction_t * const instr);
-
-
-/*
- * The following are external functions USED by this code to:
- *
- *  1) retrieve the raw binary instruction value,
- *     and its length, at a given address
- *
- *  2) notify the user that the PC has been updated
- *
- * Users of this code are expected to implement each of
- * these functions as appropriate, as they will be called
- * by the trace-decoder algorithm from time to time.
- *
- * Some of these functions are passed a "user_data" void pointer,
- * which is whatever was passed to te_open_trace_decoder().
- */
-extern unsigned te_get_instruction(
-    void * const user_data,
-    const te_address_t address,
-    rv_inst * const instruction);
-
-extern void te_advance_decoded_pc(
-    void * const user_data,
-    const te_address_t old_pc,
-    const te_address_t new_pc,
-    const te_decoded_instruction_t * const new_instruction);
 
 
 #ifdef __cplusplus

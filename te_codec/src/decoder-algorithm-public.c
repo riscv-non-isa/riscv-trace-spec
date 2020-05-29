@@ -129,7 +129,7 @@ static void unrecoverable_error(
 
 /*
  * for the address given, find the raw binary value of the instruction at
- * that address (using the external function te_get_instruction), and then use
+ * that address (using the function decoder->get_instruction), and then use
  * the open-source riscv-disassembler library to decode, and then cache it.
  */
 #define get_instr te_get_and_disassemble_instr  /* alias the function */
@@ -143,6 +143,7 @@ te_decoded_instruction_t * te_get_and_disassemble_instr(
     unsigned length;
 
     assert(decoder);
+    assert(decoder->get_instruction);
     assert(instr);
     assert(TE_SENTINEL_BAD_ADDRESS != address);
 
@@ -170,7 +171,7 @@ te_decoded_instruction_t * te_get_and_disassemble_instr(
     /* otherwise, we need to do a bit of disassembly work ... */
 
     /* first, get the raw instruction (and its length), from its address */
-    length = te_get_instruction(
+    length = (decoder->get_instruction)(
         decoder->user_data,
         address,
         &instruction);
@@ -198,6 +199,26 @@ te_decoded_instruction_t * te_get_and_disassemble_instr(
         address,
         instruction,
         false);     /* false: do not lift pseudo-instructions */
+
+    /*
+     * If it is a custom instruction, then we will want to
+     * use a different disassembled text line, and possibly
+     * overwrite some of the fields in the decoded state.
+     * If custom instructions are supported, then process
+     * any decoded properties of them here ...
+     *
+     * Note: decoder->do_custom_instruction may be NULL, in which
+     * case there must not be any custom instructions.
+     *
+     * Note: both 'address' and 'instruction' are passed in
+     * 'instr', as 'instr->decode.pc' and 'instr->decode.inst'.
+     */
+    if (decoder->do_custom_instruction)
+    {
+        (decoder->do_custom_instruction)(
+            decoder->user_data,
+            instr);
+    }
 
     /* save the freshly decoded instruction in the decoded cache */
     decoder->decoded_cache[slot] = *instr;
@@ -231,8 +252,9 @@ static unsigned instruction_size(
  * each and every transition of the PC in a consistent manner.
  * This helps with checking the correctness of the decoder.
  *
- * Ultimately, the main purpose of this function is to call the external
- * function te_advance_decoded_pc() to disseminate the new value of the PC.
+ * Ultimately, the main purpose of this function is to call-back the
+ * function-pointer decoder->advance_decoded_pc, to disseminate
+ * the new value of the PC.
  */
 static void disseminate_pc(
     te_decoder_state_t * const decoder)
@@ -269,12 +291,19 @@ static void disseminate_pc(
             instr.line);
     }
 
-    /* notify the user that the PC has been updated */
-    te_advance_decoded_pc(
-        decoder->user_data,
-        decoder->last_pc,
-        decoder->pc,
-        &instr);
+    /*
+     * notify the user that the PC has been updated
+     *
+     * Note: decoder->advance_decoded_pc may be NULL.
+     */
+    if (decoder->advance_decoded_pc)
+    {
+        (decoder->advance_decoded_pc)(
+            decoder->user_data,
+            decoder->last_pc,
+            decoder->pc,
+            &instr);
+    }
 
     /* advance the count of PC transitions */
     decoder->statistics.num_instructions++;
@@ -1137,6 +1166,7 @@ void te_process_te_inst(
 
     /*
      * update counters for each new te_inst packet that is received
+     * for both the format, and the sub-format if it is a format 3.
      */
     decoder->statistics.num_format[te_inst->format]++;
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
@@ -1160,6 +1190,43 @@ void te_process_te_inst(
         if (TE_INST_SUBFORMAT_CONTEXT == te_inst->subformat)
         {
             return; /* all done ... nothing more to do */
+        }
+
+        /* is it a te_inst synchronization exception packet ? */
+        if (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat)
+        {
+            /* update counter with number of exceptions */
+            decoder->statistics.num_exceptions++;
+
+            if ( (decoder->debug_stream) &&
+                 (decoder->debug_flags & TE_DEBUG_EXCEPTIONS) )
+            {
+                /*
+                 * get details about the most recent successfully retired
+                 * instruction ... that should be at decoder->pc.
+                 */
+                (void)te_get_and_disassemble_instr(decoder, decoder->pc, &instr);
+
+                /*
+                 * Here "address" is the instruction address that
+                 * raised an exception. Which ought to be the first
+                 * instruction spatially following the most recent
+                 * reconstructed successfully retired instruction.
+                 */
+                const te_address_t address = decoder->pc + instr.length;
+
+                /* get details about the instruction that raised an exception */
+                (void)te_get_and_disassemble_instr(decoder, address, &instr);
+
+                /* print out the instruction that raised an exception */
+                fprintf(decoder->debug_stream,
+                    "ECAUSE=%-2u [%" PRIu64 "]\t{%" PRIu64 "}\t%8" PRIx64 ":\t%s\n",
+                    te_inst->ecause,
+                    decoder->statistics.num_exceptions,
+                    decoder->statistics.num_instructions,
+                    address,
+                    instr.line);
+            }
         }
 
         /* copy any common fields from the te_inst packet */
@@ -1390,6 +1457,9 @@ void te_process_te_inst(
  */
 te_decoder_state_t * te_open_trace_decoder(
     te_decoder_state_t * decoder,
+    te_get_instruction_t * const get_instruction,
+    te_do_custom_instruction_t * const do_custom_instruction,
+    te_advance_decoded_pc_t * const advance_decoded_pc,
     void * const user_data,
     const rv_isa isa)
 {
@@ -1404,6 +1474,12 @@ te_decoder_state_t * te_open_trace_decoder(
         decoder = calloc(1, sizeof(te_decoder_state_t));
         assert(decoder);
     }
+
+    /* copy all the call-back function pointers provided */
+    assert(get_instruction);
+    decoder->get_instruction = get_instruction;
+    decoder->do_custom_instruction = do_custom_instruction;
+    decoder->advance_decoded_pc = advance_decoded_pc;
 
     /* bind the "user-data" to the allocated memory */
     decoder->user_data = user_data;

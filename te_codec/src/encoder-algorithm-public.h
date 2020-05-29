@@ -41,6 +41,34 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+/*
+ * The following are the function pointers called-back,
+ * and used by this trace-encoder algorithm to:
+ *
+ *  1) notify the user that the PC has been updated
+ *     [This is optional, and need not be provided.]
+ *
+ *  2) determine if a jump target cache extension packet
+ *     format #0 is preferred over a format #1 or #2 packet.
+ *     [This is optional, and need not be provided.]
+ *
+ * Users of this code are expected to implement each of
+ * the (non-optional) functions as appropriate, and pass
+ * pointers to them when te_open_trace_encoder() is called.
+ * These functions will be called-back (via function pointers)
+ * from this trace-encoder algorithm, from time to time.
+ *
+ * All of these functions are passed a "user_data" void pointer,
+ * which is whatever was passed to te_open_trace_encoder().
+ */
+typedef void (te_emit_te_inst_t)(
+    void * const user_data,
+    const te_inst_t * const te_inst);
+
+typedef bool (te_prefer_jtc_extension_t)(
+    void * const user_data,
+    te_inst_t * const te_inst);
+
 
 /*
  * cut-down list of fields for a set_trace packet.
@@ -149,6 +177,10 @@ typedef struct te_encoder_state_t
     /* pointer to user-data, whatever was passed to te_open_trace_encoder() */
     void * user_data;
 
+    /* set of function pointers for call-backs */
+    te_emit_te_inst_t         * emit_te_inst;
+    te_prefer_jtc_extension_t * prefer_jtc_extension;
+
     /* allocate memory for a "jump target cache" */
     te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
 
@@ -176,6 +208,8 @@ extern void te_encode_one_irecord(
 
 extern te_encoder_state_t * te_open_trace_encoder(
     te_encoder_state_t * encoder,
+    te_emit_te_inst_t * emit_te_inst,
+    te_prefer_jtc_extension_t * prefer_jtc_extension,
     void * const user_data);
 
 /*
@@ -189,30 +223,6 @@ extern te_encoder_state_t * te_open_trace_encoder(
 extern void te_send_te_inst_sync_support(
     te_encoder_state_t * const encoder,
     const te_qual_status_t qual_status);
-
-
-/*
- * The following are external functions USED by this code to:
- *
- *  1) notify the user that the PC has been updated
- *
- *  2) determine if a jump target cache extension packet
- *    format #0 is preferred over a format #1 or #2 packet.
- *
- * Users of this code are expected to implement each of
- * these functions as appropriate, as they will be called
- * by the trace-encoder algorithm from time to time.
- *
- * Some of these functions are passed a "user_data" void pointer,
- * which is whatever was passed to te_open_trace_encoder().
- */
-extern void te_send_te_inst(
-    void * const user_data,
-    const te_inst_t * const te_inst);
-
-extern bool te_prefer_jtc_extension(
-    void * const user_data,
-    te_inst_t * const te_inst);
 
 
 #ifdef __cplusplus
