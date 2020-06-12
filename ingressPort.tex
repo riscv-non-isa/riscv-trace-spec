@@ -254,6 +254,8 @@ Signals are assigned to one of the  following groups:
         \hline
         \textbf{iretire}[0:0] & SR & Number of instructions retired in this block (0 or 1).\\
         \hline
+        \textbf{ilastsize}[0:0] & SR & The size of the retired instruction is 2\textsuperscript{\textbf{ilastsize}} half-words.\\
+        \hline
     \end{tabulary}
 \end{table}
 
@@ -357,18 +359,16 @@ the signals listed in tables~\ref{tab:common-ingress} and ~\ref{tab:single-ingre
 simplifications can be summarized as follows:
  
 \begin{itemize}
-  \item As the number of instructions that are retired in a block is only 0 or 1, the 
-    encoder does not need information to enable it to deduce the address of the last instruction 
-    retired (it is the same as the 1st and only instruction retired).  So 
-    \textbf{ilastsize} is not necessary, and \textbf{iretire} simply indicates whether an
-    instruction retired or not.
+  \item \textbf{iretire} simply indicates whether an instruction retired or not;
 \end{itemize}
+
+\textbf{Note:} \textbf{ilastsize} is still needed in order to determine the address of the next 
+instruction, as this is the predicted return address for implicit return mode 
+(see Section~\ref{sec:implicit-return}).
 
 The parameter \textit{retires\_p} which indicates to the encoder the maximum number of 
 instructions that can be retired per cycle can be used by an encoder capable of supporting single or 
 multiple retirement to select the appropriate interpretation of \textbf{iretire}.  
-The \textbf{ilastsize} encoder input must be tied low when attached to a single-retirement
-hart that does not provide these outputs.
 
 
 \subsection{Alternative multiple-retirement interface configurations} \label{sec:alt-multi}
