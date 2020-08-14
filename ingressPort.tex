@@ -1,8 +1,11 @@
 \chapter{Hart to encoder interface} \label{Interface}
 
-\section{Interface requirements}
-This section describes in general terms the information which must be passed from the RISC-V hart to the trace encoder,
-and distinguishes between what is mandatory, and what is optional.
+\section{Instruction Trace Interface requirements}\label{sec:InstructionInterfaceRequirements}
+
+This section describes in general terms the information which must be
+passed from the RISC-V hart to the trace encoder for the purposes of
+Instruction Trace, and distinguishes between what is mandatory, and
+what is optional.
 
 The following information is mandatory:
 
@@ -154,9 +157,9 @@ in a fine-grained multi-threaded configuration, the frequent context changes tha
 as a result of thread-switching would result in extremely poor encoding efficiency, and so
 this configuration is not recommended.)
 
-\section{Instruction interface}
+\section{Instruction Trace Interface}\label{sec:InstructionTraceInterface}
 This section describes the interface between a RISC-V hart and the
-trace encoder that conveys the information described in the previous section.  
+trace encoder that conveys the information described in the section ~\ref{sec:InstructionInterfaceRequirements}.  
 Signals are assigned to one of the  following groups:
 
 \begin{itemize}
@@ -493,3 +496,118 @@ This capability is sometimes known as a watchpoint.
     \end{tabulary}
 \end{table}
 
+\section{Data Trace Interface requirements}\label{sec:DataInterfaceRequirements}
+
+This section describes in general terms the information which must be
+passed from the RISC-V hart to the trace encoder for the purposes of
+Data Trace, and distinguishes between what is mandatory, and what is
+optional.
+
+If Data Trace is not needed in a system then there is no requirement
+for the RISC-V hart to supply any of the signals in
+~\ref{sec:DataTraceInterface}
+
+
+\section{Data Trace Interface}\label{sec:DataTraceInterface}
+
+This section describes the interface between a RISC-V hart and the
+trace encoder that conveys the information described in the
+section~\ref{sec:DataInterfaceRequirements}.  Signals are assigned to
+one of the following groups:
+
+\begin{itemize}
+  \item M: Mandatory.  The interface must include an instance of this signal.
+  \item O: Optional.  The interface may include an instance of this signal.
+  \item MR: Mandatory, may be replicated. 
+  \item OR: Optional, may be replicated. 
+  \item BR: Block, may be replicated.  Mandatory for harts that can retire multiple instructions in a block.  
+    Replication as per OR.  If omitted, the interface must include SR group signals instead.
+  \item SR: Single, may be replicated.  Mandatory for harts that can only retire one instruction in a block.  
+    Replication as per OR (see section~\ref{sec:alt-multi}).  If omitted, the interface must include BR 
+    group signals instead.
+\end{itemize}
+
+
+\begin{table}[htp]
+    \centering
+    \caption{Data interface signals}
+    \label{tab:datacommon-ingress}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
+        \hline
+        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & MR & Termination type of the data block\\
+        \hline
+        \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.\\
+        \hline
+        \textbf{dsize}[\textit{dsize\_width\_p}-1:0] & MR & The data access size.\\
+        \hline
+        \textbf{data}[\textit{data\_width\_p}-1:0] & MR & The data.\\
+        \hline
+        \textbf{dresp}[\textit{dresp\_width\_p}-1:0] & MR & The data access size.\\
+        \hline        
+    \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+    \centering
+    \caption{\textbf{dtype} values}
+    \label{tab:dtype-ingress}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Type} & \textbf{Value} & \textbf{Notes} \\
+        \hline
+        \textbf{load} & 0000 & Width is 1 bit if only load/store supported\\
+        \hline
+        \textbf{store} & 0001 & \\
+        \hline
+        \textbf{reserved} & 0010 & Width is 3 bits if CSR \\
+        \hline
+        \textbf{reserved} & 0011 & \\
+        \hline
+        \textbf{csr-rw} & 0100 & \\
+        \hline
+        \textbf{csr-rs} & 0101 & \\
+        \hline
+        \textbf{csr-rc} & 0110 & \\
+        \hline
+        \textbf{reserved} & 0111 & Width is 4 bits is Atomics supported\\
+        \hline
+        \textbf{atomic-swap} & 1000 &\\
+        \hline
+        \textbf{atomic-and} & 1001 &\\
+        \hline
+        \textbf{atomic-add} & 1010 &\\
+        \hline
+        \textbf{atomic-or} & 1011 &\\
+        \hline
+        \textbf{atomic-xor} & 1100 &\\
+        \hline
+        \textbf{atomic-max} & 1101 &\\
+        \hline
+        \textbf{atomic-min} & 1110 &\\
+        \hline
+        \textbf{reserved} & 1111 &\\
+        \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{\textbf{dresp} values}
+    \label{tab:dresp-ingress}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Type} & \textbf{Value} & \textbf{Notes} \\
+        \hline
+        \textbf{idle} & 00 & \\
+        \hline
+        \textbf{reserved} & 01 & \\
+        \hline
+        \textbf{okay} & 10 & \\
+        \hline
+        \textbf{error} & 11 & \\
+        \hline
+    \end{tabulary}
+\end{table}
