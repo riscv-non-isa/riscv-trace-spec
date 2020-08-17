@@ -1,0 +1,441 @@
+\chapter{Data Trace Encoder Output Packets} \label{dataTracePackets}
+
+\section{Format dx0 packets} \label{sec:formatdx0}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified load or store, with address and data}
+  \label{tab:te_datadx0y0}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	2 or 3	& Transaction type (2 bits if atomics, CSRs and split transfers not supported, 3 otherwise)\newline
+    000: Unified load or split load address, aligned\newline
+    001: Unified load or split load address, unaligned\newline
+		010: Store, aligned address\newline	
+		011: Store, unaligned address\newline	
+		1xx: select other packet formats\\
+    \hline
+    \textbf{size} & clog2(\textit{data\_width\_p/8}) & Transfer size is 2**size bytes	2 bits if max size is 64-bits (\textit{data\_width\_p} < 128), 3 bits if wider \\
+    \hline
+    \textbf{diff} & 1 or 2 & 00: Full address and data (sync)	"1 bit requires data compression type to be fixed.  Could be any of the 3 options, selected by parameter
+    2 bits will be more efficient but requires more complex encoding logic and comparators to dynamically chose the smallest encoding."\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differentail address, differential data\\
+    \hline
+    \textbf{data\_len}	& \textbf{size} & Number of bytes of data is \textit {data\_len + 1}	\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & 
+                Data\\
+    \hline
+    \textbf{address} &  \textit {iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by size to recover byte address. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified load or store, with address only}
+  \label{tab:te_datadx0y1}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	2 or 3	& Transaction type	2 bits if atomics, CSRs and split transfers not supported, 3 otherwise\newline
+		000: Unified load or split load address, aligned\newline	
+		001: Unified load or split load address, unaligned\newline
+		010: Store, aligned address\newline
+		011: Store, unaligned address\newline
+		(other codes select other packet formats)\\
+    \hline
+    \textbf{size} & clog2(\textit{data\_width\_p/8}) & Transfer size is 2**size bytes	2 bits if max size is 64-bits (\textit{data\_width\_p} < 128), 3 bits if wider \\
+    \hline
+    \textbf{diff} & 1 & 0: Full address (sync)	\newline
+		1:  Differential address\\
+    \hline
+    \textbf{address} &  \textit {iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by size to recover byte address. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified load or store, with data only}
+  \label{tab:te_datadx0y2}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	2 or 3	& Transaction type	2 bits if atomics, CSRs and split transfers not supported, 3 otherwise\newline
+		000: Unified load or split load address, aligned\newline	
+		001: Unified load or split load address, unaligned\newline
+		010: Store, aligned address\newline
+		011: Store, unaligned address\newline
+		(other codes select other packet formats)\\
+    \hline
+    \textbf{size} & clog2(\textit{data\_width\_p/8}) & Transfer size is 2**size bytes	2 bits if max size is 64-bits (\textit{data\_width\_p} < 128), 3 bits if wider \\
+    \hline
+    \textbf{diff} & 1 or 2 & 00: Full address and data (sync)	"1 bit requires data compression type to be fixed.  Could be any of the 3 options, selected by parameter
+    2 bits will be more efficient but requires more complex encoding logic and comparators to dynamically chose the smallest encoding."\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differentail address, differential data\\
+    \hline
+   \textbf{data\_len}	& \textbf{size} & Number of bytes of data is \textit {data\_len + 1}	\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & 
+                Data. Send min number of required bytes to allow reconstruction by sign extension\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Split load - Address only}
+  \label{tab:te_datadx0y3}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline
+		000: Unified load or split load address, aligned\newline	
+		001: Unified load or split load address, unaligned\newline
+		(other codes select other packet formats)\\
+    \hline
+    \textbf{size} & clog2(\textit{data\_width\_p/8}) & Transfer size is 2**size bytes	2 bits if max size is 64-bits (\textit{data\_width\_p} < 128), 3 bits if wider \\
+    \hline
+    \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \hline
+    \textbf{diff} & 1 & 0: Full address (sync)	\newline
+		1:  Differential address\\
+    \hline
+    \textbf{address} &  \textit {iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by size to recover byte address. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Split load - Data only}
+  \label{tab:te_datadx0y4}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	2 or 3	& Transaction type	2 bits if atomics, CSRs and split transfers not supported, 3 otherwise\newline
+		100: plit load data\newline	
+		(other codes select other packet formats)\\
+    \hline
+    \textbf{size} & clog2(\textit{data\_width\_p/8}) & Transfer size is 2**size bytes	2 bits if max size is 64-bits (\textit{data\_width\_p} < 128), 3 bits if wider \\
+    \hline
+    \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \hline
+    \textbf{resp} & 	2	& Transfer index\newline
+		00: Error (no data)\newline	
+		01: XOR-compressed data\newline	
+		00: Full data\newline	
+		00: Differenntial data\\
+   \textbf{data\_len}	& \textbf{size} & Number of bytes of data is \textit {data\_len + 1}. Not included if resp indicates an error (sign-extend resp MSB)\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & 
+                Data. Send min number of required bytes to allow reconstruction by sign extension\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified atomic with address and data}
+  \label{tab:te_datadx0y5}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		110: Unified atomic or split atomic address\newline	
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& Atomic sub-type\newline
+	        000: Swap\newline
+		001: ADD\newline	
+		010: AND\newline	
+		011: OR\newline	
+		100: XOR\newline	
+		101: MAX\newline	
+		110: MIN\newline	
+		111: reserved\\	
+    \hline
+    \textbf{size} & 1 & Transfer size is 2**(size+2) bytes\\
+    \hline
+    \textbf{diff} & 1 or 2 & 00: Full address and data (sync)	"1 bit requires data compression type to be fixed.  Could be any of the 3 options, selected by parameter\newline
+    2 bits will be more efficient but requires more complex encoding logic and comparators to dynamically chose the smallest encoding."\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differential address, differential data\\
+    \hline
+    \textbf{op\_len} & 2 + size &	Number of bytes of operand is \textit{op\_len + 1}\\
+    \hline
+    \textbf{operand}	& 8 * (\textit{op\_len + 1}) & Operand.  Value from rs2 before operator applied\\
+    \hline
+    \textbf{data\_len}	& \textbf{size} & Number of bytes of data is \textit {data\_len + 1}\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & 
+                Data\\
+    \hline
+    \textbf{address} &  \textit {iaddress\_width\_p} &Address, aligned and encoded as per size. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified atomic with address only}
+  \label{tab:te_datadx0y6}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		110: Unified atomic or split atomic address\newline	
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& Atomic sub-type\newline
+	        000: Swap\newline
+		001: ADD\newline	
+		010: AND\newline	
+		011: OR\newline	
+		100: XOR\newline	
+		101: MAX\newline	
+		110: MIN\newline	
+		111: reserved\\	
+    \hline
+    \textbf{size} & 1 & Transfer size is 2**(size+2) bytes\\
+    \hline
+    \textbf{diff} & 1 & 0: Full address \newline
+		1: Differential address, differential data\\
+    \hline
+    \textbf{address} &  \textit {iaddress\_width\_p} &Address, aligned and encoded as per size. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified atomic with data only}
+  \label{tab:te_datadx0y7}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		110: Unified atomic or split atomic address\newline	
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& Atomic sub-type\newline
+	        000: Swap\newline
+		001: ADD\newline	
+		010: AND\newline	
+		011: OR\newline	
+		100: XOR\newline	
+		101: MAX\newline	
+		110: MIN\newline	
+		111: reserved\\	
+    \hline
+    \textbf{size} & 1 & Transfer size is 2**(size+2) bytes\\
+    \hline
+    \textbf{diff} & 1 or 2 & 00: Full address and data (sync)	"1 bit requires data compression type to be fixed.  Could be any of the 3 options, selected by parameter\newline
+    2 bits will be more efficient but requires more complex encoding logic and comparators to dynamically chose the smallest encoding."\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differential address, differential data\\
+    \hline
+    \textbf{op\_len} & 2 + size & Number of bytes of operand is \textit{op\_len + 1}\\
+    \hline
+    \textbf{operand}	& 8 * (\textit{op\_len + 1}) & Operand.  Value from rs2 before operator applied\\
+    \hline
+    \textbf{data\_len}	& \textbf{size} & Number of bytes of data is \textit {data\_len + 1}\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & 
+                Data\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Split atomic with operand only}
+  \label{tab:te_datadx0y8}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		110: Unified atomic or split atomic address\newline	
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& Atomic sub-type\newline
+	        000: Swap\newline
+		001: ADD\newline	
+		010: AND\newline	
+		011: OR\newline	
+		100: XOR\newline	
+		101: MAX\newline	
+		110: MIN\newline	
+		111: reserved\\	
+    \hline
+    \textbf{size} & 1 & Transfer size is 2**(size+2) bytes\\
+    \hline
+    \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \textbf{diff} & 1 or 2 & 00: Full address and data (sync)	"1 bit requires data compression type to be fixed.  Could be any of the 3 options, selected by parameter\newline
+    2 bits will be more efficient but requires more complex encoding logic and comparators to dynamically chose the smallest encoding."\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differential address, differential data\\
+    \hline
+    \textbf{op\_len} & 2 + size &	Number of bytes of operand is \textit{op\_len + 1}\\
+    \hline
+    \textbf{operand}	& 8 * (\textit{op\_len + 1}) & Operand.  Value from rs2 before operator applied\\
+    \hline
+    \textbf{address} &  \textit {iaddress\_width\_p} &Address, aligned and encoded as per size. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Split atomic load data only}
+  \label{tab:te_datadx0y9}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		111: Split atomic data\newline	
+		other codes other packet formats\\
+    \hline
+    \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \textbf{resp} & 2 & 00: Error (no data)\newline
+		01:  XOR-compressed data\newline	
+		10: full data\newline
+		11: differential data\\
+    \hline
+    \textbf{data\_len} & 2 + size &	Number of bytes of operand is \textit{data\_len + 1}. Not included if resp indicates an error (sign-extend resp MSB)\\
+    \hline
+    \textbf{data} &  8 * (\textit{data\_len + 1}) & Data. Not included if resp indicates an error (sign-extend resp MSB)\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified CSR, with address, data and operand}
+  \label{tab:te_datadx0y9}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		101: CSR\newline
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& CSR sub-type\newline
+		00: RW\newline	
+		01: RS\newline	
+		10: RC\newline	
+		11: reserved\\	
+    \hline
+    \textbf{diff} & 0, 1 or 2 & 00: Full address and data (sync)	"1 bit requires data compression type to be fixed.  Could be any of the 3 options, selected by parameter\newline
+    1 bit if compression type is fixed. Could be any of the 3 options, selected by parameter.\newline
+    2 bits for run-time selection of the smallest encoding.\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differential address, differential data\\
+    \hline
+    \textbf{data\_len}	& \textbf{2 + size} & Number of bytes of data is \textit {data\_len + 1}\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & Data\\
+    \hline
+    \textbf{addr\_msbs} & 6  &	Address[11:6]	Split address to take advantage of compression for LSBs\\
+    \hline
+    \textbf{op\_len} & \textbf(2+size)  & Address[11:6]	Split address to take advantage of compression for LSBs\\    
+    \hline
+    \textbf{operand}	& 8 * (\textit{op\_len + 1}) & Operand.  Value from rs2 before operator applied\\
+    \hline
+    \textbf{addr\_lsbs} &  6 & Address[5:0], aligned and encoded as per size. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified CSR, with address and read-only data (as determined by addr[11:10] = 11)}
+  \label{tab:te_datadx0y10}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		101: CSR\newline
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& CSR sub-type\newline
+		00: RW\newline	
+		01: RS\newline	
+		10: RC\newline	
+		11: reserved\\	
+    \hline
+    \textbf{diff} & 0, 1 or 2 & 00: reserved	"0 bitsif no address/data compression for CSRs\newline
+    1 bit if compression type is fixed. Could be any of the 3 options, selected by parameter.\newline
+    2 bits for run-time selection of the smallest encoding.\newline
+		01:  Differential address, XOR-compressed data\newline
+		10: Differential address, full data\newline
+		11: Differential address, differential data\\
+    \hline
+    \textbf{data\_len}	& \textbf{2 + size} & Number of bytes of data is \textit {data\_len + 1}\\
+    \hline
+    \textbf{data} & \textit {8 * (data\_len + 1)} & Data\\
+    \hline
+    \textbf{addr\_msbs} & 6  &	Address[11:6]	Split address to take advantage of compression for LSBs\\
+    \hline
+    \textbf{addr\_lsbs} &  6 & Address[5:0], aligned and encoded as per size. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+  \centering
+  \caption{Packet format for Unified CSR, with address only}
+  \label{tab:te_datadx0y10}
+  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+    \hline
+    {\bf Field name} & {\bf Bits} & {\bf Description} \\
+    \hline
+    \textbf{format} & 	3	& Transaction type\newline 	
+		101: CSR\newline
+		other codes other packet formats\\
+    \hline
+    \textbf{subtype} & 	3	& CSR sub-type\newline
+		00: RW\newline	
+		01: RS\newline	
+		10: RC\newline	
+		11: reserved\\	
+    \hline
+    \textbf{diff} & 0 or 1 & 0: Full address 0 bits if no address/data compression for CSRs\newline
+		1: Differential address\\
+    \hline
+    \textbf{addr\_msbs} & 6  &	Address[11:6]	Split address to take advantage of compression for LSBs\\
+    \hline
+    \textbf{addr\_lsbs} &  6 & Address[5:0], aligned and encoded as per size. Last as most likely to compress well \\
+    \hline
+  \end{tabulary}
+\end{table}
+
