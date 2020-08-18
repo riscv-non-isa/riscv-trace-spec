@@ -536,6 +536,8 @@ one of the following groups:
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline
+        \textbf{dretire} 1 & MR & \\
+        \hline
         \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & MR & Termination type of the data block\\
         \hline
         \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.\\
@@ -544,9 +546,19 @@ one of the following groups:
         \hline
         \textbf{data}[\textit{data\_width\_p}-1:0] & MR & The data.\\
         \hline
-        \textbf{dresp}[\textit{dresp\_width\_p}-1:0] & MR & The data access size.\\
+        \textbf{iaddr\_lsbs}[\textit{iaddr\_lsbs\_width\_p}-1:0] & MR & Required for multi-retirement.\\
+        \hline
+        \textbf{dblock}[\textit{dblock\_width\_p}-1:0] & MR & Required for multi-retirement.\\
+        \hline
+        \textbf{lresp}[\textit{lresp\_width\_p}-1:0] & MR & Load response.\\
         \hline        
-        \textbf{index}[\textit{index\_width\_p}-1:0] & O & Index used in split transactions.\\
+        \textbf{lrid}[\textit{lrid\_width\_p}-1:0] & O & Load request ID in split transactions. Only valid when \textbf{dretire} is valid\\
+        \hline        
+        \textbf{lid}[\textit{lrid\_width\_p}-1:0] & O & Load ID in split transactions. Only valid when \textbf{lresp} is non-zero\\
+        \hline        
+        \textbf{sdata}[\textit{sdata\_width\_p}-1:0] & O & Store data. Only valid when \textbf{dretire} is valid.\\
+        \hline        
+        \textbf{ldata}[\textit{ldata\_width\_p}-1:0] & O & Load data. Only valid when \textbf{lresp} is non-zero\\
         \hline        
     \end{tabulary}
 \end{table}
@@ -597,7 +609,7 @@ one of the following groups:
 
 \begin{table}[htp]
     \centering
-    \caption{\textbf{dresp} values}
+    \caption{\textbf{lresp} values}
     \label{tab:dresp-ingress}
     \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
         \hline
