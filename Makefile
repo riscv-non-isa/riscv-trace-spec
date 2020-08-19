@@ -1,7 +1,7 @@
 SPEC_TEX=riscv-trace-spec
 SPEC=$(SPEC_TEX)
 
-INCLUDES_TEX = introduction.tex branchTrace.tex exampleAlgorithm.tex filtering.tex futures.tex ingressPort.tex payload.tex dataTracePayload.tex preamble.tex riscv-trace-spec.tex decoder.tex discovery.tex exampleCodeSnippets.tex
+INCLUDES_TEX = introduction.tex branchTrace.tex exampleAlgorithm.tex filtering.tex futures.tex ingressPort.tex payload.tex dataTracePayload.tex control.tex preamble.tex riscv-trace-spec.tex decoder.tex discovery.tex exampleCodeSnippets.tex
 
 all:	$(SPEC).pdf
 
