@@ -1,0 +1,91 @@
+\chapter{Encoder Control} \label{encoderControl}
+
+\section{Message mapping to register proposal} \label{sec:messageToRegiser}
+
+\begin{table}[htp]
+  \tiny
+  \centering
+  \caption{Mapping UST messages to Register based control used in Nexus}
+  \label{tab:te_control}
+  \begin{tabulary}{\textwidth}{|l|l|p{15mm}|l|p{10mm}|l|p{15mm}|p{15mm}}
+
+    \hline
+    {\bf Field} & {\bf W} & {\bf Description} & {\bf Register} & {\bf Offset} & {\bf Message} & {\bf Offset} & {\bf UST Name} \\
+    \hline
+    \textbf {teActive} & 1 & Master Enable & \textbf {teControl} & 0 & \textbf {set\_enabled} & 16 & \textbf {module\_enable}\\
+    \hline  
+    \textbf {teEnable} & 1 & Trace Enable & \textbf{teControl} & 1 & \textbf {set\_trace.instruction} & 8 & \textbf {trace\_enable}\\     
+    \hline
+    \textbf{teTriggered} & 1 & Enable external triggers to change teEnable & \textbf {teControl} & TBD & \textbf {set\_trace.instruction} & 9 & \textbf {trigger\_enable}\\
+    \hline
+    \textbf{teTracing} & 1 & trace being generated & \textbf{teControl} & 2 & & \\
+    \hline
+    \textbf{teEmpty} & 1 & All trace emitted & \textbf{teControl} & 3 & & & Not necessary for RISC-V WG trace, as \textbf {te\_inst} support message issued after all trace emitted.\\
+    \hline
+    \textbf{teInstruction} & ? & trace mode enables & teControl & 4 & \textbf{set\_trace.instruction} & 37\newline
+    38\newline
+    39\newline
+    40\newline
+    41\newline
+    42\newline
+    43\newline & 
+    \textbf {encoder\_mode} (2 bits)\newline
+    \textbf{full\_address}\newline
+    \textbf{implicit\_return}\newline
+    \textbf{implicit\_except}\newline
+    \textbf{sijump}\newline
+    \textbf{branch\_prediction}\newline
+    \textbf{jump\_target\_cache}\newline
+    (others for proprietary extensions)\\
+    \hline
+    \textbf{teStallEnable} & 1 & Enable lossless behaviour & \textbf{teControl} & 13 & \textbf{set\_trace.instruction} & 35 & lossless\\
+    \hline
+    \textbf{teStallOnWrap} & 1 & Circular buffer control & \textbf{teControl} & 14	& - & \\
+    \hline
+    \textbf{teInhibitSrc} & 1 & Inhibit SrcID & \textbf{teControl} & 15 & - & &  Inappropriate in a message based architecture \\
+    \hline
+    \textbf{teSyncMax} & 4 & Resync interval & \textbf{teControl} & 16 & \textbf{set\_trace.instruction} & 13 & \textbf{max\_resync}\\
+    \hline
+    \textbf{teSyncMode} & 2 &Resync mode & \textbf{teControl} & TBD & \textbf{set\_trace.instruction} & 17 & \textbf{resync\_mode} \\
+    \hline
+    \textbf{teMessageFormat} & 3 & Trace format & \textbf{teControl} & 26 & - & & \\
+    \hline
+    \textbf{teSink} & 3 & Sink selector & \textbf{teControl} & 28 & - & UST trace routing is distributed and control mechanism is incompatible with this.\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+
+\begin{table}[htp]
+  \tiny
+  \centering
+  \caption{Mapping UST messages to Register based teImpl regster used in Nexus}
+  \label{tab:te_control}
+  \begin{tabulary}{\textwidth}{|l|l|p{15mm}|l|p{10mm}|l|p{15mm}|p{15mm}}
+    \hline
+    {\bf Field} & {\bf W} & {\bf Description} & {\bf Register} & {\bf Offset} & {\bf Message} & {\bf Offset} & {\bf UST Name} \\
+    \hline
+    \textbf{teFilter} & 16 & I-trace filter enable vector & TBD & TBD & \textbf{set\_trace.instruction} & 19 & \textbf{trigger} \\
+    \hline
+    \textbf{version} & 4 & TE version & \textbf{teImpl} & 0 & \textbf{discovery\_response} & TBD & arch \\
+    \hline
+    \textbf{hasSRAMSink} & 1 & TE has SRAM sink & \textbf{teImpl} & 4 & - & \\
+    \hline
+    \textbf{hasATBSink} & 1 & TE has ATB sink & \textbf{teImpl} & 5 & - &\\
+    \hline
+    \textbf{hasPIBSink} & 1 & TE has PIB sink & \textbf{teImpl} & 6 & - &\\
+    \hline
+    \textbf{hasSBASink} & 1 & TE has SBA sink & \textbf{teImpl} & 7 & - & &\\
+    \hline
+    \textbf{hasFunnelSink} & 1 & TE has funnel sink & \textbf{teImpl} & 8 & - &\\
+    \hline
+    \textbf{reserved} & 11 & 9 & & & & &\\
+    \hline
+    \textbf{SrcID} & 4 & Source ID & \textbf{teImpl} & 20 & - &\\
+    \hline
+    \textbf{nSrcBits} & 3 & Width of source ID & \textbf{teImpl} & 24 & & &\\
+    \hline
+  \end{tabulary}
+\end{table}
+
