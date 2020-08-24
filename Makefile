@@ -1,11 +1,13 @@
-SPEC=riscv-trace-spec
+SPEC_TEX=riscv-trace-spec
+SPEC=$(SPEC_TEX)
 
-INCLUDES_TEX = introduction.tex branchTrace.tex exampleAlgorithm.tex filtering.tex futures.tex ingressPort.tex payload.tex preamble.tex riscv-trace-spec.tex decoder.tex discovery.tex exampleCodeSnippets.tex
+INCLUDES_TEX = introduction.tex branchTrace.tex exampleAlgorithm.tex filtering.tex futures.tex ingressPort.tex payload.tex dataTracePayload.tex control.tex preamble.tex riscv-trace-spec.tex decoder.tex discovery.tex exampleCodeSnippets.tex
 
 all:	$(SPEC).pdf
 
-$(SPEC).pdf: $(SPEC).tex $(INCLUDES_TEX) vc.tex 
-	pdflatex -shell-escape $< && makeindex $(SPEC) && pdflatex -shell-escape $<
+$(SPEC).pdf: $(SPEC_TEX).tex $(INCLUDES_TEX) vc.tex 
+	echo $(SPEC)
+	pdflatex -shell-escape $< && makeindex $(SPEC_TEX) && pdflatex -shell-escape $<
 
 publish:	$(SPEC).pdf
 	cp $< $(SPEC)-`git rev-parse --abbrev-ref HEAD`.`git rev-parse --short HEAD`.pdf

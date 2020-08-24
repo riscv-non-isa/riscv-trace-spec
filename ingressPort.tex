@@ -1,8 +1,11 @@
 \chapter{Hart to encoder interface} \label{Interface}
 
-\section{Interface requirements}
-This section describes in general terms the information which must be passed from the RISC-V hart to the trace encoder,
-and distinguishes between what is mandatory, and what is optional.
+\section{Instruction Trace Interface requirements}\label{sec:InstructionInterfaceRequirements}
+
+This section describes in general terms the information which must be
+passed from the RISC-V hart to the trace encoder for the purposes of
+Instruction Trace, and distinguishes between what is mandatory, and
+what is optional.
 
 The following information is mandatory:
 
@@ -154,9 +157,9 @@ in a fine-grained multi-threaded configuration, the frequent context changes tha
 as a result of thread-switching would result in extremely poor encoding efficiency, and so
 this configuration is not recommended.)
 
-\section{Instruction interface}
+\section{Instruction Trace Interface}\label{sec:InstructionTraceInterface}
 This section describes the interface between a RISC-V hart and the
-trace encoder that conveys the information described in the previous section.  
+trace encoder that conveys the information described in the section ~\ref{sec:InstructionInterfaceRequirements}.  
 Signals are assigned to one of the  following groups:
 
 \begin{itemize}
@@ -492,4 +495,166 @@ This capability is sometimes known as a watchpoint.
         \hline
     \end{tabulary}
 \end{table}
+
+\section{Data Trace Interface requirements}\label{sec:DataInterfaceRequirements}
+
+This section describes in general terms the information which must be
+passed from the RISC-V hart to the trace encoder for the purposes of
+Data Trace, and distinguishes between what is mandatory, and what is
+optional.
+
+If Data Trace is not needed in a system then there is no requirement
+for the RISC-V hart to supply any of the signals in section
+~\ref{sec:DataTraceInterface}.
+
+Data trace supports up to four data access types: load, store, atomic and CSR.  
+Support for atomic and CSR accesses is optional.  
+
+The signalling protocol can take one of two forms, depending on the needs of the RISC-V 
+hart: \textit{unified} or \textit{split}.
+
+Unified is the simplest form, suitable for simpler, in-order harts.  In this form, all
+information about a data access is signalled by the RISC-V hart in the
+same cycle that the associated data access instruction is reported on the instruction
+trace interface.  
+
+For harts with out of order or speculative execution capabilites, many loads may be in 
+progress simultaneously, and this approach is not practical as it would require the hart 
+to maintain a large amount of state relating to all the in-progress loads.  For this 
+reason, the interface also supports splitting loads into two parts:
+
+\begin{itemize}
+  \item The \textit{request} phase provides all information about the load that 
+    originates from the hart (address, size, etc.) when the instruction retires;
+  \item The \textit{response} phase provides the data and response status when it has
+    been returned to the hart from the memory system.
+\end{itemize}
+
+The two parts of a split load are associated by use of a transaction ID.
+
+\section{Data Trace Interface}\label{sec:DataTraceInterface}
+
+This section describes the interface between a RISC-V hart and the
+trace encoder that conveys the information described in the
+section~\ref{sec:DataInterfaceRequirements}.  Signals are assigned to
+one of the following groups:
+
+\begin{itemize}
+  \item M: Mandatory.  The interface must include an instance of this signal;
+  \item U: Unified.  Mandatory for unified signalling;
+  \item S: Split.  Mandatory for split load signalling;
+  \item O: Optional.  The interface may include an instance of this signal.
+\end{itemize}
+
+\begin{table}[htp]
+    \centering
+    \caption{Data interface signals}
+    \label{tab:data-ingress}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
+        \hline
+        \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
+        \hline
+        \textbf{dretire} & M & Data access retired\\
+        \hline
+        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type: \newline
+        0: Load\newline
+        1: Store\newline
+        2: reserved\newline
+        3: reserved\newline
+        4: CSR read-write\newline
+        5: CSR read-set\newline
+        6: CSR read-clear\newline
+        7: reserved\newline
+        8: Atomic swap\newline
+        9: Atomic add\newline
+        10: Atomic AND\newline
+        11: Atomic OR\newline
+        12: Atomic XOR\newline
+        13: Atomic max\newline
+        14: Atomic min\newline
+        15: reserved\\
+        \hline
+        \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & M & The data access address\\
+        \hline
+        \textbf{dsize}[\textit{dsize\_width\_p}-1:0] & M & The data access size is 2\textsuperscript{\textbf{dsize}} bytes\\
+        \hline
+        \textbf{data}[\textit{data\_width\_p}-1:0] & U & The data\\
+        \hline
+        \textbf{iaddr\_lsbs}[\textit{iaddr\_lsbs\_width\_p}-1:0] & O & LSBs of the data access instruction address.  Required if \textit{retires\_p} > 1\\
+        \hline
+        \textbf{dblock}[\textit{dblock\_width\_p}-1:0] & O & Instruction block in which the data access instruction is retired.  Required if there 
+          are replicated instruction block signals\\
+        \hline
+        \textbf{lrid}[\textit{lrid\_width\_p}-1:0] & S & Load request ID. Valid when \textbf{dretire} is high\\
+        \hline        
+        \textbf{lresp}[\textit{lresp\_width\_p}-1:0] & S & Load response:\newline
+        0: None\newline
+        1: reserved\newline
+        2: Okay.  Load successful; \textbf{ldata} valid\newline
+        3: Error. Load failed; \textbf{ldata} not valid\\
+        \hline        
+        \textbf{lid}[\textit{lrid\_width\_p}-1:0] & S & Split Load ID. Valid when \textbf{lresp} is non-zero\\
+        \hline        
+        \textbf{sdata}[\textit{sdata\_width\_p}-1:0] & S & Store data. Valid when \textbf{dretire} is high\\
+        \hline        
+        \textbf{ldata}[\textit{ldata\_width\_p}-1:0] & S & Load data. Valid when \textbf{lresp} is non-zero\\
+        \hline        
+    \end{tabulary}
+\end{table}
+
+All signals in M, U and O groups are only valid when \textbf{dretire} is high.  Signals in the S group are valid as
+indicated in table \ref{tab:data-ingress}.
+
+The maximum value of \textit{dtype\_width\_p} is 4.  However, if only loads and stores are supported, 
+\textit{dtype\_width\_p} can be 1.  If CSRs are supported but atomics are not, \textit{dtype\_width\_p} can be 3.
+
+Atomic and CSR accesses have either both load and store data, or store data and an operand.  For CSRs and unified
+atomics, both values are reported via \textbf{data}, with the store data in the LSBs and the load data or operand
+in the MSBs.
+
+\textit{lrid\_width\_p} is determined by the maximum number of loads that can be in progress simultaneously, such
+that at any one time there can be no more than one load in progress with a given ID.
+
+\textbf{iaddr\_lsbs} and \textbf{dblock} are provided to support filtering of which data accesses to trace
+based on their instruction address.  This is best illustrated by considering the following instruction sequence:
+
+\begin{enumerate}
+  \item load
+  \item <some non data access instruction>
+  \item load
+  \item <some non data access instruction>
+  \item <some non data access instruction>
+\end{enumerate}
+ 
+Suppose the hart is capable of retiring up to 4 instructions in a cycle, via a single block.   Instruction trace is 
+enabled throughout, but the requirement is to collect data trace for the 1st load (instruction 1), and filtering is
+configured to match the address of this instruction only.  However, information about instruction addresses is passed 
+to the encoder at the block level, and the block boundaries are invisible to the decoder.  For instruction trace, 
+all instructions in a block are traced if any of the instructions in that block match the filtering criteria.  
+That is fine for instruction trace - the address of the 1st and last traced instruction are output explicitly.  
+There will be some fuzziness about precisely what those addresses will be depending on where the block boundaries 
+fall, but this is not a concern as everything is always self-consistent.
+ 
+However, that is not the case for data trace.  Consider two scenarios:
+
+\begin{itemize}
+  \item Case 1: 1st block contains instructions 1, 2, 3; second block contains 4, 5
+  \item Case 2: 1st block contains instructions 1,2; second block contains 3, 4, 5
+\end{itemize}
+ 
+Given that \textbf{dvalid} is high in the same cycle that the data access retires, the encoder knows the address of 
+the 1st and last instructions in a block, but does not know precisely where in the block the data access is.  
+In both cases, the first block matches the filtering criteria (it contains the address of instruction 1), and the second block does not.  
+But if the encoder traced all the data accesses in the matching block, then in case 1 it would trace both instructions 1 and 3, whereas 
+in the second case it would trace only instruction 1.  The decoder has no visibility of the block boundaries so cannot account for this.
+It is expecting only instruction 1 to be traced, and so may misinterpret instruction 3.  If this code is in a loop for example, it will 
+assume that the 2nd traced load is in fact instruction 1 from the next loop iteration, rather than instruction 3 from this iteration.
+ 
+Providing the LSBs of the data access instruction address allows the decoder to determine precisely whether the data access should be 
+traced or not, and removes the dependency on the block sizes and boundaries.  The number of bits required is one more bit than the 
+number required to index within the block because blocks can start on any half-word boundary.
+ 
+For harts that replicate the block signals to allow multiple blocks to retire per cycle it is also necessary to indicate which block 
+each data access is associated with, so the encoder knows which block address to combine with the LSBs in order to construct the 
+actual data access instruction address.  1 bit for 2 blocks per cycle, 2 bits for 4, and so on.
 
