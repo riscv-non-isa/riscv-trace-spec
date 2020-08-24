@@ -2,6 +2,108 @@
 
 Need to add definitions for individual fields here.
 
+Fields are categorized into the following groups:
+
+\begin{itemize}
+  \item M: Mandatory
+  \item O: Optional
+  \item MD: Mandatory if data trace is supported
+  \item OD: Optional for data trace
+  \item F: Optional for filtering.
+\end{itemize}
+
+Other abreviations used in the tables are:
+\begin{itemize}
+  \item \textbf{W} column heading indicates field width
+  \item \textbf{G} column heading indicates field group
+  \item \textbf{Rst} column heading indicates field reset value
+  \item SD in \textbf{Rst} column indicates a system dependent reset value
+\end{itemize}
+
+\section{Basic Control} \label{sec:ctl-basic}
+
+The following fields control basic encoding behaviour.
+
+\begin{table}[htp]
+  \centering
+  \caption{Basic Control}
+  \label{tab:ctl-basic}
+  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{90mm}|}
+    \hline
+    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
+    \hline
+    \textbf{Active} & 1 & M & RW & 0 & Master enable for trace system.  When 0, the trace system may have clocks gated off or be powered down,
+     and other register locations may be inaccessible.
+      Hardware may take arbitrarily long to process power-up or power-down and will indicate completion when the read value of this bit
+      matches the value written.\\
+    \hline
+    \textbf{iEnable} & 1 & M & RW & 0 & Instruction trace enable.  Setting to 0 flushes any queued instruction trace.\\
+    \hline
+    \textbf{dEnable} & 1 & MD & RW & 0 & Data trace enable.  Setting to 0 flushes any queued data trace.\\
+    \hline
+    \textbf{iTrigEnable} & 1 & O & RW & 0 & When 1, allows \textbf{iEnable} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
+      Debug module triggers respectively (see \ref{sec:trigger}).\\
+    \hline
+    \textbf{dTrigEnable} & 1 & OD & RW & 0 & When 1, allows \textbf{dEnable} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
+      Debug module triggers respectively (see \ref{sec:trigger}).\\
+    \hline
+    \textbf{stallEnable} & 1 & O & RW & 0 & When 0, if the encoder cannot accept trace input from the RISC-V hart, trace is lost, and is
+      indicated via the \textit{Support} trace packet (see table~\ref{sec:format31}).\newline
+      When 1, the \textbf{stall} output signal is asserted to stall the RISC-V hart until trace can be accepted (see table~\ref{tab:egress-side-band}).\\
+    \hline
+    \textbf{Empty} & 1 & O & R & 1 & Reads as 1 when all trace has been emitted.  Note: this status is also indicated via the 
+      \textit{Support} trace packet (see table~\ref{sec:format31}).\\
+    \hline
+    \textbf{ResyncMode} & 2 & M & RW & SD & Selects the resynchronization mechanism.  At least one non-zero mechanism must be implemented.\newline
+    0: Off\newline
+    1: Count trace packets\newline
+    2: Count clock cycles\newline
+    3: Count instruction half-words\\
+    \hline
+    \textbf{ResyncMax} & 4 & O & RW & SD & The maximum interval (in units determined by \textbf{ResyncMode}) between synchronization packets
+    (see tables~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\FloatBarrier
+\section{Optional Modes} \label{sec:ctl-modes}
+
+See section~\ref{optional} for details of the modes covered in this section.  \textbf{Author note:} data trace mode descriptions need adding.
+
+\begin{table}[htp]
+  \centering
+  \caption{Optional and run-time configurable modes}
+  \label{tab:ctl-resync}
+  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{90mm}|}
+    \hline
+    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
+    \hline
+    \textbf{FullAddress} & 1 & O & RW & SD & Send only full (non-differential) addresses when set\\
+    \hline
+    \textbf{ImplicitExcept} & 1 & O & RW & SD & When set, do not send exception address, only exception cause in 
+      Exception packets (see table~\ref{sec:format31})\\
+    \hline
+    \textbf{siJump} & 1 & O & RW & SD & Do not treat sequentially inferrable jumps as uninferable PC discontinuities when set.\\
+    \hline
+    \textbf{ImplicitReturn} & 1 & O & RW & SD & Do not treat returns as uninferable PC discontinuities when set.\\
+    \hline
+    \textbf{BranchPrediction} & 1 & O & RW & SD & Branch predictor enabled when set.\\
+    \hline
+    \textbf{JumpTargetCache} & 1 & O & RW & SD & Jump target cache enabled when set.\\
+    \hline
+  \end{tabulary}
+\end{table}
+
+
+\section{Filtering} \label{sec:ctl-filter}
+
+Details to follow
+
+\section{Buffering and Transport} \label{sec:ctl-transport}
+
+Details to follow
+
 \section{Message mapping to register proposal} \label{sec:messageToRegiser}
 
 \begin{table}[htp]
