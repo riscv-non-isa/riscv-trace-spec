@@ -1,6 +1,6 @@
-\chapter{Trace Encoder Output Packets} \label{packets}
+\chapter{Instruction Trace Encoder Output Packets} \label{packets}
 
-The bulk of this section describes the payload of packets output from the Trace Encoder.  
+The bulk of this section describes the payload of packets output from the Instruction Trace Encoder.
 The infrastructure used to transport these packets is outside the scope of this document, and
 as such the manner in which packets are encapsulated for transport is not specified.
 However, the following information must be provided to the encapsulator:
@@ -92,7 +92,7 @@ subformat 0 and subformat 1 packets.
 \section{Format 3 subformat 0 - Synchronisation} \label{sec:format30}
 
 This packet contains all the information the decoder needs to fully identify an instruction.  It is sent for
-the first traced instruction (unless that instruction also happens to be a the first in an exception handler), 
+the first traced instruction (unless that instruction also happens to be the first in an exception handler), 
 and when resynchronization has been scheduled by expiry of the resynchronisation timer.
 
 \begin{table}[htp]
@@ -147,7 +147,7 @@ This packet also contains all the information the decoder needs to fully identif
 It is sent following an exception, and as well as reporting the address of the exception handler, it also 
 includes the exception cause and the address of the faulted instruction.
 
-If the implicit exception mode is enabled (see section~\ref{sec:implicit-exception}), the address is omited.
+If the implicit exception mode is enabled (see section~\ref{sec:implicit-exception}), the address is omitted.
 
 \begin{table}[htp]
   \centering
@@ -454,7 +454,7 @@ instruction before an exception, interrupt, privilege change or resync.  There a
 \section{Format 1 packets} \label{sec:format1}
 
 This packet includes branch information, and is used when either the branch information must be reported 
-(for example because the branch map is full), or whe the address of an instruction must be reported, and there has 
+(for example because the branch map is full), or when the address of an instruction must be reported, and there has 
 been at least one branch since the previous packet.  If included, the address is in differential format unless full 
 address mode is enabled (see section~\ref{sec:full-address}).
 

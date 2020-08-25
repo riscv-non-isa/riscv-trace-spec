@@ -9,12 +9,12 @@ Fields are categorized into the following groups:
   \item O: Optional
   \item MD: Mandatory if data trace is supported
   \item OD: Optional for data trace
-  \item F: Optional for filtering.
+  \item F: Optional for filtering
 \end{itemize}
 
-Other abreviations used in the tables are:
+Other abbreviations used in the tables are:
 \begin{itemize}
-  \item \textbf{W} column heading indicates field width
+  \item \textbf{W} column heading indicates field width (in bits)
   \item \textbf{G} column heading indicates field group
   \item \textbf{Rst} column heading indicates field reset value
   \item SD in \textbf{Rst} column indicates a system dependent reset value
@@ -22,7 +22,7 @@ Other abreviations used in the tables are:
 
 \section{Basic Control} \label{sec:ctl-basic}
 
-The following fields control basic encoding behaviour.
+The following fields control basic encoding behavior.
 
 \begin{table}[htp]
   \centering
@@ -58,7 +58,7 @@ The following fields control basic encoding behaviour.
     0: Off\newline
     1: Count trace packets\newline
     2: Count clock cycles\newline
-    3: Count instruction half-words\\
+    3: Count instruction (16-bit) half-words\\
     \hline
     \textbf{ResyncMax} & 4 & O & RW & SD & The maximum interval (in units determined by \textbf{ResyncMode}) between synchronization packets
     (see tables~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
