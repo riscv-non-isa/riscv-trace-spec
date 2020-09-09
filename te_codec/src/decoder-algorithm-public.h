@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 UltraSoC Technologies Limited
+ * Copyright (c) 2019,2020 UltraSoC Technologies Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,6 +76,7 @@ extern "C" {
 #define TE_DEBUG_PACKETS            (1u << 3)
 #define TE_DEBUG_JUMP_TARGET_CACHE  (1u << 4)
 #define TE_DEBUG_BRANCH_PREDICTION  (1u << 5)
+#define TE_DEBUG_EXCEPTIONS         (1u << 6)
 
 
 /*
@@ -145,7 +146,8 @@ extern "C" {
 
 
 /*
- * There is a relatively high cost of calling the function get_instr(),
+ * There is a relatively high cost of calling the function
+ * te_get_and_disassemble_instr(), which is aliased to get_instr(),
  * and this function is called at lot! This function may need to:
  *  1) retrieve an instruction from an Elf binary (for a given address)
  *  2) decode the retrieved instruction (using riscv-disassembler)
@@ -209,6 +211,8 @@ typedef enum
     TE_INST_EXTN_BRANCH_PREDICTOR = 0,  /* branch predictor */
     TE_INST_EXTN_JUMP_TARGET_CACHE = 1, /* jump target cache */
 } te_inst_extensions_t;
+#define TE_NUM_EXTENSIONS       2       /* number of extensions */
+
 
 /* enumerate the 2-bit qualification status */
 typedef enum
@@ -241,17 +245,17 @@ typedef enum
  * which "operating mode" the trace-encoder is currently using.
  *
  * The initial focus is with the "compressed branch trace", hence
- * there is initially only a single possible algorithm listed here
- * ... more may be added in the future.
+ * there is initially only a single algorithm ("delta mode 1")
+ * listed here ... more may be added in the future.
  *
- * Note: TE_ALGORITHM_NUM_BITS should be the minimum number of bits
- * required to encode the largest value of type te_trace_algorithm_t.
+ * Note: TE_ENCODER_MODE_BITS should be the minimum number of bits
+ * required to encode the largest value of type te_encoder_mode_t.
  */
 typedef enum
 {
-    TE_ALGORITHM_COMPRESSED_BRANCH = 0, /* compressed branch trace algorithm */
-} te_trace_algorithm_t;
-#define TE_ALGORITHM_NUM_BITS      (0u) /* number of bits to send te_trace_algorithm_t */
+    TE_ENCODER_MODE_DELTA = 0,          /* 00 (delta): delta mode 1 (aka compressed branch trace) */
+} te_encoder_mode_t;
+#define TE_ENCODER_MODE_BITS    (1u)    /* number of bits to send te_encoder_mode_t */
 
 /*
  * enumerate the sub-set of "exception causes" (ecause) used
@@ -266,14 +270,36 @@ typedef enum
 
 
 /*
+ * enumerate the set of error codes for the function
+ * unrecoverable_error()
+ */
+typedef enum
+{
+    TE_ERROR_OKAY = 0,          /* this is NOT an error condition! */
+    TE_ERROR_DEPLETED,
+    TE_ERROR_UNINFERRABLE,
+    TE_ERROR_BAD_FOLLOW,
+    TE_ERROR_UNPROCESSED,
+    TE_ERROR_IMPLICT_EXCEPTION,
+    TE_ERROR_NOT_FORMAT3,
+    TE_ERROR_NUM_ERRORS         /* must be last in list */
+} te_error_code_t;
+
+
+/*
  * The following structure is used to hold the decoded and
  * disassembled information for a single RISC-V instruction.
+ *
+ * Empirically, 84 bytes is the length of the longest
+ * disassembled line observed thus far, but other (unseen)
+ * instructions could be longer (e.g. custom instructions)!
  */
 typedef struct
 {
     rv_decode   decode;     /* from the riscv-disassembler repo */
     unsigned    length;     /* instruction size (in bytes) */
-    char        line[80];   /* disassembly line for printing */
+    bool        custom;     /* true if a custom instruction */
+    char        line[88];   /* disassembly line for printing */
 } te_decoded_instruction_t;
 
 
@@ -281,7 +307,7 @@ typedef struct
  * The following is used to cache a sub-set of the fields in the
  * discovery_response packet for this Trace-Encoder IP block.
  */
-typedef struct
+typedef struct te_discovery_response_t
 {
     unsigned int version;               /* 9-bits */
     unsigned int call_counter_size;     /* 4-bits */
@@ -329,6 +355,8 @@ typedef struct
 typedef struct
 {
     unsigned int        support_type;   /* 4-bits */
+    bool                enable;         /* 1-bit */
+    te_encoder_mode_t   encoder_mode;   /* TE_ENCODER_MODE_BITS-bits */
     te_qual_status_t    qual_status;    /* 2-bits */
     te_options_t        options;        /* run-time configuration bits */
 } te_support_t;
@@ -345,12 +373,14 @@ typedef struct
     /* counters for each type of te_inst format */
     size_t num_format[4];       /* index is two bits */
     /* counters for each type of te_inst format 0 sub-format */
-    size_t num_extention[2];    /* index is one bit */
+    size_t num_extention[TE_NUM_EXTENSIONS];    /* variable bits */
     /* counters for each type of te_inst format 3 sub-format */
     size_t num_subformat[4];    /* index is two bits */
 
-    /* counter that increments each time the PC is changed */
+    /* counter for each instruction that is retired */
     size_t num_instructions;
+    /* counter for each instruction that raises an exception  */
+    size_t num_exceptions;
 
     /*
      * counters for total number of branch instructions,
@@ -422,94 +452,9 @@ typedef struct
 
 
 /*
- * The following structure is used to hold all the state
- * for a single instance of a trace-decoder ... this allows
- * a plurality of trace-decoders to be running simultaneously,
- * with each core being traced having its own unique instance
- * of this structure (and hence state)
- */
-typedef struct
-{
-    /* Reconstructed program counter */
-    te_address_t pc;
-    /* PC of previously retired instruction */
-    te_address_t last_pc;
-    /* Number of branches to process */
-    uint64_t branches;
-    /* Bit vector of not taken/taken (1/0) status for branches */
-    uint32_t branch_map;    /* a maximum of 32 such taken bits */
-    /* Flag to indicate reconstruction is to end at the final branch */
-    bool stop_at_last_branch;
-    /* Flag to indicate that reported address from format != 3 was
-     * not following an uninferrable jump (and is therefore inferred) */
-    bool inferred_address;
-    /* true if 1st trace packet still to be processed */
-    bool start_of_trace;
-
-    /* array holding return address stack (only when "implicit_return" is 1) */
-    te_address_t return_stack[TE_MAX_IRSTACK_DEPTH];
-    /* depth of the return address stack, zero == stack is empty */
-    size_t irstack_depth;
-
-    /*
-     * Following is the "normalized" (i.e. un-shifted, non-differential) address
-     * corresponding to the "address" field in the most recent te_inst packet.
-     * Both the trace-encoder, and the trace-decoder (as peers) should
-     * maintain the same value for this, and always keep them in sync.
-     */
-    te_address_t last_sent_addr;
-
-    /* fields from the discovery_response packets */
-    te_discovery_response_t discovery_response;
-
-    /*
-     * set of run-time configuration "option" bits from the most
-     * recently received te_inst synchronization support packet
-     */
-    te_options_t options;
-
-    /* the most recent privilege level reported */
-    uint8_t privilege;      /* up to 4-bits */
-
-    /* pointer to user-data, whatever was passed to te_open_trace_decoder() */
-    void * user_data;
-
-    /* the ISA to use (for riscv-disassembler) */
-    rv_isa isa;
-
-    /* allocate memory for a "jump target cache" */
-    te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
-
-    /* following used only if we enable a branch predictor */
-    te_bpred_t bpred;
-
-    /* collection of various counters, to generate statistics */
-    te_statistics_t statistics;
-
-    /* number of non-sync packets received, since last sync packet */
-    uint32_t non_sync_packets;
-
-    /* see comment above for an explanation of this decode cache */
-    te_decoded_instruction_t decoded_cache[TE_DECODED_CACHE_SIZE];
-
-    /* maintain a few statistics about decoded_cache[] */
-    unsigned long num_gets;
-    unsigned long num_same;
-    unsigned long num_hits;
-
-    /* the FILE I/O stream to which to write all debug info */
-    FILE * debug_stream;
-
-    /* the set of active debug flags (OR-ed together) */
-    unsigned int debug_flags;
-} te_decoder_state_t;
-
-
-
-/*
  * list of fields used in a te_inst packet.
  */
-typedef struct
+typedef struct te_inst_t
 {
     /* following used by all formats */
     te_inst_format_t format;/* 2-bits */
@@ -520,6 +465,18 @@ typedef struct
      * it is used to help qualify fields that are.
      */
     bool with_address;      /* true if the "address" field is valid */
+
+    /*
+     * The following field is not transmitted at all in any real
+     * packets from the hardware trace-encoder. However, it may
+     * be used by a software trace-encoder, purely to help with
+     * debugging activities of the software trace-decoder itself.
+     * That is, this field optionally might include a count of
+     * the number of instructions that will be reconstructed by
+     * following the execution path.
+     * The core algorithm does not depend on this field at all.
+     */
+    size_t icount;          /* instruction count */
 
     /* following not used by TE_INST_FORMAT_3_SYNC */
     unsigned branches;      /* 5-bits */
@@ -578,9 +535,154 @@ typedef struct
 
     /* following only used by TE_INST_FORMAT_0_EXTN */
     te_inst_extensions_t extension; /* sub-format for optional efficiency extensions */
-    unsigned jtc_index;     /* cache_size_p-bits, index for the jump target cache */
-    uint64_t correct_predictions;  /* maximum value is 2^32 - 1 + 31 */
+    union
+    {
+        struct
+        {
+            unsigned index; /* cache_size_p-bits, index for the jump target cache */
+        }   jtc;            /* jump-target-cache specific extensions */
+        struct
+        {
+            uint64_t correct_predictions;  /* maximum value is 2^32 - 1 + 31 */
+            te_branch_fmt_t branch_fmt;
+        }   bpred;          /* branch-predictor specific extensions */
+    } u;                    /* union of extensions */
 } te_inst_t;
+
+
+/*
+ * The following are the function pointers called-back,
+ * and used by this trace-decoder algorithm to:
+ *
+ *  1) retrieve the raw binary instruction value,
+ *     and its length, at a given address
+ *     [This is NOT optional, and must be provided.]
+ *
+ *  2) provide any required support for using custom RISC-V
+ *     instructions. For non-custom instruction, this does
+ *     nothing. For custom instructions, it can overwrite
+ *     both the disassemble line, and the decoded state.
+ *     [This is optional, and need not be provided.]
+ *
+ *  3) notify the user that the PC has been updated
+ *     [This is optional, and need not be provided.]
+ *
+ * Users of this code are expected to implement each of
+ * the (non-optional) functions as appropriate, and pass
+ * pointers to them when te_open_trace_decoder() is called.
+ * These functions will be called-back (via function pointers)
+ * from this trace-decoder algorithm, from time to time.
+ *
+ * All of these functions are passed a "user_data" void pointer,
+ * which is whatever was passed to te_open_trace_decoder().
+ */
+typedef unsigned (te_get_instruction_t)(
+    void * const user_data,
+    const te_address_t address,
+    rv_inst * const instruction);
+
+typedef void (te_do_custom_instruction_t)(
+    void * const user_data,
+    te_decoded_instruction_t * const instr);
+
+typedef void (te_advance_decoded_pc_t)(
+    void * const user_data,
+    const te_address_t old_pc,
+    const te_address_t new_pc,
+    const te_decoded_instruction_t * const new_instruction);
+
+
+/*
+ * The following structure is used to hold all the state
+ * for a single instance of a trace-decoder ... this allows
+ * a plurality of trace-decoders to be running simultaneously,
+ * with each core being traced having its own unique instance
+ * of this structure (and hence state)
+ */
+typedef struct te_decoder_state_t
+{
+    /* Reconstructed program counter */
+    te_address_t pc;
+    /* PC of previously retired instruction */
+    te_address_t last_pc;
+    /* Number of branches to process */
+    uint64_t branches;
+    /* Bit vector of not taken/taken (1/0) status for branches */
+    uint32_t branch_map;    /* a maximum of 32 such taken bits */
+    /* Flag to indicate reconstruction is to end at the final branch */
+    bool stop_at_last_branch;
+    /* Flag to indicate that reported address from format != 3 was
+     * not following an uninferrable jump (and is therefore inferred) */
+    bool inferred_address;
+    /* true if 1st trace packet still to be processed */
+    bool start_of_trace;
+
+    /* array holding return address stack (only when "implicit_return" is 1) */
+    te_address_t return_stack[TE_MAX_IRSTACK_DEPTH];
+    /* depth of the return address stack, zero == stack is empty */
+    size_t irstack_depth;
+
+    /*
+     * Following is the "normalized" (i.e. un-shifted, non-differential) address
+     * corresponding to the "address" field in the most recent te_inst packet.
+     * Both the trace-encoder, and the trace-decoder (as peers) should
+     * maintain the same value for this, and always keep them in sync.
+     */
+    te_address_t last_sent_addr;
+
+    /* fields from the discovery_response packets */
+    te_discovery_response_t discovery_response;
+
+    /*
+     * set of run-time configuration "option" bits from the most
+     * recently received te_inst synchronization support packet
+     */
+    te_options_t        options;
+    te_encoder_mode_t   encoder_mode;
+
+    /* the most recent privilege level reported */
+    uint8_t privilege;      /* up to 4-bits */
+
+    /* pointer to user-data, whatever was passed to te_open_trace_decoder() */
+    void * user_data;
+
+    /* set of function pointers for call-backs */
+    te_get_instruction_t       * get_instruction;
+    te_do_custom_instruction_t * do_custom_instruction;
+    te_advance_decoded_pc_t    * advance_decoded_pc;
+
+    /* the ISA to use (for riscv-disassembler) */
+    rv_isa isa;
+
+    /* allocate memory for a "jump target cache" */
+    te_address_t jump_target[TE_JUMP_TARGET_CACHE_SIZE];
+
+    /* following used only if we enable a branch predictor */
+    te_bpred_t bpred;
+
+    /* collection of various counters, to generate statistics */
+    te_statistics_t statistics;
+
+    /* number of non-sync packets received, since last sync packet */
+    uint32_t non_sync_packets;
+
+    /* see comment above for an explanation of this decode cache */
+    te_decoded_instruction_t decoded_cache[TE_DECODED_CACHE_SIZE];
+
+    /* maintain a few statistics about decoded_cache[] */
+    unsigned long num_gets;
+    unsigned long num_same;
+    unsigned long num_hits;
+
+    /* the FILE I/O stream to which to write all debug info */
+    FILE * debug_stream;
+
+    /* the set of active debug flags (OR-ed together) */
+    unsigned int debug_flags;
+
+    /* error code, if an unrecoverable error was encountered */
+    te_error_code_t error_code;
+} te_decoder_state_t;
 
 
 /*
@@ -593,38 +695,19 @@ extern void te_process_te_inst(
 
 extern te_decoder_state_t * te_open_trace_decoder(
     te_decoder_state_t * decoder,
+    te_get_instruction_t * const get_instruction,
+    te_do_custom_instruction_t * const do_custom_instruction,
+    te_advance_decoded_pc_t * const advance_decoded_pc,
     void * const user_data,
     const rv_isa isa);
 
 extern void te_print_decoded_cache_statistics(
     const te_decoder_state_t * const decoder);
 
-
-/*
- * The following are external functions USED by this code to:
- *
- *  1) retrieve the raw binary instruction value,
- *     and its length, at a given address
- *
- *  2) notify the user that the PC has been updated
- *
- * Users of this code are expected to implement each of
- * these functions as appropriate, as they will be called
- * by the trace-decoder algorithm from time to time.
- *
- * Some of these functions are passed a "user_data" void pointer,
- * which is whatever was passed to te_open_trace_decoder().
- */
-extern unsigned te_get_instruction(
-    void * const user_data,
+extern te_decoded_instruction_t * te_get_and_disassemble_instr(
+    te_decoder_state_t * const decoder,
     const te_address_t address,
-    rv_inst * const instruction);
-
-extern void te_advance_decoded_pc(
-    void * const user_data,
-    const te_address_t old_pc,
-    const te_address_t new_pc,
-    const te_decoded_instruction_t * const new_instruction);
+    te_decoded_instruction_t * const instr);
 
 
 #ifdef __cplusplus
