@@ -136,7 +136,7 @@ Jumps may optionally be further classified according to the recommended calling 
     \end{itemize}
 \end{itemize}
 
-\subsection{Relationship betweem RISC-V core and the encoder} \label{sec:relationship}
+\subsection{Relationship between RISC-V core and the encoder} \label{sec:relationship}
 
 The encoder is intended to encode the instructions executed on a single hart.  
 
@@ -276,7 +276,7 @@ zero. \textbf{cause} and \textbf{tval} are only defined if
 \textbf{itype} is 1 or 2. If \textbf{iretire}=0 and \textbf{itype}=0,
 the values of all other signals are undefined.
 
-\textbf{iretire} contains the number of half-words represented by
+\textbf{iretire} contains the number of (16-bit) half-words represented by
 instructions retired in this block, and \textbf{ilastsize} the size of the last
 instruction.  Half-words rather than instruction count enables the encoder to easily compute the address of
 the last instruction in the block without having access to the size of every 
@@ -287,7 +287,7 @@ indicate all uninferable jumps.  This is simpler to implement, but precludes use
 (see section~\ref{sec:implicit-return}), which requires jump types to be fully classified.
 
 Whilst \textbf{iaddr} is typically a virtual address, it does not affect the encoder's behavior
-if it is a phyical address.
+if it is a physical address.
 
 For harts that can retire a maximum of N branches per clock
 cycle, the signal groups MR, OR and either BR or SR must be replicated N times. 
@@ -324,7 +324,7 @@ The \textbf{context} field can be used to convey any additional information to t
 \end{itemize}
 
 Table~\ref{tab:context-type} specifies the actions for the various \textbf{ctype} values.  A typical 
-behaviour would be for this signal to remain zero except on the 1st retirement after a context change.
+behavior would be for this signal to remain zero except on the 1st retirement after a context change.
 \textit{ctype\_width\_p} may be 1 or 2.  The reduced width option only provides support for reporting
 context changes imprecisely.
 
@@ -381,7 +381,7 @@ solution is to use one instance of signals from groups BR, MR and OR.  However, 
 N branches in a cycle, N instances of signals from groups MR, OR and either SR or BR must be used 
 (each instance can be either a single instruction or a block).
 
-If the hart can retire N instructions per cycle, but only one branch, it is allowed (though not recommmended)
+If the hart can retire N instructions per cycle, but only one branch, it is allowed (though not recommended)
 to provide explicit details of every instruction retired by using N instances of signals from groups
 SR, MR and OR.
 
@@ -508,7 +508,7 @@ for the RISC-V hart to supply any of the signals in section
 ~\ref{sec:DataTraceInterface}.
 
 Data trace supports up to four data access types: load, store, atomic and CSR.  
-Support for atomic and CSR accesses is optional.  
+Support for both atomic and CSR accesses are independently optional.
 
 The signalling protocol can take one of two forms, depending on the needs of the RISC-V 
 hart: \textit{unified} or \textit{split}.
@@ -518,13 +518,13 @@ information about a data access is signalled by the RISC-V hart in the
 same cycle that the associated data access instruction is reported on the instruction
 trace interface.  
 
-For harts with out of order or speculative execution capabilites, many loads may be in 
+For harts with out of order or speculative execution capabilities, many loads may be in 
 progress simultaneously, and this approach is not practical as it would require the hart 
 to maintain a large amount of state relating to all the in-progress loads.  For this 
 reason, the interface also supports splitting loads into two parts:
 
 \begin{itemize}
-  \item The \textit{request} phase provides all information about the load that 
+  \item The \textit{request} phase provides all the information about the load that
     originates from the hart (address, size, etc.) when the instruction retires;
   \item The \textit{response} phase provides the data and response status when it has
     been returned to the hart from the memory system.
@@ -554,7 +554,7 @@ one of the following groups:
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline
-        \textbf{dretire} & M & Data access retired\\
+        \textbf{dretire} & M & Data access retired (when high)\\
         \hline
         \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type: \newline
         0: Load\newline

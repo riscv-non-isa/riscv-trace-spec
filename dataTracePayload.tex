@@ -6,8 +6,8 @@ One option is for instruction and data trace to be issued using different IDs (f
 different \textbf{ATID} values).  Alternatively, an additional field as part of the packet encapsulation can be 
 used (UltraSoC use a 2-bit \textbf{msg\_type} field to differentiate different trace types from the same source).
 
-By default, all trace packets include both address and data.  However, provision is made for run-time 
-configuration options to exclude either the address or data, in order to minimize trace bandwidth.  For example,
+By default, all data trace packets include both address and data.  However, provision is made for run-time 
+configuration options to exclude either the address or the data, in order to minimize trace bandwidth.  For example,
 if filtering has been configured to only trace from a specific data access address there is no need to report
 the address in the trace.  Alternatively, the user may want to know which locations are accessed but not care 
 about the data value. Information about whether address or data are omitted is not encoded in the packets
@@ -44,7 +44,7 @@ The following sections include examples for all three cases.
     \textbf{data} & 8 * (\textbf{data\_len} + 1) & 
                 Data\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by size to recover byte address \\
+    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -70,7 +70,7 @@ The following sections include examples for all three cases.
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1:  Differential address\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by size to recover byte address \\
+    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -125,7 +125,7 @@ The following sections include examples for all three cases.
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1: Differential address\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by size to recover byte address \\
+    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -167,7 +167,7 @@ Unified loads and split load request phase share the same code because the encod
 other, indicated by a discoverable parameter.
 
 Data accesses aligned to their size (e.g. 32-bit loads aligned to 32-bit word boundaries) are expected to
-be commonplace, and in such cases, encoding efficiency can be improved by not reporting the LSBs of the address.
+be commonplace, and in such cases, encoding efficiency can be improved by not reporting the redundant LSBs of the address.
 
 \subsection{size field} \label{sec:loadstore-size}
 
