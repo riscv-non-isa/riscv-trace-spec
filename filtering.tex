@@ -18,15 +18,34 @@ it may be desirable to trace:
 
 How this is accomplished is implementation specific.  
 
-One suggested implementation provides: 
+One suggested implementation partitions the architecture into filters and comparators in order to provide maximum flexibility at 
+low cost.  The number of filters and comparators is system dependent.
+
+Each comparator unit is actually a pair of comparators (Primary and Secondary, or P, S) allowing a bounded range to be matched with a single unit
+if required, and offers:
 
 \begin{itemize}
-  \item Comparators offering a range of arithmetic options (<, >, =, !=, etc) for \textbf{iaddress}, 
-    \textbf{context} and \textbf{tval} inputs;
-  \item Multiple choice selection for \textbf{priv} and \textbf{cause} inputs;
-  \item Masked matching for \textbf{interrupt} and \textbf{impdef} inputs;
-  \item The ability to enable tracing when \textbf{trigger[0]} is asserted, and continue tracing 
-    until \textbf{trigger[0]} is asserted (see Section~\ref{sec:trigger}).
+  \item input selected from \textbf{iaddress}, \textbf{context} and \textbf{tval} (and \textbf{daddress} if data
+    trace is supported);
+  \item A range of arithmetic options (<, >, =, !=, etc) independently selectable for each comparator;
+  \item Secondary match value may be used as a mask for the primary comparator;
+  \item The two comparators can be combined in several ways: P, P\&\&S, !(P\&\&S), latch (set on P clear on S);
+  \item Each comparator can also be used to explcitly report a particular instruction address (i.e. generate a watchpoint).
 \end{itemize}
+
+Each filter can specify filtering against instruction and optionally data trace inputs from the HART, and offers:
+
+\begin{itemize}
+  \item Require up to 3 run-time selectable comparator units to match;
+  \item Multiple choice selection for \textbf{priv} and \textbf{cause} inputs (and \textbf{dtype} if data trace is supported);
+  \item Masked matching for \textbf{interrupt} and \textbf{impdef} inputs.
+\end{itemize}
+
+Allowing for up to 3 comparators allows for simultaneous matching on Address, Trap value and context (unlikely, but should not 
+be architecturally precluded).
+
+The filtering configuration fields are detailed in section~\ref{encoderControl}.  These support the architecture described 
+above, though will also support simpler implementations, for example where the comparator function is more tightly coupled with
+each filter, or where filtering is provided on only some inputs (such as just instruction address).
 
 
