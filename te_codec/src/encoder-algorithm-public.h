@@ -188,7 +188,9 @@ typedef struct te_encoder_state_t
     te_bpred_t bpred;
 
     /* collection of various counters, to generate statistics */
+#if defined(TE_WITH_STATISTICS)
     te_statistics_t statistics;
+#endif  /* TE_WITH_STATISTICS */
 
     /* the FILE I/O stream to which to write all debug info */
     FILE * debug_stream;

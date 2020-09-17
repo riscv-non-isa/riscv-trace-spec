@@ -282,6 +282,7 @@ typedef enum
     TE_ERROR_UNPROCESSED,
     TE_ERROR_IMPLICT_EXCEPTION,
     TE_ERROR_NOT_FORMAT3,
+    TE_ERROR_INVALID_PACKET,
     TE_ERROR_NUM_ERRORS         /* must be last in list */
 } te_error_code_t;
 
@@ -354,7 +355,6 @@ typedef struct
  */
 typedef struct
 {
-    unsigned int        support_type;   /* 4-bits */
     bool                enable;         /* 1-bit */
     te_encoder_mode_t   encoder_mode;   /* TE_ENCODER_MODE_BITS-bits */
     te_qual_status_t    qual_status;    /* 2-bits */
@@ -368,12 +368,13 @@ typedef struct
  * traced instructions ... ultimately to print various
  * statistics about a trace session.
  */
+#if defined(TE_WITH_STATISTICS)
 typedef struct
 {
     /* counters for each type of te_inst format */
     size_t num_format[4];       /* index is two bits */
     /* counters for each type of te_inst format 0 sub-format */
-    size_t num_extention[TE_NUM_EXTENSIONS];    /* variable bits */
+    size_t num_extension[TE_NUM_EXTENSIONS];    /* variable bits */
     /* counters for each type of te_inst format 3 sub-format */
     size_t num_subformat[4];    /* index is two bits */
 
@@ -411,6 +412,18 @@ typedef struct
         size_t hits;
         size_t with_bmap;    /* total number of packets with a branch-map */
         size_t without_bmap; /* total number of packets without a branch-map */
+            /*
+             * total number of times that we got a "hit", but there
+             * were just too many branches to use a JTC packet.
+             */
+        size_t too_many_branches;
+            /*
+             * following is used to count the total number of times
+             * that prefer_jtc_extension() (if defined) decided
+             * NOT to use a JTC efficient extension packet, even
+             * though it was legitimate to use such a packet!
+             */
+        size_t not_preferred;
     }   jtc;
 
     /* counters for the branch predictor table, bpred_table[] */
@@ -425,6 +438,7 @@ typedef struct
         size_t without_address; /* total number of packets without an address */
     }   bpred;
 } te_statistics_t;
+#endif  /* TE_WITH_STATISTICS */
 
 
 /*
@@ -661,7 +675,9 @@ typedef struct te_decoder_state_t
     te_bpred_t bpred;
 
     /* collection of various counters, to generate statistics */
+#if defined(TE_WITH_STATISTICS)
     te_statistics_t statistics;
+#endif  /* TE_WITH_STATISTICS */
 
     /* number of non-sync packets received, since last sync packet */
     uint32_t non_sync_packets;
@@ -670,9 +686,11 @@ typedef struct te_decoder_state_t
     te_decoded_instruction_t decoded_cache[TE_DECODED_CACHE_SIZE];
 
     /* maintain a few statistics about decoded_cache[] */
+#if defined(TE_WITH_STATISTICS)
     unsigned long num_gets;
     unsigned long num_same;
     unsigned long num_hits;
+#endif  /* TE_WITH_STATISTICS */
 
     /* the FILE I/O stream to which to write all debug info */
     FILE * debug_stream;
@@ -701,8 +719,10 @@ extern te_decoder_state_t * te_open_trace_decoder(
     void * const user_data,
     const rv_isa isa);
 
+#if defined(TE_WITH_STATISTICS)
 extern void te_print_decoded_cache_statistics(
     const te_decoder_state_t * const decoder);
+#endif  /* TE_WITH_STATISTICS */
 
 extern te_decoded_instruction_t * te_get_and_disassemble_instr(
     te_decoder_state_t * const decoder,
