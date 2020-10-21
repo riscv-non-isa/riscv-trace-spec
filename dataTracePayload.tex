@@ -212,6 +212,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		101: MAX\newline	
 		110: MIN\newline	
 		111: reserved\\	
+
     \hline
     \textbf{size} & 1 & Transfer size is 2\textsuperscript{\textbf{size}+2} bytes\\
     \hline
@@ -254,7 +255,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		100: XOR\newline	
 		101: MAX\newline	
 		110: MIN\newline	
-		111: reserved\\	
+		\textcolor{red}{111: store conditional store failure}\\	
     \hline
     \textbf{size} & 1 & Transfer size is 2\textsuperscript{\textbf{size}+2} bytes\\
     \hline

@@ -25,32 +25,31 @@
 \usepackage{algpseudocode}
 
 \usepackage{hyperref}
-%\usepackage{changepage}
 
-\newcommand{\versionnum}{1.1.1-Draft}
+\newcommand{\versionnum}{1.1.2-Draft}
 
 \input{vc.tex}
 
 \begin{document}
 \setcounter{footnote}{0}
 
-\title{RISC-V Processor Trace\\
-Version \versionnum\\
+\title{\textcolor{red}{Efficient Trace for RISC-V}\\
+Version \textcolor{red}{\versionnum}\\
 \GITHash
 }
 
 \author{
   Gajinder Panesar, Iain Robertson \\
- \textless gajinder.panesar@ultrasoc.com\textgreater, \textless iain.robertson@ultrasoc.com\textgreater
+ \textless \textcolor{red}{gajinder\_panesar@mentor.com}\textgreater, \textless \textcolor{red}{iain\_robertson@mentor.com}\textgreater
  \and
- UltraSoC Technologies Ltd.
+ \textcolor{red}{Mentor Graphics, a Siemens Business}.
 }
 
 
 \maketitle
 
-\markboth{RISC-V Processor Trace Version \versionnum}
-{RISC-V Processor Trace Version \versionnum}
+\markboth{\textcolor{red}{Efficient Trace for RISC-V Version} \textcolor{red}{\versionnum}}
+{\textcolor{red}{Efficient Trace for RISC-V Version} \textcolor{red}{\versionnum}}
 \thispagestyle{empty}
 
 \frontmatter
@@ -66,11 +65,11 @@ Version \versionnum\\
 \input{branchTrace.tex}
 \input{ingressPort.tex}
 \input{filtering.tex}
+\input{timestamping.tex}
 \input{payload.tex}
 \input{dataTracePayload.tex}
 \input{exampleAlgorithm.tex}
 \input{discovery.tex}
-\input{futures.tex}
 \input{decoder.tex}
 \input{exampleCodeSnippets.tex}
 \newpage
