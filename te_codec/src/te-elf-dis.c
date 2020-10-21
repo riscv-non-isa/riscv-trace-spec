@@ -113,7 +113,7 @@ static int compare_tuples(
  *
  * It returns zero on success, and non-zero otherwise.
  */
-extern int te_read_one_elf_dis_file(
+int te_read_one_elf_dis_file(
     te_elf_dis_file_t * const elf_dis,
     const char * const elf_dis_name)
 {
@@ -194,7 +194,7 @@ extern int te_read_one_elf_dis_file(
  * free all the memory associated with
  * a single te_elf_dis_file_t instance
  */
-extern void te_free_one_elf_dis_file(
+void te_free_one_elf_dis_file(
     te_elf_dis_file_t * const elf_dis)
 {
     /* pointer to the first tuple in the array */
@@ -223,7 +223,7 @@ extern void te_free_one_elf_dis_file(
  * tuples ... if it exists, return the pointer to
  * the tuple ... otherwise return NULL.
  */
-extern const te_elf_dis_tuple_t * te_find_one_elf_dis_tuple(
+const te_elf_dis_tuple_t * te_find_one_elf_dis_tuple(
     const te_elf_dis_file_t * const elf_dis,
     const uint64_t address)
 {

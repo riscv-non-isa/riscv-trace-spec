@@ -38,8 +38,6 @@
 #define elements_of(array)  (sizeof(array)/sizeof(*array))
 
 
-
-
 /*
  * Fake up some default values that would be obtained through
  * "discovery", or means other than "te_inst" packets.
@@ -79,6 +77,7 @@ static const char * const error_messages[TE_ERROR_NUM_ERRORS] =
     [TE_ERROR_UNPROCESSED]          = "unprocessed branches",
     [TE_ERROR_IMPLICT_EXCEPTION]    = "implicit exception mode is not currently supported",
     [TE_ERROR_NOT_FORMAT3]          = "expecting trace to start with a format 3 packet",
+    [TE_ERROR_INVALID_PACKET]       = "invalid packet format",
 };
 
 
@@ -147,7 +146,9 @@ te_decoded_instruction_t * te_get_and_disassemble_instr(
     assert(instr);
     assert(TE_SENTINEL_BAD_ADDRESS != address);
 
+#if defined(TE_WITH_STATISTICS)
     decoder->num_gets++;        /* update statistics */
+#endif  /* TE_WITH_STATISTICS */
 
     /*
      * if the address matches the decoded one passed in ...
@@ -155,14 +156,18 @@ te_decoded_instruction_t * te_get_and_disassemble_instr(
      */
     if ( (instr->decode.pc == address) )
     {
+#if defined(TE_WITH_STATISTICS)
         decoder->num_same++;        /* update statistics */
+#endif  /* TE_WITH_STATISTICS */
         return instr;       /* referenced data is unchanged */
     }
 
     /* is "address" currently in our decoded cache ? */
     if (decoder->decoded_cache[slot].decode.pc == address)
     {
+#if defined(TE_WITH_STATISTICS)
         decoder->num_hits++;        /* update statistics */
+#endif  /* TE_WITH_STATISTICS */
         /* copy, and return the cached decode */
         *instr = decoder->decoded_cache[slot];
         return instr;       /* referenced data is updated */
@@ -265,6 +270,7 @@ static void disseminate_pc(
 
     /* do some sanity checks ... just in case! */
     assert(TE_SENTINEL_BAD_ADDRESS != decoder->pc);
+#if defined(TE_WITH_STATISTICS)
     if (decoder->statistics.num_instructions)
     {
         /* it is NOT the first transition */
@@ -275,6 +281,7 @@ static void disseminate_pc(
         /* it is the FIRST transition */
         assert(TE_SENTINEL_BAD_ADDRESS == decoder->last_pc);
     }
+#endif  /* TE_WITH_STATISTICS */
 
     /* decode & disassemble the instruction at the new PC */
     (void)get_instr(decoder, decoder->pc, &instr);
@@ -306,7 +313,9 @@ static void disseminate_pc(
     }
 
     /* advance the count of PC transitions */
+#if defined(TE_WITH_STATISTICS)
     decoder->statistics.num_instructions++;
+#endif  /* TE_WITH_STATISTICS */
 }
 
 
@@ -784,11 +793,13 @@ static bool next_pc(
 
     (void)get_instr(decoder, decoder->pc, &instr);
 
+#if defined(TE_WITH_STATISTICS)
     if (is_branch(&instr))
     {
         /* update counter with number of branch instructions */
         decoder->statistics.num_branches++;
     }
+#endif  /* TE_WITH_STATISTICS */
 
     if (is_inferrable_jump(&instr))
     {
@@ -817,14 +828,18 @@ static bool next_pc(
           stop_here = true;
         }
         /* update counter with number of unpredicted discontinuities */
+#if defined(TE_WITH_STATISTICS)
         decoder->statistics.num_updiscons++;
+#endif  /* TE_WITH_STATISTICS */
     }
     else if (is_taken_branch(decoder, &instr))
     {
         const int64_t imm = instr.decode.imm;
         decoder->pc += (te_address_t)imm;
         /* update counter with number of taken branches */
+#if defined(TE_WITH_STATISTICS)
         decoder->statistics.num_taken++;
+#endif  /* TE_WITH_STATISTICS */
     }
     else
     {
@@ -843,7 +858,9 @@ static bool next_pc(
     {
         push_return_stack(decoder, this_pc);
         /* update counter with number of function calls */
+#if defined(TE_WITH_STATISTICS)
         decoder->statistics.num_calls++;
+#endif  /* TE_WITH_STATISTICS */
     }
 
     decoder->last_pc = this_pc;
@@ -1161,18 +1178,21 @@ void te_process_te_inst(
             break;
 
         default:
-            assert(!"Invalid packet format");
+            unrecoverable_error(decoder, TE_ERROR_INVALID_PACKET, NULL);
+            return; /* return immediately if an unrecoverable error */
     }
 
     /*
      * update counters for each new te_inst packet that is received
      * for both the format, and the sub-format if it is a format 3.
      */
+#if defined(TE_WITH_STATISTICS)
     decoder->statistics.num_format[te_inst->format]++;
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
     {
         decoder->statistics.num_subformat[te_inst->subformat]++;
     }
+#endif  /* TE_WITH_STATISTICS */
 
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
     {
@@ -1196,6 +1216,7 @@ void te_process_te_inst(
         if (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat)
         {
             /* update counter with number of exceptions */
+#if defined(TE_WITH_STATISTICS)
             decoder->statistics.num_exceptions++;
 
             if ( (decoder->debug_stream) &&
@@ -1227,6 +1248,7 @@ void te_process_te_inst(
                     address,
                     instr.line);
             }
+#endif  /* TE_WITH_STATISTICS */
         }
 
         /* copy any common fields from the te_inst packet */
@@ -1349,7 +1371,9 @@ void te_process_te_inst(
         {
             assert(te_inst->u.bpred.correct_predictions);
             assert(decoder->branches <= 1u);
-            decoder->statistics.num_extention[te_inst->extension]++;
+#if defined(TE_WITH_STATISTICS)
+            decoder->statistics.num_extension[te_inst->extension]++;
+#endif  /* TE_WITH_STATISTICS */
             decoder->bpred.use_bmap_first =
                 (!!decoder->branches) &&
                 (!decoder->bpred.miss_predict_carry_in);
@@ -1367,7 +1391,9 @@ void te_process_te_inst(
                   (TE_INST_FORMAT_0_EXTN == te_inst->format) &&
                   (TE_INST_EXTN_JUMP_TARGET_CACHE == te_inst->extension) )
         {
-            decoder->statistics.num_extention[te_inst->extension]++;
+#if defined(TE_WITH_STATISTICS)
+            decoder->statistics.num_extension[te_inst->extension]++;
+#endif  /* TE_WITH_STATISTICS */
             decoder->stop_at_last_branch = false;
             /* use the address in the jump target cache */
             assert(te_inst->u.jtc.index < elements_of(decoder->jump_target));
@@ -1512,6 +1538,7 @@ te_decoder_state_t * te_open_trace_decoder(
 /*
  * if we have any yet, print out the decoded cache statistics
  */
+#if defined(TE_WITH_STATISTICS)
 void te_print_decoded_cache_statistics(
     const te_decoder_state_t * const decoder)
 {
@@ -1531,3 +1558,4 @@ void te_print_decoded_cache_statistics(
             same + hits);
     }
 }
+#endif  /* TE_WITH_STATISTICS */

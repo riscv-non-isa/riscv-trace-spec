@@ -190,11 +190,13 @@ static void send_te_inst(
     const te_address_t address = te_inst->address;
 
     /* update statistics */
+#if defined(TE_WITH_STATISTICS)
     encoder->statistics.num_format[te_inst->format]++;
     if (TE_INST_FORMAT_3_SYNC == te_inst->format)
     {
         encoder->statistics.num_subformat[te_inst->subformat]++;
     }
+#endif  /* TE_WITH_STATISTICS */
 
     /*
      * adjust the "address", if it will be sent as a
@@ -296,7 +298,11 @@ static void send_te_inst_sync(
 
     te_inst_t te_inst =
     {
+#if defined(TE_WITH_STATISTICS)
         .icount = encoder->statistics.num_instructions,
+#else   /* TE_WITH_STATISTICS */
+        .icount = 0,
+#endif  /* TE_WITH_STATISTICS */
     };
 
     /*
@@ -502,7 +508,11 @@ static void send_te_inst_non_sync(
         .address = curr->pc,
         .branches = encoder->branches,
         .branch_map = encoder->branch_map,
+#if defined(TE_WITH_STATISTICS)
         .icount = encoder->statistics.num_instructions,
+#else   /* TE_WITH_STATISTICS */
+        .icount = 0,
+#endif  /* TE_WITH_STATISTICS */
     };
 
     /*
@@ -521,10 +531,15 @@ static void send_te_inst_non_sync(
             if (encoder->jump_target[jtc_index] == curr->pc)
             {
                 jump_cache_hit = true;   /* yes it is! */
+#if defined(TE_WITH_STATISTICS)
                 encoder->statistics.jtc.hits++;
+#endif  /* TE_WITH_STATISTICS */
             }
+#if defined(TE_WITH_STATISTICS)
             encoder->statistics.jtc.lookups++;
+#endif  /* TE_WITH_STATISTICS */
         }
+#if defined(TE_WITH_STATISTICS)
         if ( (encoder->debug_stream) &&
              (encoder->statistics.jtc.lookups) &&
              (encoder->debug_flags & TE_DEBUG_JUMP_TARGET_CACHE) )
@@ -540,6 +555,7 @@ static void send_te_inst_non_sync(
                 encoder->statistics.jtc.lookups,
                 (double)(encoder->statistics.jtc.hits)/((double)encoder->statistics.jtc.lookups)*100.0);
         }
+#endif  /* TE_WITH_STATISTICS */
         /*
          * unconditionally update the jump target cache with
          * the current target ... do this for ALL non-sync packets,
@@ -558,6 +574,9 @@ static void send_te_inst_non_sync(
             {
                 /* hit, but no legal format #0 packet is possible */
                 jump_cache_hit = false;
+#if defined(TE_WITH_STATISTICS)
+                encoder->statistics.jtc.too_many_branches++;
+#endif  /* TE_WITH_STATISTICS */
             }
             else
             {
@@ -572,6 +591,13 @@ static void send_te_inst_non_sync(
                 {
                     jump_cache_hit = (encoder->prefer_jtc_extension)
                         (encoder->user_data, &te_inst);
+#if defined(TE_WITH_STATISTICS)
+                    /* if JTC is *not* preferred, then update statistics */
+                    if (!jump_cache_hit)
+                    {
+                        encoder->statistics.jtc.not_preferred++;
+                    }
+#endif  /* TE_WITH_STATISTICS */
                 }
             }
         }
@@ -588,7 +614,9 @@ static void send_te_inst_non_sync(
          */
         te_inst.format = TE_INST_FORMAT_0_EXTN;
         te_inst.extension = TE_INST_EXTN_BRANCH_PREDICTOR;
-        encoder->statistics.num_extention[te_inst.extension]++;
+#if defined(TE_WITH_STATISTICS)
+        encoder->statistics.num_extension[te_inst.extension]++;
+#endif  /* TE_WITH_STATISTICS */
         te_inst.u.bpred.correct_predictions = encoder->bpred.correct_predictions;
         te_inst.branches = 0;
         te_inst.branch_map = 0;
@@ -608,6 +636,7 @@ static void send_te_inst_non_sync(
         }
 
         /* update min, max, and accumulators for the branch-predictor */
+#if defined(TE_WITH_STATISTICS)
         if (encoder->bpred.correct_predictions > encoder->statistics.bpred.longest_sent)
         {
             encoder->statistics.bpred.longest_sent = encoder->bpred.correct_predictions;
@@ -626,6 +655,7 @@ static void send_te_inst_non_sync(
         {
             encoder->statistics.bpred.without_address++;
         }
+#endif  /* TE_WITH_STATISTICS */
     }
     else if (jump_cache_hit)
     {
@@ -635,7 +665,8 @@ static void send_te_inst_non_sync(
          */
         te_inst.format = TE_INST_FORMAT_0_EXTN;
         te_inst.extension = TE_INST_EXTN_JUMP_TARGET_CACHE;
-        encoder->statistics.num_extention[te_inst.extension]++;
+#if defined(TE_WITH_STATISTICS)
+        encoder->statistics.num_extension[te_inst.extension]++;
         if (te_inst.branches)
         {
             encoder->statistics.jtc.with_bmap++;
@@ -644,6 +675,7 @@ static void send_te_inst_non_sync(
         {
             encoder->statistics.jtc.without_bmap++;
         }
+#endif  /* TE_WITH_STATISTICS */
     }
     else if (!with_address)
     {
@@ -714,7 +746,9 @@ static void send_te_inst_non_sync(
              * eventually transmit the updiscon field in the bit-stream.
              */
             te_inst.updiscon = true;
+#if defined(TE_WITH_STATISTICS)
             encoder->statistics.num_updiscon_fields++;
+#endif  /* TE_WITH_STATISTICS */
         }
     }
 
@@ -763,6 +797,7 @@ static void clock_the_encoder(
             const te_bpred_state_t old_state =
                 (te_bpred_state_t)(encoder->bpred.table[bpred_index]);
             const bool predicted_outcome = !!(old_state & 0x2u);
+            __attribute__((unused))
             const bool previous_outcome  = !!(old_state & 0x1u);
 
             /* calculate the next value of the branch predictor state */
@@ -772,14 +807,19 @@ static void clock_the_encoder(
             if (predicted_outcome == branch_taken)
             {
                 encoder->bpred.correct_predictions++;
+#if defined(TE_WITH_STATISTICS)
                 encoder->statistics.bpred.correct++;
+#endif  /* TE_WITH_STATISTICS */
             }
             else
             {
+#if defined(TE_WITH_STATISTICS)
                 encoder->statistics.bpred.incorrect++;
+#endif  /* TE_WITH_STATISTICS */
             }
 
             /* optionally, print out what we have done */
+#if defined(TE_WITH_STATISTICS)
             if ( (encoder->debug_stream) &&
                  (encoder->debug_flags & TE_DEBUG_BRANCH_PREDICTION) )
             {
@@ -799,6 +839,7 @@ static void clock_the_encoder(
                     encoder->bpred.correct_predictions,
                     (predicted_outcome == branch_taken) ? "CORRECTLY PREDICATED" : "miss-predicted");
             }
+#endif  /* TE_WITH_STATISTICS */
 
             /* finally update the lookup table with the new state */
             encoder->bpred.table[bpred_index] = (uint8_t)new_state;
@@ -1224,11 +1265,15 @@ void te_encode_one_irecord(
          */
         if (encoder->second->is_exception)
         {
+#if defined(TE_WITH_STATISTICS)
             encoder->statistics.num_exceptions++;
+#endif  /* TE_WITH_STATISTICS */
         }
         else
         {
+#if defined(TE_WITH_STATISTICS)
             encoder->statistics.num_instructions++;
+#endif  /* TE_WITH_STATISTICS */
         }
 
         clock_the_encoder(encoder);
