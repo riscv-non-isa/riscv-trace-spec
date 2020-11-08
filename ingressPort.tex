@@ -12,7 +12,12 @@ The following information is mandatory:
 \begin{itemize}
   \item The number of instructions that are being retired;
   \item Whether there has been an exception or interrupt, and if so the cause (from the \textbf{\textit{ucause/scause/mcause}} CSR)
-        and trap value (from the \textbf{\textit{utval/stval/mtval}} CSR);
+        and trap value (from the \textbf{\textit{utval/stval/mtval}} CSR).
+
+\textcolor{green}{The register set to output should be the set that is updated as a
+result of the exception (i.e. the set associated with the privilege
+level immediately following the exception)};
+
   \item The current privilege level of the RISC-V hart;
   \item The \textit{instruction\_type} of retired instructions for:
     \begin{itemize}

@@ -28,11 +28,11 @@ may be passed in to the design by some means.
         \hline
         \textit{ctype\_width\_p} & & Width of the \textbf{ctype} bus\\
         \hline
-        \textit{context\_width\_p} &  & Width of context bus \\
+        \textit{context\_width\_p} &  & Width of \textcolor{green}{\textbf{context}} bus \\
         \hline
-        \textcolor{red}{\textit{time\_width\_p}} &  & \textcolor{red}{Width of time bus} \\
+        \textcolor{green}{\textit{time\_width\_p}} &  & \textcolor{green}{Width of \textcolor{green}{\textbf{time}} bus} \\
         \hline
-        \textit{ecause\_width\_p} &  & Width of exception cause bus \\
+        \textit{ecause\_width\_p} &  & Width of \textcolor{green}{\textbf{exception cause}} bus \\
         \hline
         \textit{ecause\_choice\_p} & & Number of bits of exception cause to match using multiple choice \\
         \hline
@@ -48,9 +48,9 @@ may be passed in to the design by some means.
         \hline
         \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 (provided \textit{filter\_excint\_p} is non-zero) \\
         \hline
-        \textit{iaddress\_lsb\_p} & & LSB of instruction address bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
+        \textit{iaddress\_lsb\_p} & & LSB of instruction \textcolor{red}{\textbf{address}} bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
         \hline
-        \textit{iaddress\_width\_p} & & Width of instruction address bus. This is the same as \textit{DXLEN}\\
+        \textit{iaddress\_width\_p} & & Width of instruction \textcolor{red}{\textbf{address}} bus. This is the same as \textit{DXLEN}\\
         \hline
         \textit{iretire\_width\_p} & & Width of the \textbf{iretire} bus\\
         \hline
@@ -62,7 +62,7 @@ may be passed in to the design by some means.
         \hline
         \textcolor{red}{\textit{notime\_p}} & \textcolor{red}{0} or \textcolor{red}{1} & \textcolor{red}{Exclude time from \textit{te\_inst} packets if 1} \\
         \hline
-        \textit{privilege\_width\_p} & & Width of privilege bus \\
+        \textit{privilege\_width\_p} & & Width of \textcolor{red}{\textbf{privilege}} bus \\
         \hline
         \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
         \hline
@@ -73,7 +73,7 @@ may be passed in to the design by some means.
         \hline
         \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype} etc. are replicated\\
         \hline
-        \textit{impdef\_width\_p} & & Width of implementation-defined input bus \\
+        \textit{impdef\_width\_p} & & Width of \textcolor{red}{\textbf{implementation-defined input}} bus \\
         \hline
     \end{tabulary}
 \end{table}
@@ -124,9 +124,9 @@ Section~\ref{sec:ipxact} gives an example of how this may be accomplished.
         \hline
         \textit{iaddress\_width} & 31 & \textit{iaddress\_width\_p} - 1 \\
         \hline
-        \textit{nocontext} & 0 & \textit{nocontext} \\
+        \textit{nocontext} & \textcolor{red}{1} & \textit{nocontext} \\
         \hline
-        \textcolor{red}{\textit{notime}} & \textcolor{red}{0} & \textcolor{red}{\textit{notime}} \\
+        \textcolor{red}{\textit{notime}} & \textcolor{red}{1} & \textcolor{red}{\textit{notime}} \\
         \hline
         \textit{privilege\_width} & 2 & \textit{privilege\_width\_p} - 1 \\
         \hline
