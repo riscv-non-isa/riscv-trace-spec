@@ -11,8 +11,9 @@ The following information is mandatory:
 
 \begin{itemize}
   \item The number of instructions that are being retired;
-  \item Whether there has been an exception or interrupt, and if so the cause (from the \textbf{\textit{ucause/scause/mcause}} CSR)
-        and trap value (from the \textbf{\textit{utval/stval/mtval}} CSR).
+  \item Whether there has been an exception or interrupt, and if so the cause 
+        (from the \textbf{\textit{ucause/scause/\textcolor{cyan}{vscause/}mcause}} CSR)
+        and trap value (from the \textbf{\textit{utval/stval/\textcolor{cyan}{vstval/}mtval}} CSR).
 
 \textcolor{green}{The register set to output should be the set that is updated as a
 result of the exception (i.e. the set associated with the privilege
@@ -41,10 +42,10 @@ level immediately following the exception)};
 The following information is optional:
 
 \begin{itemize}
-  \item \textcolor{red}{Context or Time information}:
+  \item Context or Time information:
     \begin{itemize}
-      \item \textcolor{red}{The context and/or hart ID and/or time};
-      \item \textcolor{red}{The type of action to take when context or time data changes.}
+      \item The context and/or hart ID and/or time;
+      \item The type of action to take when context or time data changes.
     \end{itemize}
   \item The \textit{instruction\_type} of instructions for:
     \begin{itemize}
@@ -58,10 +59,10 @@ The following information is optional:
       \item Jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
       \item Jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code.
     \end{itemize}
-  \item \textcolor{red}{If context or time is supported then the \textit{instruction\_address}} for:
+  \item If context or time is supported then the \textit{instruction\_address} for:
     \begin{itemize}
-      \item \textcolor{red}{The last instruction retired before a context or a time change;}
-      \item \textcolor{red}{The first instruction retired following a context or time change}.
+      \item The last instruction retired before a context or a time change;
+      \item The first instruction retired following a context or time change.
     \end{itemize}
   \item Whether jump targets are sequentially inferable or not.
 \end{itemize}
@@ -170,9 +171,9 @@ Signals are assigned to one of the  following groups:
 \begin{itemize}
   \item M: Mandatory.  The interface must include an instance of this signal.
   \item O: Optional.  The interface may include an instance of this signal.
-  \item MR: Mandatory, may be replicated. For harts that can retire a maximum of N taken branches per clock
+  \item MR: Mandatory, may be replicated. For harts that can retire a maximum of N \textcolor{cyan}{"special"} instructions per clock
     cycle, the interface must include N instances of this signal.
-  \item OR: Optional, may be replicated. For harts that can retire a maximum of N taken branches per clock
+  \item OR: Optional, may be replicated. For harts that can retire a maximum of N \textcolor{cyan}{"special"} per clock
     cycle, the interface must include zero or N instances of this signal.
   \item BR: Block, may be replicated.  Mandatory for harts that can retire multiple instructions in a block.  
     Replication as per OR.  If omitted, the interface must include SR group signals instead.
@@ -180,6 +181,7 @@ Signals are assigned to one of the  following groups:
     Replication as per OR (see section~\ref{sec:alt-multi}).  If omitted, the interface must include BR 
     group signals instead.
 \end{itemize}
+\textcolor{cyan}{"Special" instructions are those that require \textbf{itype} to be non-zero.}
 
 \begin{table}[htp]
     \centering
@@ -189,52 +191,35 @@ Signals are assigned to one of the  following groups:
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline
-        \textbf{itype}[\textit{itype\_width\_p}-1:0] & MR & Termination type of the instruction block (see Section~\ref{Jump Classes} for definitions of codes 6 - 15):\newline
-        0: Final instruction in the block is none of the other named \textbf{itype} codes;\newline
-        1: Exception. An exception that traps occurred following the final retired instruction in the block;\newline
-        2: Interrupt. An interrupt that traps occurred following the final retired instruction in the block;\newline
-        3: Exception or interrupt return;\newline
-        4: Nontaken branch;\newline
-        5: Taken branch;\newline
-        6: Uninferable jump if \textit{itype\_width\_p} is 3, reserved otherwise;\newline
-        7: reserved;\newline
-        8: Uninferable call;\newline
-        9: Inferrable call;\newline
-        10: Uninferable tail-call;\newline
-        11: Inferrable tail-call;\newline
-        12: Co-routine swap;\newline
-        13: Return;\newline
-        14: Other uninferable jump;\newline
-        15: Other inferable jump.\\
+        \textbf{itype}[\textit{itype\_width\_p}-1:0] & MR & Termination type of the instruction block.  Encoding given in Table~\ref{tab:itype}
+         (see Section~\ref{Jump Classes} for definitions of codes 6 - 15).\\
         \hline
-        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & M & Exception or interrupt cause (\textbf{\textit{ucause/scause/ mcause}}).
+        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & M & Exception or interrupt cause (\textbf{\textit{ucause/scause/ \textcolor{cyan}{vscause/}mcause}}).
         Ignored unless \textbf {itype}=1 or 2.\\
         \hline
         \textbf{tval}[\textit{iaddress\_width\_p}-1:0] & M & The associated trap value, e.g. the
         faulting virtual address for address exceptions, as would be
-        written to the \textbf{utval/stval/mtval} CSR. Future optional extensions may define \textbf{tval} 
+        written to the \textbf{utval/stval/\textcolor{cyan}{vstval/}mtval} CSR. Future optional extensions may define \textbf{tval} 
         to provide ancillary information in cases where it currently supplies zero.
         Ignored unless \textbf{itype}=1 or 2.\\
         \hline
-        \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions retired on this cycle.\\
+        \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions retired on this cycle.
+        Encoding given in Table~\ref{tab:priv}.  Codes 4-7 optional.\\
         \hline
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.
         Invalid if \textbf{iretire}=0 \\
         \hline
         \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context for all instructions retired on this cycle.\\
         \hline
-        \textcolor{red}{\textbf{time}[\textit{time\_width\_p}-1:0]} & \textcolor{red}{O} & \textcolor{red}{Time generated by the core}\\
+        \textbf{time}[\textit{time\_width\_p}-1:0] & O & Time generated by the core.\\
         \hline
-        \textbf{ctype}[\textit{ctype\_width\_p}-1:0] & O & Reporting behavior for \textbf{context}:\newline
-        0: Don't report; \newline
-        1: Report imprecisely;\newline
-        2: Report precisely;\newline
-        3: Report as asynchronous discontinuity.\\
+        \textbf{ctype}[\textit{ctype\_width\_p}-1:0] & O & Reporting behavior for \textbf{context}.  
+        Encoding given in Table~\ref{tab:context-type}.  Codes 2-3 optional.\\
         \hline
         \textbf{sijump} & OR & If \textbf{itype} indicates that this block ends with an uninferable discontinuity, setting this signal to 1 
         indicates that it is sequentially inferable and may be treated as inferable by the encoder if the preceding 
         \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} has been traced.  
-        Ignored for \textbf{itype} codes other than 8, 10, 12 or 14.\\
+        Ignored for \textbf{itype} codes other than \textcolor{cyan}{6,} 8, 10, 12 or 14.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -269,6 +254,54 @@ Signals are assigned to one of the  following groups:
     \end{tabulary}
 \end{table}
 
+\begin{table}[htp]
+    \centering
+    \caption{Instruction Type (\textbf{itype}) encoding}
+    \label{tab:itype}
+    \begin{tabulary}{\textwidth}{|l|p{140mm}|}
+      \hline
+      \textbf{Value} & \textbf{Description} \\
+      \hline
+      0  & Final instruction in the block is none of the other named \textbf{itype} codes\\
+      1  & Exception. An exception that traps occurred following the final retired instruction in the block\\
+      2  & Interrupt. An interrupt that traps occurred following the final retired instruction in the block\\
+      3  & Exception or interrupt return\\
+      4  & Nontaken branch\\
+      5  & Taken branch\\
+      6  & Uninferable jump if \textit{itype\_width\_p} is 3, reserved otherwise\\
+      7  & reserved\\
+      8  & Uninferable call\\
+      9  & Inferrable call\\
+      10 & Uninferable tail-call\\
+      11 & Inferrable tail-call\\
+      12 & Co-routine swap\\
+      13 & Return\\
+      14 & Other uninferable jump\\
+      15 & Other inferable jump\\
+      \hline
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Privilege level (\textbf{priv}) encoding}
+    \label{tab:priv}
+    \begin{tabulary}{\textwidth}{|l|p{140mm}|}
+      \hline
+      \textbf{Value} & \textbf{Description} \\
+      \hline
+        \textcolor{cyan}{0} & \textcolor{cyan}{U}\\
+        \textcolor{cyan}{1} & \textcolor{cyan}{S/HS}\\
+        \textcolor{cyan}{2} & \textcolor{cyan}{reserved}\\
+        \textcolor{cyan}{3} & \textcolor{cyan}{M}\\
+        \textcolor{cyan}{4} & \textcolor{cyan}{D (debug mode)}\\
+        \textcolor{cyan}{5} & \textcolor{cyan}{VU}\\
+        \textcolor{cyan}{6} & \textcolor{cyan}{VS}\\
+        \textcolor{cyan}{7} & \textcolor{cyan}{reserved}\\
+      \hline
+    \end{tabulary}
+\end{table}
+
 Tables~\ref{tab:common-ingress} and ~\ref{tab:multi-ingress}
 list the signals in the interface designed to efficiently support retirement of multiple 
 instructions per cycle.  The following discussion describes the multiple-retirement behavior.  
@@ -296,16 +329,18 @@ indicate all uninferable jumps.  This is simpler to implement, but precludes use
 Whilst \textbf{iaddr} is typically a virtual address, it does not affect the encoder's behavior
 if it is a physical address.
 
-For harts that can retire a maximum of N branches per clock
-cycle, the signal groups MR, OR and either BR or SR must be replicated N times. 
+For harts that can retire a maximum of N \textcolor{cyan}{non-zero \textbf{itype} values} per clock
+cycle, the signal groups MR, OR and either BR or SR must be replicated N times.  
+\textcolor{cyan}{Typically N is determined by the maximum number of branches that can be retired per clock cycle.}
 Signal group 0 represents information about the oldest instruction block, and group N-1
 represents the newest instruction block. The interface supports no more
-than one privilege, context, exception or interrupt per cycle and so signals in
+than one privilege \textcolor{cyan}{change}, context \textcolor{cyan}{change}, 
+exception or interrupt per cycle and so signals in
 groups M and O are not replicated. Furthermore, \textbf{itype} can only
 take the value 1 or 2 in one of the signal groups, and this must be
 the newest valid group (i.e. \textbf{iretire} and \textbf{itype} must
-be zero for higher numbered groups). If fewer than N branches
-are retired in a cycle, then lower numbered groups must be used
+be zero for higher numbered groups). If fewer than N \textcolor{cyan}{groups are required} 
+in a cycle, then lower numbered groups must be used
 first. For example, if there is one branch, use only group 0, if
 there are two branches, instructions up to the 1st branch
 must be reported in group 0 and instructions up to the 2nd branch
@@ -328,13 +363,13 @@ The \textbf{context} and/or the \textbf{time} field can be used to convey any ad
   \item In cases where a single encoder is being shared amongst multiple harts 
   (see section~\ref{sec:relationship}), it could also be used to indicate the hart ID, in cases where the 
   hart ID can be changed dynamically.
-\textcolor{red}{\item Time from within the hart}
+\item Time from within the hart
 \end{itemize}
 
 Table~\ref{tab:context-type} specifies the actions for the various
 \textbf{ctype} values.  A typical behavior would be for this signal to
 remain zero except on the 1st retirement after a context change
-\textcolor{red}{or when a time value should be reported}.
+or when a time value should be reported.
 \textit{ctype\_width\_p} may be 1 or 2.  The reduced width option only
 provides support for reporting context changes imprecisely.
 
@@ -433,7 +468,7 @@ will need to be applied via the \textbf{context} input.
     \centering
     \caption{Optional sideband encoder output signals}
     \label{tab:egress-side-band}
-    \begin{tabulary}{\textwidth}{|l|l|p{130mm}|}
+    \begin{tabulary}{\textwidth}{|l|l|p{125mm}|}
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline
@@ -458,7 +493,7 @@ caused the trigger is retired.
     \centering
     \caption{Debug Module trigger support (\textbf{\textit{mcontrol}} \textbf{action})}
     \label{tab:debugModuleTriggerSupport}
-    \begin{tabulary}{\textwidth}{|l|p{120mm}|}
+    \begin{tabulary}{\textwidth}{|l|p{140mm}|}
         \hline
         \textbf {Value} & \textbf {Description} \\
         \hline
@@ -475,8 +510,13 @@ caused the trigger is retired.
     \end{tabulary}
 \end{table}
 
-Trace-on and Trace-off actions provide a means for the hart to control when tracing occurs.  
-Trace-notify provides  means to ensure that a specified instruction is explicitly reported.  
+Trace-on and Trace-off actions provide a means for the hart to control when tracing
+\textcolor{cyan}{starts and stops.  It is recommended that tracing starts from the oldest  
+instruction retired in the cycle that Trace-on is asserted, and stops following the newest
+instruction retired in the cycle that Trace-off is asserted (subject to any optional filtering).}
+
+Trace-notify provides means to ensure that a specified instruction is explicitly reported 
+\textcolor{cyan}{(subject to any optional filtering)}.  
 This capability is sometimes known as a watchpoint.
 
 \FloatBarrier
@@ -566,23 +606,7 @@ one of the following groups:
         \hline
         \textbf{dretire} & M & Data access retired (when high)\\
         \hline
-        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type: \newline
-        0: Load\newline
-        1: Store\newline
-        2: reserved\newline
-        3: reserved\newline
-        4: CSR read-write\newline
-        5: CSR read-set\newline
-        6: CSR read-clear\newline
-        7: reserved\newline
-        8: Atomic swap\newline
-        9: Atomic add\newline
-        10: Atomic AND\newline
-        11: Atomic OR\newline
-        12: Atomic XOR\newline
-        13: Atomic max\newline
-        14: Atomic min\newline
-        15: reserved\\
+        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in Table~\ref{tab:itype}\\
         \hline
         \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & M & The data access address\\
         \hline
@@ -609,6 +633,34 @@ one of the following groups:
         \hline        
         \textbf{ldata}[\textit{ldata\_width\_p}-1:0] & S & Load data. Valid when \textbf{lresp} is non-zero\\
         \hline        
+    \end{tabulary}
+\end{table}
+
+\begin{table}[htp]
+    \centering
+    \caption{Data access type (\textbf{dtype}) encoding}
+    \label{tab:dtype}
+    \begin{tabulary}{\textwidth}{|l|p{140mm}|}
+      \hline
+      \textbf{Value} & \textbf{Description} \\
+        \hline
+        0  & Load\\
+        1  & Store\\
+        2  & reserved\\
+        3  & reserved\\
+        4  & CSR read-write\\
+        5  & CSR read-set\\
+        6  & CSR read-clear\\
+        7  & reserved\\
+        8  & Atomic swap\\
+        9  & Atomic add\\
+        10 & Atomic AND\\
+        11 & Atomic OR\\
+        12 & Atomic XOR\\
+        13 & Atomic max\\
+        14 & Atomic min\\
+        15 & reserved\\
+      \hline
     \end{tabulary}
 \end{table}
 

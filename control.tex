@@ -14,8 +14,9 @@ Other abbreviations used in the tables are:
 \begin{itemize}
   \item \textbf{W} column heading indicates field width (in bits)
   \item \textbf{G} column heading indicates field group
-  \item \textbf{Rst} column heading indicates field reset value
-  \item SD in \textbf{Rst} column indicates a system dependent reset value
+  \item \textcolor{cyan}{\textbf{RW} column heading indicates whether bit is read-only (R), or read-write (RW).  
+    For the latter, it is allowed but not required that the bit be writable}
+  \item \textbf{Rst} column heading indicates field reset value. SD in this column indicates a system dependent reset value
 \end{itemize}
 
 \section{Basic Control} \label{sec:ctl-basic}
@@ -35,14 +36,20 @@ The following fields control basic encoding behavior.
       Hardware may take arbitrarily long to process power-up or power-down and will indicate completion when the read value of this bit
       matches the value written.\\
     \hline
-    \textbf{iEnable} & 1 & M & RW & 0 & Instruction trace enable.  Setting to 0 flushes any queued instruction trace.\\
+    \textbf{\textcolor{cyan}{teEnable}} & \textcolor{cyan}{1} & \textcolor{cyan}{M} & \textcolor{cyan}{RW} & \textcolor{cyan}{0} & 
+      \textcolor{cyan}{Master trace enable.  Trace can be enabled via \textbf{iEnable}
+      or \textbf{dEnable} when 1. Setting to 0 flushes any queued trace data to the designated sink.}\\
     \hline
-    \textbf{dEnable} & 1 & MD & RW & 0 & Data trace enable.  Setting to 0 flushes any queued data trace.\\
+    \textbf{\textcolor{cyan}{iTracing}} & 1 & M & RW & 0 & Instruction trace enable.  \textcolor{cyan}{When 1, trace will be generated,
+       subject to any optional filtering.  May be written by software, or via triggers if \textbf{iTrigEnable} is 1.}  \\
     \hline
-    \textbf{iTrigEnable} & 1 & O & RW & 0 & When 1, allows \textbf{iEnable} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
+    \textbf{\textcolor{cyan}{dTracing}} & 1 & MD & RW & 0 & Data trace enable.  \textcolor{cyan}{When 1, trace will be generated,
+       subject to any optional filtering.  May be written by software, or via triggers if \textbf{dTrigEnable} is 1.}  \\
+    \hline
+    \textbf{iTrigEnable} & 1 & O & RW & 0 & When 1, allows \textcolor{cyan}{iTracing} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
       Debug module triggers respectively (see \ref{sec:trigger}).\\
     \hline
-    \textbf{dTrigEnable} & 1 & OD & RW & 0 & When 1, allows \textbf{dEnable} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
+    \textbf{dTrigEnable} & 1 & OD & RW & 0 & When 1, allows \textcolor{cyan}{dTracing} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
       Debug module triggers respectively (see \ref{sec:trigger}).\\
     \hline
     \textbf{stallEnable} & 1 & O & RW & 0 & When 0, if the encoder cannot accept trace input from the RISC-V hart, trace is lost, and is
