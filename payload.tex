@@ -113,8 +113,8 @@ and when resynchronization has been scheduled by expiry of the resynchronisation
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the reported instruction\\
     \hline
-    \textbf{\textcolor{red}{time}} &  \textcolor{red}{\textit {time\_width\_p} or 0 if \textit {notime\_p} is 1} & 
-               \textcolor{red}{The time value.}\\
+    \textbf{time} &  \textit {time\_width\_p} or 0 if \textit {notime\_p} is 1 & 
+               The time value.\\
     \hline
     \textbf{context} &  \textit {context\_width\_p}, 
                or 0 if \textit {nocontext\_p} is 1 & 
@@ -170,8 +170,8 @@ If the implicit exception mode is enabled (see section~\ref{sec:implicit-excepti
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the reported instruction.\\
     \hline
-    \textbf{\textcolor{red}{time}} &  \textcolor{red}{\textit {time\_width\_p} or 0 if \textit {notime\_p} is 1} & 
-               \textcolor{red}{The time value.} \\
+    \textbf{time} &  \textit {time\_width\_p} or 0 if \textit {notime\_p} is 1 & 
+               The time value. \\
     \hline
     \textbf{context} &  \textit {context\_width\_p}, or 0 if \textit {nocontext\_p} is 1 & The instruction context  \\
     \hline
@@ -200,7 +200,8 @@ instructions, loads or stores that are mis-aligned, but not for illegal instruct
 \FloatBarrier
 \section{Format 3 subformat 2 - Context} \label{sec:format32}
 
-\textcolor{red}{This packet contains only the context and/or the timestamp, and is output when the context value changes and can be reported imprecisely (see Table~\ref{tab:context-type}).}
+This packet contains only the context and/or the timestamp, and is output when the context value 
+changes and can be reported imprecisely (see Table~\ref{tab:context-type}).
 
 \begin{table}[htp]
   \centering
@@ -217,8 +218,8 @@ instructions, loads or stores that are mis-aligned, but not for illegal instruct
     \textbf{privilege} & \textit {privilege\_width\_p} & 
                 The privilege level of the new context.\\
     \hline
-    \textbf{\textcolor{red}{time}} &  \textcolor{red}{\textit {time\_width\_p} or 0 if \textit {notime\_p} is 1} & 
-               \textcolor{red}{The time value} \\
+    \textbf{time} &  \textit {time\_width\_p} or 0 if \textit {notime\_p} is 1 & 
+               The time value \\
     \hline
     \textbf{context} &  \textit {context\_width\_p}, or 0 if \textit {nocontext\_p} is 1 & The instruction context. \\
     \hline

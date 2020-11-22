@@ -1,24 +1,23 @@
-\chapter{\textcolor{red}{Timestamping}} \label{ch:timestamping}
+\chapter{Timestamping} \label{ch:timestamping}
 
-\textcolor{red}{The support for Timestamps is optional and so the
-  contents of this chapter are informative only.}
+The support for Timestamps is optional and so the contents of this chapter are informative only.
 
 
-\textcolor{red}{In many systems it is desirable to periodically insert a
+In many systems it is desirable to periodically insert a
 timestamp packet into the trace stream, effectively marking that point
-in the stream with a time value.}
+in the stream with a time value.
 
-\textcolor{red}{This can be used to judge "time" between various point in the trace
+This can be used to judge "time" between various point in the trace
 stream and, more notably, to be able to correlate trace streams from
 different harts (i.e. this point in hart A's stream occurred at
 roughly the same time as that point in hart B's trace stream).  The
 former helps one to judge performance of sections of code execution
 (to the granularity of timestamp insertion). The latter helps
-debugging multi-hart MP problems.}
+debugging multi-hart MP problems.
 
-\textcolor{red}{An implementation may have the following: }
+An implementation may have the following: 
 
-\textcolor{red}{\begin{itemize}
+\begin{itemize}
 \item
 A timestamp is (up to) a 64-bit time value. 
 \item
@@ -58,4 +57,4 @@ packets are emitted very frequently, then they will tend to be <1 byte
 in size.  Timestamp values associated with sync packets would always
 be the full implemented size.
 \end{itemize}
-}
+

@@ -40,7 +40,7 @@ may be passed in to the design by some means.
         \hline
         \textit{filter\_context\_p} & 0 or 1 & Filtering on context supported when 1 \\
         \hline
-        \textcolor{red}{\textit{filter\_time\_p}} & \textcolor{red}{0} or \textcolor{red}{1} & \textcolor{red}{Filtering on time supported when 1} \\
+        \textit{filter\_time\_p} & 0 or 1 & Filtering on time supported when 1 \\
         \hline
         \textit{filter\_excint\_p} & & Filtering on exception cause or interrupt supported when non\_zero.  Number of nested exceptions supported is 2\textsuperscript{filter\_excint\_p} \\
         \hline
@@ -48,9 +48,9 @@ may be passed in to the design by some means.
         \hline
         \textit{filter\_tval\_p} & 0 or 1 & Filtering on trap value supported when 1 (provided \textit{filter\_excint\_p} is non-zero) \\
         \hline
-        \textit{iaddress\_lsb\_p} & & LSB of instruction \textcolor{red}{\textbf{address}} bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
+        \textit{iaddress\_lsb\_p} & & LSB of instruction \textbf{address} bus to trace.  1 is compressed instructions are supported, 2 otherwise\\
         \hline
-        \textit{iaddress\_width\_p} & & Width of instruction \textcolor{red}{\textbf{address}} bus. This is the same as \textit{DXLEN}\\
+        \textit{iaddress\_width\_p} & & Width of instruction \textbf{address} bus. This is the same as \textit{DXLEN}\\
         \hline
         \textit{iretire\_width\_p} & & Width of the \textbf{iretire} bus\\
         \hline
@@ -60,9 +60,9 @@ may be passed in to the design by some means.
         \hline
         \textit{nocontext\_p} & 0 or 1 & Exclude context from \textit{te\_inst} packets if 1 \\
         \hline
-        \textcolor{red}{\textit{notime\_p}} & \textcolor{red}{0} or \textcolor{red}{1} & \textcolor{red}{Exclude time from \textit{te\_inst} packets if 1} \\
+        \textit{notime\_p} & 0 or 1 & Exclude time from \textit{te\_inst} packets if 1 \\
         \hline
-        \textit{privilege\_width\_p} & & Width of \textcolor{red}{\textbf{privilege}} bus \\
+        \textit{privilege\_width\_p} & & Width of \textbf{privilege} bus \\
         \hline
         \textit{retires\_p} &  & Maximum number of instructions that can be retired per block \\
         \hline
@@ -73,7 +73,7 @@ may be passed in to the design by some means.
         \hline
         \textit{taken\_branches\_p} & & Number of times \textbf{iretire}, \textbf{itype} etc. are replicated\\
         \hline
-        \textit{impdef\_width\_p} & & Width of \textcolor{red}{\textbf{implementation-defined input}} bus \\
+        \textit{impdef\_width\_p} & & Width of \textbf{implementation-defined input} bus \\
         \hline
     \end{tabulary}
 \end{table}
@@ -114,7 +114,7 @@ Section~\ref{sec:ipxact} gives an example of how this may be accomplished.
         \hline
         \textit{context\_width} & 0 & \textit{context\_width\_p} - 1 \\
         \hline
-        \textcolor{red}{\textit{time\_width}} & \textcolor{red}{0} & \textcolor{red}{\textit{time\_width\_p} - 1} \\
+        \textit{time\_width} & 0 & \textit{time\_width\_p} - 1 \\
         \hline
         \textit{ecause\_width} & 3 & \textit{ecause\_width\_p} - 1 \\
         \hline
@@ -124,9 +124,9 @@ Section~\ref{sec:ipxact} gives an example of how this may be accomplished.
         \hline
         \textit{iaddress\_width} & 31 & \textit{iaddress\_width\_p} - 1 \\
         \hline
-        \textit{nocontext} & \textcolor{red}{1} & \textit{nocontext} \\
+        \textit{nocontext} & 1 & \textit{nocontext} \\
         \hline
-        \textcolor{red}{\textit{notime}} & \textcolor{red}{1} & \textcolor{red}{\textit{notime}} \\
+        \textit{notime} & 1 & \textit{notime} \\
         \hline
         \textit{privilege\_width} & 2 & \textit{privilege\_width\_p} - 1 \\
         \hline
@@ -160,7 +160,7 @@ document.
         \hline
         \textit{filter\_context} & 1 & \textit{filter\_context\_p}\\
         \hline
-        \textcolor{red}{\textit{filter\_time}} & \textcolor{red}{1} & \textcolor{red}{\textit{filter\_time\_p}}\\
+        \textit{filter\_time} & 1 & \textit{filter\_time\_p}\\
         \hline
         \textit{filter\_excint} & 1 & \textit{filter\_excint\_p}\\
         \hline
