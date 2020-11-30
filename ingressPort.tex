@@ -15,9 +15,8 @@ The following information is mandatory:
         (from the \textbf{\textit{ucause/scause/\textcolor{cyan}{vscause/}mcause}} CSR)
         and trap value (from the \textbf{\textit{utval/stval/\textcolor{cyan}{vstval/}mtval}} CSR).
 
-\textcolor{green}{The register set to output should be the set that is updated as a
-result of the exception (i.e. the set associated with the privilege
-level immediately following the exception)};
+The register set to output should be the set that is updated as a result of the exception (i.e. 
+the set associated with the privilege level immediately following the exception);
 
   \item The current privilege level of the RISC-V hart;
   \item The \textit{instruction\_type} of retired instructions for:
@@ -356,6 +355,8 @@ prevent correct reconstruction by the decoder.
 The \textbf{context} and/or the \textbf{time} field can be used to convey any additional information to the decoder.  For example:
 
 \begin{itemize}
+  \item \textcolor{red}{The address space and virtual machine IDs (\textbf{ASID} and \textbf{VMID}
+  respectively).  Where present it is recommended these values be wired to bits [15:0] and [29:16];}
   \item The software thread ID;
   \item The process ID from an operating system;
   \item It could be used to convey the values of CSRs to the decoder by setting \textbf{context} to the 
@@ -455,7 +456,9 @@ will need to be applied via the \textbf{context} input.
         \hline
         \textbf{halted} & O & Hart is halted.  Upon assertion, the encoder will output a packet to report the address 
         of the last instruction retired before halting, followed by a support packet to indicate that tracing has stopped. 
-        Upon deassertion, the encoder will start tracing again, commencing with a synchronization packet.\\
+        Upon deassertion, the encoder will start tracing again, commencing with a synchronization packet.
+        \color{red}{\textbf{Note:} If this signal is not provided, it is strongly recommended that Debug mode can be signalled via a 3-bit 
+          \textbf{privilege} signal.  This will allow tracing in Debug mode to be controlled via the optional filtering capabilities.}\\
         \hline
         \textbf{reset} & O & Hart is in reset.  Provided the encoder is in a different reset domain to the hart, this
         allows the encoder to indicate that tracing has ended on entry to reset, and restarted on exit.  

@@ -37,8 +37,8 @@ The following fields control basic encoding behavior.
       matches the value written.\\
     \hline
     \textbf{\textcolor{cyan}{teEnable}} & \textcolor{cyan}{1} & \textcolor{cyan}{M} & \textcolor{cyan}{RW} & \textcolor{cyan}{0} & 
-      \textcolor{cyan}{Master trace enable.  Trace can be enabled via \textbf{iEnable}
-      or \textbf{dEnable} when 1. Setting to 0 flushes any queued trace data to the designated sink.}\\
+      \textcolor{cyan}{Master trace enable.  Trace can be enabled via \textbf{iTracing}
+      or \textbf{dTracing} when 1. Setting to 0 flushes any queued trace data to the designated sink.}\\
     \hline
     \textbf{\textcolor{cyan}{iTracing}} & 1 & M & RW & 0 & Instruction trace enable.  \textcolor{cyan}{When 1, trace will be generated,
        subject to any optional filtering.  May be written by software, or via triggers if \textbf{iTrigEnable} is 1.}  \\
