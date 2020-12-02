@@ -14,8 +14,8 @@ Other abbreviations used in the tables are:
 \begin{itemize}
   \item \textbf{W} column heading indicates field width (in bits)
   \item \textbf{G} column heading indicates field group
-  \item \textcolor{cyan}{\textbf{RW} column heading indicates whether bit is read-only (R), or read-write (RW).  
-    For the latter, it is allowed but not required that the bit be writable}
+  \item \textbf{RW} column heading indicates whether bit is read-only (R), or read-write (RW).  
+    For the latter, it is allowed but not required that the bit be writable
   \item \textbf{Rst} column heading indicates field reset value. SD in this column indicates a system dependent reset value
 \end{itemize}
 
@@ -36,28 +36,28 @@ The following fields control basic encoding behavior.
       Hardware may take arbitrarily long to process power-up or power-down and will indicate completion when the read value of this bit
       matches the value written.\\
     \hline
-    \textbf{\textcolor{cyan}{teEnable}} & \textcolor{cyan}{1} & \textcolor{cyan}{M} & \textcolor{cyan}{RW} & \textcolor{cyan}{0} & 
-      \textcolor{cyan}{Master trace enable.  Trace can be enabled via \textbf{iTracing}
-      or \textbf{dTracing} when 1. Setting to 0 flushes any queued trace data to the designated sink.}\\
+    \textbf{teEnable} & 1 & M & RW & 0 & 
+      Master trace enable.  Trace can be enabled via \textbf{iTracing}
+      or \textbf{dTracing} when 1. Setting to 0 flushes any queued trace data to the designated sink.\\
     \hline
-    \textbf{\textcolor{cyan}{iTracing}} & 1 & M & RW & 0 & Instruction trace enable.  \textcolor{cyan}{When 1, trace will be generated,
-       subject to any optional filtering.  May be written by software, or via triggers if \textbf{iTrigEnable} is 1.}  \\
+    \textbf{iTracing} & 1 & M & RW & 0 & Instruction trace enable.  When 1, trace will be generated,
+       subject to any optional filtering.  May be written by software, or via triggers if \textbf{iTrigEnable} is 1.  \\
     \hline
-    \textbf{\textcolor{cyan}{dTracing}} & 1 & MD & RW & 0 & Data trace enable.  \textcolor{cyan}{When 1, trace will be generated,
-       subject to any optional filtering.  May be written by software, or via triggers if \textbf{dTrigEnable} is 1.}  \\
+    \textbf{dTracing} & 1 & MD & RW & 0 & Data trace enable.  When 1, trace will be generated,
+       subject to any optional filtering.  May be written by software, or via triggers if \textbf{dTrigEnable} is 1.  \\
     \hline
-    \textbf{iTrigEnable} & 1 & O & RW & 0 & When 1, allows \textcolor{cyan}{iTracing} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
+    \textbf{iTrigEnable} & 1 & O & RW & 0 & When 1, allows iTracing to be set or cleared by \textit{trace-on} and \textit{trace-off} 
       Debug module triggers respectively (see \ref{sec:trigger}).\\
     \hline
-    \textbf{dTrigEnable} & 1 & OD & RW & 0 & When 1, allows \textcolor{cyan}{dTracing} to be set or cleared by \textit{trace-on} and \textit{trace-off} 
+    \textbf{dTrigEnable} & 1 & OD & RW & 0 & When 1, allows dTracing to be set or cleared by \textit{trace-on} and \textit{trace-off} 
       Debug module triggers respectively (see \ref{sec:trigger}).\\
     \hline
     \textbf{stallEnable} & 1 & O & RW & 0 & When 0, if the encoder cannot accept trace input from the RISC-V hart, trace is lost, and is
-      indicated via the \textit{Support} trace packet (see table~\ref{sec:format31}).\newline
+      indicated via the \textit{Support} trace packet (see \textcolor{green}{section}~\ref{sec:format33}).\newline
       When 1, the \textbf{stall} output signal is asserted to stall the RISC-V hart until trace can be accepted (see table~\ref{tab:egress-side-band}).\\
     \hline
     \textbf{Empty} & 1 & O & R & 1 & Reads as 1 when all trace has been emitted.  Note: this status is also indicated via the 
-      \textit{Support} trace packet (see table~\ref{sec:format31}).\\
+      \textit{Support} trace packet (see table~\ref{tab:te_inst3-3}).\\
     \hline
     \textbf{ResyncMode} & 2 & M & RW & SD & Selects the resynchronization mechanism.  At least one non-zero mechanism must be implemented.\newline
     0: Off\newline
@@ -66,7 +66,7 @@ The following fields control basic encoding behavior.
     3: Count instruction (16-bit) half-words\\
     \hline
     \textbf{ResyncMax} & 4 & O & RW & SD & The maximum interval (in units determined by \textbf{ResyncMode}) between synchronization packets
-    (see tables~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
+    (see \textcolor{green}{sections}~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
     \hline
   \end{tabulary}
 \end{table}
@@ -189,7 +189,7 @@ filter must match for the HART inputs enabled via the fields in table~\ref{tab:c
     {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
     \hline
     \textbf{matchChoicePrivilege} & 8 & O & RW & SD & When \textbf{matchPrivilege} is set, match all privilege levels for which the corresponding bit is set.
-       For example, if bit \textit{N} is 1, then match if the privilege level is \textit{N}.\\
+       For example, if bit \textit{N} is 1, then match if \textcolor{green}{the \textbf{priv} value is \textit{N} (see table~\ref{tab:priv} for privilege level encoding).}\\
     \hline
     \textbf{matchValueInterrupt} & 1 & O & RW & SD & When \textbf{matchinterrupt} is set, match \textbf{itype} of 2 or 1 depending on whether this bit is 
        1 or 0 respectively.\\
