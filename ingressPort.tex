@@ -12,8 +12,8 @@ The following information is mandatory:
 \begin{itemize}
   \item The number of instructions that are being retired;
   \item Whether there has been an exception or interrupt, and if so the cause 
-        (from the \textbf{\textit{ucause/scause/\textcolor{cyan}{vscause/}mcause}} CSR)
-        and trap value (from the \textbf{\textit{utval/stval/\textcolor{cyan}{vstval/}mtval}} CSR).
+        (from the \textbf{\textit{ucause/scause/vscause/mcause}} CSR)
+        and trap value (from the \textbf{\textit{utval/stval/vstval/mtval}} CSR).
 
 The register set to output should be the set that is updated as a result of the exception (i.e. 
 the set associated with the privilege level immediately following the exception);
@@ -170,9 +170,9 @@ Signals are assigned to one of the  following groups:
 \begin{itemize}
   \item M: Mandatory.  The interface must include an instance of this signal.
   \item O: Optional.  The interface may include an instance of this signal.
-  \item MR: Mandatory, may be replicated. For harts that can retire a maximum of N \textcolor{cyan}{"special"} instructions per clock
+  \item MR: Mandatory, may be replicated. For harts that can retire a maximum of N "special" instructions per clock
     cycle, the interface must include N instances of this signal.
-  \item OR: Optional, may be replicated. For harts that can retire a maximum of N \textcolor{cyan}{"special"} per clock
+  \item OR: Optional, may be replicated. For harts that can retire a maximum of N "special" per clock
     cycle, the interface must include zero or N instances of this signal.
   \item BR: Block, may be replicated.  Mandatory for harts that can retire multiple instructions in a block.  
     Replication as per OR.  If omitted, the interface must include SR group signals instead.
@@ -180,7 +180,7 @@ Signals are assigned to one of the  following groups:
     Replication as per OR (see section~\ref{sec:alt-multi}).  If omitted, the interface must include BR 
     group signals instead.
 \end{itemize}
-\textcolor{cyan}{"Special" instructions are those that require \textbf{itype} to be non-zero.}
+"Special" instructions are those that require \textbf{itype} to be non-zero.
 
 \begin{table}[htp]
     \centering
@@ -193,12 +193,12 @@ Signals are assigned to one of the  following groups:
         \textbf{itype}[\textit{itype\_width\_p}-1:0] & MR & Termination type of the instruction block.  Encoding given in Table~\ref{tab:itype}
          (see Section~\ref{Jump Classes} for definitions of codes 6 - 15).\\
         \hline
-        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & M & Exception or interrupt cause (\textbf{\textit{ucause/scause/ \textcolor{cyan}{vscause/}mcause}}).
+        \textbf{cause}[\textit{ecause\_width\_p}-1:0] & M & Exception or interrupt cause (\textbf{\textit{ucause/scause/ vscause/mcause}}).
         Ignored unless \textbf {itype}=1 or 2.\\
         \hline
         \textbf{tval}[\textit{iaddress\_width\_p}-1:0] & M & The associated trap value, e.g. the
         faulting virtual address for address exceptions, as would be
-        written to the \textbf{utval/stval/\textcolor{cyan}{vstval/}mtval} CSR. Future optional extensions may define \textbf{tval} 
+        written to the \textbf{utval/stval/vstval/mtval} CSR. Future optional extensions may define \textbf{tval} 
         to provide ancillary information in cases where it currently supplies zero.
         Ignored unless \textbf{itype}=1 or 2.\\
         \hline
@@ -218,7 +218,7 @@ Signals are assigned to one of the  following groups:
         \textbf{sijump} & OR & If \textbf{itype} indicates that this block ends with an uninferable discontinuity, setting this signal to 1 
         indicates that it is sequentially inferable and may be treated as inferable by the encoder if the preceding 
         \textbf{\textit{auipc}}, \textbf{\textit{lui}} or \textbf{\textit{c.lui}} has been traced.  
-        Ignored for \textbf{itype} codes other than \textcolor{cyan}{6,} 8, 10, 12 or 14.\\
+        Ignored for \textbf{itype} codes other than 6, 8, 10, 12 or 14.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -289,14 +289,14 @@ Signals are assigned to one of the  following groups:
       \hline
       \textbf{Value} & \textbf{Description} \\
       \hline
-        \textcolor{cyan}{0} & \textcolor{cyan}{U}\\
-        \textcolor{cyan}{1} & \textcolor{cyan}{S/HS}\\
-        \textcolor{cyan}{2} & \textcolor{cyan}{reserved}\\
-        \textcolor{cyan}{3} & \textcolor{cyan}{M}\\
-        \textcolor{cyan}{4} & \textcolor{cyan}{D (debug mode)}\\
-        \textcolor{cyan}{5} & \textcolor{cyan}{VU}\\
-        \textcolor{cyan}{6} & \textcolor{cyan}{VS}\\
-        \textcolor{cyan}{7} & \textcolor{cyan}{reserved}\\
+        0 & U\\
+        1 & S/HS\\
+        2 & reserved\\
+        3 & M\\
+        4 & D (debug mode)\\
+        5 & VU\\
+        6 & VS\\
+        7 & reserved\\
       \hline
     \end{tabulary}
 \end{table}
@@ -328,17 +328,17 @@ indicate all uninferable jumps.  This is simpler to implement, but precludes use
 Whilst \textbf{iaddr} is typically a virtual address, it does not affect the encoder's behavior
 if it is a physical address.
 
-For harts that can retire a maximum of N \textcolor{cyan}{non-zero \textbf{itype} values} per clock
+For harts that can retire a maximum of N non-zero \textbf{itype} values per clock
 cycle, the signal groups MR, OR and either BR or SR must be replicated N times.  
-\textcolor{cyan}{Typically N is determined by the maximum number of branches that can be retired per clock cycle.}
+Typically N is determined by the maximum number of branches that can be retired per clock cycle.
 Signal group 0 represents information about the oldest instruction block, and group N-1
 represents the newest instruction block. The interface supports no more
-than one privilege \textcolor{cyan}{change}, context \textcolor{cyan}{change}, 
+than one privilege change, context change, 
 exception or interrupt per cycle and so signals in
 groups M and O are not replicated. Furthermore, \textbf{itype} can only
 take the value 1 or 2 in one of the signal groups, and this must be
 the newest valid group (i.e. \textbf{iretire} and \textbf{itype} must
-be zero for higher numbered groups). If fewer than N \textcolor{cyan}{groups are required} 
+be zero for higher numbered groups). If fewer than N groups are required 
 in a cycle, then lower numbered groups must be used
 first. For example, if there is one branch, use only group 0, if
 there are two branches, instructions up to the 1st branch
@@ -514,13 +514,12 @@ caused the trigger is retired.
 \end{table}
 
 Trace-on and Trace-off actions provide a means for the hart to control when tracing
-\textcolor{cyan}{starts and stops.  It is recommended that tracing starts from the oldest  
+starts and stops.  It is recommended that tracing starts from the oldest  
 instruction retired in the cycle that Trace-on is asserted, and stops following the newest
-instruction retired in the cycle that Trace-off is asserted (subject to any optional filtering).}
+instruction retired in the cycle that Trace-off is asserted (subject to any optional filtering).
 
 Trace-notify provides means to ensure that a specified instruction is explicitly reported 
-\textcolor{cyan}{(subject to any optional filtering)}.  
-This capability is sometimes known as a watchpoint.
+(subject to any optional filtering). This capability is sometimes known as a watchpoint.
 
 \FloatBarrier
 \subsection{Example retirement sequences}
