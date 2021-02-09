@@ -73,10 +73,15 @@
 #error The C pre-processor variable, CONFIG_BASE, must be set.
 #endif
 
-#define CSR_MTIMEL      (CONFIG_BASE + 0x0000)
-#define CSR_MTIMEH      (CONFIG_BASE + 0x0004)
-#define CSR_MTIMECMPL   (CONFIG_BASE + 0x0008)
-#define CSR_MTIMECMPH   (CONFIG_BASE + 0x000C)
+
+// --------------------------------------------------------
+// Memory-mapped machine timer registers and other support
+//  for generating a timer interrupt
+
+#define MMR_MTIMEL      (CONFIG_BASE + 0x0000)
+#define MMR_MTIMEH      (CONFIG_BASE + 0x0004)
+#define MMR_MTIMECMPL   (CONFIG_BASE + 0x0008)
+#define MMR_MTIMECMPH   (CONFIG_BASE + 0x000C)
 
 #define TIMER_COUNT     (100)
 #define WATCHDOG_COUNT  (100000)
@@ -88,14 +93,28 @@
 #define MIE_MTIE        0x80
 
 
+// --------------------------------------------------------
+// mcause bit definitions
+
 #define MCAUSE_SUPERVISOR_SOFTWARE_INTERRUPT    (0x1 << (__riscv_xlen - 1) + 1)
 #define MCAUSE_MACHINE_TIMER_INTERRUPT          (0x1 << (__riscv_xlen - 1) + 7)
 #define MCAUSE_ILLEGAL_INSTRUCTION              (0x0 << (__riscv_xlen - 1) + 2)
 
+// --------------------------------------------------------
+// Support for tohost/fromhost
+
 #define PASS_CODE       1
 #define FAIL_CODE       1337
+
+
+// --------------------------------------------------------
+// Other test support definitions...
+
 #define BR_LOOP_COUNT   10    // For testing a simple br loop
 
+
+// --------------------------------------------------------
+// Support for 32/64 bit compilation.
 
 #if __riscv_xlen == 64
 # define LREG ld
@@ -180,7 +199,8 @@ reset_vector:
   li    t0,       0xffffffff
   csrw  pmpaddr0, t0
 
-  // initialize machine trap vector
+// --------------------------------------------------------
+// initialize machine trap vector
   la    x5,       machine_trap_entry
   csrw  mtvec,    x5
 
@@ -239,7 +259,7 @@ j_exception_stimulus:
   //    Let's test it out....
   //
   //    Note that the excpetion handler for this case will *NOT* do an
-  //    mret.  It will jump to 'exception_return'.  
+  //    mret.  It will jump to 'illegal_instruction_exception_return'.  
 
   la    x5,       bad_opcode
   jr    x5
@@ -270,7 +290,7 @@ j_target_end_fail:
 
 // --------------------------------------------------------
 
-exception_return:
+illegal_instruction_exception_return:
   la    x5,       j_target_end_pass
   jalr  x5
   j     j_target_end_fail // should never be taken
@@ -289,11 +309,11 @@ timer_interrupt_return:
 timer_interrupt_test:
   addi  x7,       x0,     TIMER_COUNT
   
-  lui   x8,       CSR_MTIMECMPL >> 12
-  sw    x7,       (CSR_MTIMECMPL & 0xfff)(x8)
+  lui   x8,       MMR_MTIMECMPL >> 12
+  sw    x7,       (MMR_MTIMECMPL & 0xfff)(x8)
 
-  lui   x8,       CSR_MTIMECMPH >> 12
-  sw    x0,       (CSR_MTIMECMPH & 0xfff)(x8)
+  lui   x8,       MMR_MTIMECMPH >> 12
+  sw    x0,       (MMR_MTIMECMPH & 0xfff)(x8)
 
   addi  x7,       x0,     MIE_MTIE
   csrs  mie,      x7
@@ -374,6 +394,7 @@ machine_trap_entry_0:
   li      x6,       0x1
   la      x7,       timer_interrupt_flag
   sw      x6,       0(x7)
+
   // Turn off timer interrupt. No longer needed
   addi    x7,       x0,     MIE_MTIE
   csrc    mie,      x7
@@ -391,7 +412,7 @@ not_a_timer_interrupt:
   //    part of this simple test.
   csrr    x7,       mcause
   li      x6,       MCAUSE_ILLEGAL_INSTRUCTION
-  beq     x7,       x6,     exception_return
+  beq     x7,       x6,     illegal_instruction_exception_return
   j       j_target_end_fail
 // --------------------------------------------------------
 
