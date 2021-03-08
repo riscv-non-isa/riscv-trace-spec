@@ -1,5 +1,10 @@
 \chapter{Encoder Control} \label{encoderControl}
 
+\textcolor{red}{This chapter describes the fields required to control the Trace Encoder.  
+How fields are organized and accessed (e.g packet based or memory mapped) is outside the scope of this document.  
+A recommended register map can be found at} \href{https://github.com/riscv/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc#register-map}
+{https://github.com/riscv/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc\#register-map}.
+
 Fields are categorized into the following groups:
 
 \begin{itemize}
@@ -10,8 +15,8 @@ Fields are categorized into the following groups:
   \item F: Optional for filtering
 \end{itemize}
 
-\textcolor{cyan}{Where an optional field provides a number of encoded options, implementers can chose to implement a subset of the options, 
-in which case the standard RISC-V WARL (write any, read legal) approach can be used to determine which options are available.}
+Where an optional field provides a number of encoded options, implementers can chose to implement a subset of the options, 
+in which case the standard RISC-V WARL (write any, read legal) approach can be used to determine which options are available.
 
 Other abbreviations used in the tables are:
 \begin{itemize}
@@ -56,7 +61,7 @@ The following fields control basic encoding behavior.
       Debug module triggers respectively (see \ref{sec:trigger}).\\
     \hline
     \textbf{stallEnable} & 1 & O & RW & 0 & When 0, if the encoder cannot accept trace input from the RISC-V hart, trace is lost, and is
-      indicated via the \textit{Support} trace packet (see \textcolor{green}{section}~\ref{sec:format33}).\newline
+      indicated via the \textit{Support} trace packet (see section~\ref{sec:format33}).\newline
       When 1, the \textbf{stall} output signal is asserted to stall the RISC-V hart until trace can be accepted (see table~\ref{tab:egress-side-band}).\\
     \hline
     \textbf{Empty} & 1 & O & R & 1 & Reads as 1 when all trace has been emitted.  Note: this status is also indicated via the 
@@ -69,7 +74,7 @@ The following fields control basic encoding behavior.
     3: Count instruction (16-bit) half-words\\
     \hline
     \textbf{ResyncMax} & 4 & O & RW & SD & The maximum interval (in units determined by \textbf{ResyncMode}) between synchronization packets
-    (see \textcolor{green}{sections}~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
+    (see sections~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
     \hline
   \end{tabulary}
 \end{table}
@@ -192,7 +197,7 @@ filter must match for the HART inputs enabled via the fields in table~\ref{tab:c
     {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
     \hline
     \textbf{matchChoicePrivilege} & 8 & O & RW & SD & When \textbf{matchPrivilege} is set, match all privilege levels for which the corresponding bit is set.
-       For example, if bit \textit{N} is 1, then match if \textcolor{green}{the \textbf{priv} value is \textit{N} (see table~\ref{tab:priv} for privilege level encoding).}\\
+       For example, if bit \textit{N} is 1, then match if the \textbf{priv} value is \textit{N} (see table~\ref{tab:priv} for privilege level encoding).\\
     \hline
     \textbf{matchValueInterrupt} & 1 & O & RW & SD & When \textbf{matchinterrupt} is set, match \textbf{itype} of 2 or 1 depending on whether this bit is 
        1 or 0 respectively.\\
