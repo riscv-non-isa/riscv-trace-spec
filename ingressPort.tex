@@ -669,9 +669,9 @@ one of the following groups:
 All signals in M, U and O groups are only valid when \textbf{dretire} is high.  Signals in the S group are valid as
 indicated in table \ref{tab:data-ingress}.  
 
-\textcolor{cyan}{For harts that can retire a maximum of M data accesses per cycle, the implemented signal
+For harts that can retire a maximum of M data accesses per cycle, the implemented signal
 groups must be replicated M times.  If fewer than M groups are required in a cycle, then lower numbered groups must 
-be used first. For example, if there is one data access, use only group 0.}
+be used first. For example, if there is one data access, use only group 0.
 
 The maximum value of \textit{dtype\_width\_p} is 4.  However, if only loads and stores are supported, 
 \textit{dtype\_width\_p} can be 1.  If CSRs are supported but atomics are not, \textit{dtype\_width\_p} can be 3.
