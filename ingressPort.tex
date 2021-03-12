@@ -242,13 +242,13 @@ Signals are assigned to one of the  following groups:
     \centering
     \caption{Instruction interface signals - single retirement per block}
     \label{tab:single-ingress}
-    \begin{tabulary}{\textwidth}{|l|l|p{110mm}|}
+    \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline
         \textbf{iretire}[0:0] & SR & Number of instructions retired in this block (0 or 1).\\
         \hline
-        \textbf{ilastsize}[0:0] & SR & The size of the retired instruction is 2\textsuperscript{\textbf{ilastsize}} half-words.\\
+        \textbf{ilastsize}[\textcolor{red}{\textit{ilastsize\_width\_p}-1}:0] & SR & The size of the retired instruction is 2\textsuperscript{\textbf{ilastsize}} half-words.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -608,7 +608,7 @@ one of the following groups:
         \hline
         \textbf{dretire} & M & Data access retired (when high)\\
         \hline
-        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in Table~\ref{tab:dtype}\\
+        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in Table~\ref{tab:itype}\\
         \hline
         \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & M & The data access address\\
         \hline
