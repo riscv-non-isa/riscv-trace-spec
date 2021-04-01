@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2019,2020 UltraSoC Technologies Limited
+ * SPDX-License-Identifier: BSD-2-Clause
+ * SPDX-FileCopyrightText: Copyright 2019-2021 Siemens. All rights reserved.
+ *
+ * Copyright 2019-2021 Siemens
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -355,7 +358,7 @@ typedef struct
  */
 typedef struct
 {
-    bool                enable;         /* 1-bit */
+    bool                i_enable;       /* 1-bit */
     te_encoder_mode_t   encoder_mode;   /* TE_ENCODER_MODE_BITS-bits */
     te_qual_status_t    qual_status;    /* 2-bits */
     te_options_t        options;        /* run-time configuration bits */
@@ -473,12 +476,6 @@ typedef struct te_inst_t
     /* following used by all formats */
     te_inst_format_t format;/* 2-bits */
     te_address_t address;   /* width of instruction address bus */
-
-    /*
-     * the following flag is not transmitted directly in a packet, but
-     * it is used to help qualify fields that are.
-     */
-    bool with_address;      /* true if the "address" field is valid */
 
     /*
      * The following field is not transmitted at all in any real
@@ -628,8 +625,8 @@ typedef struct te_decoder_state_t
     /* Flag to indicate that reported address from format != 3 was
      * not following an uninferrable jump (and is therefore inferred) */
     bool inferred_address;
-    /* true if 1st trace packet still to be processed */
-    bool start_of_trace;
+    /* true if 1st itrace packet still to be processed */
+    bool start_of_itrace;
 
     /* array holding return address stack (only when "implicit_return" is 1) */
     te_address_t return_stack[TE_MAX_IRSTACK_DEPTH];
@@ -707,6 +704,9 @@ typedef struct te_decoder_state_t
  * The following are external functions DEFINED by this code.
  * See the associated C source file for their semantics.
  */
+extern bool te_is_with_address(     /* a predicate function */
+    const te_inst_t * const te_inst);
+
 extern void te_process_te_inst(
     te_decoder_state_t * const decoder,
     const te_inst_t * const te_inst);

@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2020 UltraSoC Technologies Limited
+ * SPDX-License-Identifier: BSD-2-Clause
+ * SPDX-FileCopyrightText: Copyright 2020 Siemens. All rights reserved.
+ *
+ * Copyright 2020 Siemens
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

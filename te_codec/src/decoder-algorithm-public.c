@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2019,2020 UltraSoC Technologies Limited
+ * SPDX-License-Identifier: BSD-2-Clause
+ * SPDX-FileCopyrightText: Copyright 2019-2021 Siemens. All rights reserved.
+ *
+ * Copyright 2019-2021 Siemens
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1053,7 +1056,7 @@ do                                                              \
  * If an unrecoverable error occurs, this function will immeditely
  * return, if the function unrecoverable_error() returns.
  */
-static void process_support(
+static void process_isupport(
     te_decoder_state_t * const decoder,
     const te_inst_t * const te_inst)
 {
@@ -1098,7 +1101,7 @@ static void process_support(
          (TE_QUAL_STATUS_ENDED_REP == support->qual_status) )
     {
         /* Trace ended, so get ready to start again */
-        decoder->start_of_trace = true;
+        decoder->start_of_itrace = true;
     }
 
     if ( (TE_QUAL_STATUS_ENDED_UPD == support->qual_status) &&
@@ -1127,10 +1130,73 @@ static void process_support(
 
 
 /*
+ * this is a predicate function, which returns TRUE if the
+ * structure pointed to by te_inst includes an address field,
+ * or false otherwise.
+ */
+bool te_is_with_address(
+    const te_inst_t * const te_inst)
+{
+    bool with_address = false;  /* assume no address field */
+
+    assert(te_inst);
+
+    /*
+     * does the te_inst include an address field?
+     */
+    switch (te_inst->format)
+    {
+        case TE_INST_FORMAT_0_EXTN:
+            if (TE_INST_EXTN_BRANCH_PREDICTOR == te_inst->extension)
+            {
+                if (TE_BRANCH_FMT_00_NO_ADDR != te_inst->u.bpred.branch_fmt)
+                {
+                    with_address = true;
+                }
+            }
+            else if (TE_INST_EXTN_JUMP_TARGET_CACHE == te_inst->extension)
+            {
+                /*
+                 * Technically, using the jump target cache, does not send an "address"
+                 * field, but it sends an "index" instead. This packet does update the
+                 * "last_sent_addr", and hence to all practical purposes, we must treat
+                 * receipt of a JTC packet as one that has an implicit address field.
+                 * One can think of the "index" in a JTC packet as simply being an
+                 * alternative compressed (smaller) representation of an "address" field.
+                 */
+                with_address = true;
+            }
+            break;
+
+        case TE_INST_FORMAT_1_DIFF:
+            with_address = !!te_inst->branches;
+            break;
+
+        case TE_INST_FORMAT_2_ADDR:
+            with_address = true;
+            break;
+
+        case TE_INST_FORMAT_3_SYNC:
+            if ( (TE_INST_SUBFORMAT_START == te_inst->subformat) ||
+                 (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat) )
+            {
+                with_address = true;
+            }
+            break;
+
+        default:
+            assert(!"Invalid format in te_is_with_address()");
+    }
+
+    return with_address;
+}
+
+
+/*
  * Process a single te_inst packet.
  * Called each time a te_inst packet is received.
  *
- * If an unrecoverable error occurs, this function will immeditely
+ * If an unrecoverable error occurs, this function will immediately
  * return, if the function unrecoverable_error() returns.
  */
 void te_process_te_inst(
@@ -1143,44 +1209,10 @@ void te_process_te_inst(
     assert(te_inst);
 
     /*
-     * The caller of this function is expected to set the field
-     * "with_address" in the structure pointed to by te_inst.
-     * However, as a "sanity check", it is compared here against
-     * what it ought to be, given the values of the other fields.
+     * work out if the te_inst packet includes an address.
      */
-    switch (te_inst->format)
-    {
-        case TE_INST_FORMAT_0_EXTN:
-            if (TE_INST_EXTN_BRANCH_PREDICTOR == te_inst->extension)
-            {
-                assert( (TE_BRANCH_FMT_00_NO_ADDR != te_inst->u.bpred.branch_fmt) == te_inst->with_address);
-            }
-            break;
+    const bool with_address = te_is_with_address(te_inst);
 
-        case TE_INST_FORMAT_1_DIFF:
-            assert(te_inst->with_address == !!te_inst->branches);
-            break;
-
-        case TE_INST_FORMAT_2_ADDR:
-            assert(te_inst->with_address);
-            break;
-
-        case TE_INST_FORMAT_3_SYNC:
-            if ( (TE_INST_SUBFORMAT_START == te_inst->subformat) ||
-                 (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat) )
-            {
-                assert(te_inst->with_address);
-            }
-            else
-            {
-                assert(!te_inst->with_address);
-            }
-            break;
-
-        default:
-            unrecoverable_error(decoder, TE_ERROR_INVALID_PACKET, NULL);
-            return; /* return immediately if an unrecoverable error */
-    }
 
     /*
      * update counters for each new te_inst packet that is received
@@ -1201,8 +1233,8 @@ void te_process_te_inst(
         /* is it a te_inst synchronization support packet ? */
         if (TE_INST_SUBFORMAT_SUPPORT == te_inst->subformat)
         {
-            process_support(decoder, te_inst);
-            /* Note: process_support() can call unrecoverable_error() */
+            process_isupport(decoder, te_inst);
+            /* Note: process_isupport() can call unrecoverable_error() */
             return; /* all done ... nothing more to do */
         }
 
@@ -1257,7 +1289,7 @@ void te_process_te_inst(
         decoder->privilege = te_inst->privilege;
 
         if ( (TE_INST_SUBFORMAT_EXCEPTION == te_inst->subformat) ||
-             (decoder->start_of_trace) )
+             (decoder->start_of_itrace) )
         {
             /* expunge any pending branches */
             decoder->branches   = 0;
@@ -1279,7 +1311,7 @@ void te_process_te_inst(
         }
 
         if ( (TE_INST_SUBFORMAT_START == te_inst->subformat) &&
-             (!decoder->start_of_trace) )
+             (!decoder->start_of_itrace) )
         {
             follow_execution_path(decoder, decoder->last_sent_addr, te_inst);
             /* Note: follow_execution_path() can call unrecoverable_error() */
@@ -1313,7 +1345,7 @@ void te_process_te_inst(
              */
             decoder->last_pc = decoder->pc;
         }
-        decoder->start_of_trace = false;
+        decoder->start_of_itrace = false;
         /*
          * The specification contains the following words:
          *      Throughout this document, the term "synchronization packet"
@@ -1342,7 +1374,7 @@ void te_process_te_inst(
         decoder->bpred.miss_predict_carry_in = decoder->bpred.miss_predict_carry_out;
         decoder->bpred.miss_predict_carry_out = false;
 
-        if (decoder->start_of_trace)
+        if (decoder->start_of_itrace)
         {
             /* This should not be possible! */
             unrecoverable_error(decoder, TE_ERROR_NOT_FORMAT3, NULL);
@@ -1350,7 +1382,7 @@ void te_process_te_inst(
         }
 
         /* extract the latest address, and update last_sent_addr */
-        if (te_inst->with_address)
+        if (with_address)
         {
             if (decoder->options.full_address)
             {
@@ -1380,7 +1412,7 @@ void te_process_te_inst(
             decoder->bpred.correct_predictions = te_inst->u.bpred.correct_predictions;
             decoder->branches += te_inst->u.bpred.correct_predictions;
             /* if no address, then one additional miss-predict too */
-            if (!te_inst->with_address)
+            if (!with_address)
             {
                 decoder->branches++;
                 decoder->stop_at_last_branch = true;
@@ -1416,7 +1448,7 @@ void te_process_te_inst(
         else
         {
             if ( (TE_INST_FORMAT_2_ADDR == te_inst->format) ||
-                 (te_inst->with_address) )
+                 (with_address) )
             {
                 decoder->stop_at_last_branch = false;
                 if (decoder->options.jump_target_cache)
@@ -1438,7 +1470,7 @@ void te_process_te_inst(
             }
             if (TE_INST_FORMAT_1_DIFF == te_inst->format)
             {
-                decoder->stop_at_last_branch = !te_inst->with_address;
+                decoder->stop_at_last_branch = !with_address;
                 /*
                  * Branch map will contain <= 1 branch
                  * (1 if last reported instruction was a branch)
@@ -1518,7 +1550,19 @@ te_decoder_state_t * te_open_trace_decoder(
     decoder->pc = TE_SENTINEL_BAD_ADDRESS;
     decoder->last_pc = TE_SENTINEL_BAD_ADDRESS;
     decoder->last_sent_addr = TE_SENTINEL_BAD_ADDRESS;
-    decoder->start_of_trace = true;
+    decoder->start_of_itrace = true;
+
+    /*
+     * Initialize the array used to hold the (direct-mapped) cache of
+     * recent instruction decodes in the te_decoder_state_t structure.
+     * Specifically, initialize all the PCs with an miss-matched address.
+     * Note: technically only the slot corresponding to address 0x0
+     * actually needs to be initialized with a known bad address, all
+     * the others can remain initialized with all zeros (from above)!
+     * For details, see the long comment in decoder-algorithm-public.h
+     */
+    decoder->decoded_cache[TE_SLOT_NUMBER(0x0)].decode.pc =
+        TE_SENTINEL_BAD_ADDRESS;
 
     /* initialize the branch predictor lookup table */
     te_initialize_bpred_table(&decoder->bpred);

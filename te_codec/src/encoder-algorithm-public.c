@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2019,2020 UltraSoC Technologies Limited
+ * SPDX-License-Identifier: BSD-2-Clause
+ * SPDX-FileCopyrightText: Copyright 2019-2021 Siemens. All rights reserved.
+ *
+ * Copyright 2019-2021 Siemens
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -179,7 +182,8 @@ static void clock_the_pipeline(
 
 static void send_te_inst(
     te_encoder_state_t * const encoder,
-    te_inst_t * const te_inst)
+    te_inst_t * const te_inst,
+    const bool with_address)
 {
     assert(encoder);
     assert(te_inst);
@@ -237,7 +241,7 @@ static void send_te_inst(
      * Keep a note of the most recently sent address.
      * Both the encoder and decoder need to keep this in step.
      */
-    if (te_inst->with_address)
+    if (with_address)
     {
         encoder->last_sent_addr = address;
     }
@@ -323,6 +327,11 @@ static void send_te_inst_sync(
     te_inst.subformat = subformat;
 
     /*
+     * will te_inst also include an address? Assume not for now.
+     */
+    bool with_address = false;
+
+    /*
      * Some of the sub-formats omit the "address" field, hence it is
      * strictly optional, and it should really be assigned in the following
      * switch statement, but only for the sub-formats that actually use it.
@@ -370,7 +379,7 @@ static void send_te_inst_sync(
             /*lint -fallthrough */ /* no break */
         case TE_INST_SUBFORMAT_START:
             assert(irecord);
-            te_inst.with_address = true;
+            with_address = true;
             /*
              * Set to 0 if the address points to a branch
              * instruction, and the branch was taken.
@@ -407,7 +416,7 @@ static void send_te_inst_sync(
     }
 
     /* send the completed te_inst packet downstream */
-    send_te_inst(encoder, &te_inst);
+    send_te_inst(encoder, &te_inst, with_address);
 
     /*
      * most te_inst synchronization packets includes the context,
@@ -504,7 +513,6 @@ static void send_te_inst_non_sync(
      */
     te_inst_t te_inst =
     {
-        .with_address = with_address,
         .address = curr->pc,
         .branches = encoder->branches,
         .branch_map = encoder->branch_map,
@@ -753,7 +761,7 @@ static void send_te_inst_non_sync(
     }
 
     /* finally, send the completed te_inst packet downstream */
-    send_te_inst(encoder, &te_inst);
+    send_te_inst(encoder, &te_inst, with_address);
 }
 
 
