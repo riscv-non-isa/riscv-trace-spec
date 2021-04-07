@@ -563,7 +563,7 @@ branch counts will be lower, in which case increased waste for longer packets wi
 Furthermore, the rate at which packets are generated can be higher for lower branch counts, and so reducing
 waste for this case will improve overall bandwidth at times where it is most important.
 
-\subsection{Format 1 \textbf{irstatus} and \textbf{irdepth} fields}
+\subsection{Format 1 \textbf{irreport} and \textbf{irdepth} fields}
 
 See section~\ref{sec:irxx}.
 
@@ -772,7 +772,7 @@ reported address will always be for a branch, and in the former cases it may be.
 it is necessary to be explicit about whether or not the prediction was met or not.  If it is met, then the reported address is 
 that of the last correctly predicted branch.
 
-\subsection{Format 0 \textbf{irstatus} and \textbf{irdepth} fields}
+\subsection{Format 0 \textbf{irreport} and \textbf{irdepth} fields}
 These bits are encoded so that most of the time they will take the same value as the immediately preceding bit
 (\textbf{updiscon}, \textbf{branch\_map[MSB]} or \textbf{branches[MSB]} depending on the specific packet format).  
 Purpose and behavior is as described in section~\ref{sec:irxx}.
