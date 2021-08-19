@@ -248,7 +248,7 @@ Signals are assigned to one of the  following groups:
         \hline
         \textbf{iretire}[0:0] & SR & Number of instructions retired in this block (0 or 1).\\
         \hline
-        \textbf{ilastsize}[\textcolor{red}{\textit{ilastsize\_width\_p}-1}:0] & SR & The size of the retired instruction is 2\textsuperscript{\textbf{ilastsize}} half-words.\\
+        \textbf{ilastsize}[\textit{ilastsize\_width\_p-1}:0] & SR & The size of the retired instruction is 2\textsuperscript{\textbf{ilastsize}} half-words.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -584,6 +584,13 @@ reason, the interface also supports splitting loads into two parts:
 
 The two parts of a split load are associated by use of a transaction ID.
 
+\textcolor{green}{The code size working group is proposing push and pop instructions,
+which will each potentially result in multiple loads or stores.  In this case, the 
+resulting loads and stores must be reported individually on the interface.  If an exception
+occurs part way through the sequence of loads or stores initiated by such an instruction,
+and the instruction is re-executed after the exception handler has been serviced, the
+load or store sequence must recommence from the beginning.}
+
 \section{Data Trace Interface}\label{sec:DataTraceInterface}
 
 This section describes the interface between a RISC-V hart and the
@@ -661,7 +668,7 @@ one of the following groups:
         12 & Atomic XOR\\
         13 & Atomic max\\
         14 & Atomic min\\
-        15 & reserved\\
+        15 & \textcolor{green}{Conditional store failure}\\
       \hline
     \end{tabulary}
 \end{table}

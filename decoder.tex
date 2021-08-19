@@ -107,14 +107,14 @@ function follow_execution_path(address, te_inst)
           ERROR: unprocessed branches
         return
       if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
-        (te_inst.notify != get_previous_bit(te_inst, "notify")) and 
+        (te_inst.notify != get_preceding_bit(te_inst, "notify")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)))
           # All branches processed, and reached reported address due to notification,
           # not as an uninferable jump target
         return
       if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
         !is_uninferable_discon(get_instr(last_pc)) and 
-        (te_inst.updiscon == get_previous_bit(te_inst, "updiscon")) and 
+        (te_inst.updiscon == get_preceding_bit(te_inst, "updiscon")) and 
         (branches == (is_branch(get_instr(pc)) ? 1 : 0)) and
         ((te_inst.irreport == get_previous_bit(te_inst, "irreport")) or 
          te_inst.irdepth == irstack_depth))
@@ -173,7 +173,7 @@ function process_support (te_inst)
   options = te_inst.options
     if (te_inst.qual_status != no_change)
       start_of_trace = TRUE # Trace ended, so get ready to start again
-    if (te_inst.qual_status == ended_upd and inferred_address)
+    if (te_inst.qual_status == \textcolor{green}{ended_ntr} and inferred_address)
       local previous_address = pc
       inferred_address       = FALSE
       while (TRUE)
@@ -312,7 +312,7 @@ function is_implicit_return (instr)
 
   if ((instr.opcode == JALR and instr.rs1 == 1 and instr.rd == 0) or
       (instr.opcode == C.JR and instr.rs1 == 1))
-    if ((te_inst.irreport != get_previous_bit(te_inst, "irreport")) and 
+    if ((te_inst.irreport != get_preceding_bit(te_inst, "irreport")) and 
          te_inst.irdepth == irstack_depth)
       return FALSE 
     return (irstack_depth > 0)

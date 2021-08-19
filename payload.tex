@@ -450,7 +450,7 @@ instruction before an exception, interrupt, privilege change or resync.  There a
     \begin{itemize}
       \item There have been no returns since the last call (in which case the decoder will correctly stop in the 
         innermost call), or
-      \item There has been at least one unreported branch since the last return (in which case the decoder will correctly
+      \item There has been at least one branch since the last return (in which case the decoder will correctly
         stop in the call where there are no unprocessed branches).
     \end{itemize}
     Without this, the decoder would follow the execution path until it encountered the reported address, and in most cases 
