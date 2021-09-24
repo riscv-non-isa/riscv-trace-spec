@@ -260,7 +260,7 @@ optional modes supported by the encoder.
        00 (no\_change): No change to filter qualification \newline
        01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
        10: (trace\_lost): One or more packets lost.\newline
-       11 : (ended\_upd): Qualification ended, preceding \textbf{te\_inst} would have been sent anyway due to an updiscon, even if it wasn't the last qualified instruction)\\
+       11 : (\textcolor{green}{ended\_ntr}): Qualification ended, preceding \textbf{te\_inst} would have been sent anyway due to an updiscon, even if it wasn't the last qualified instruction)\\
      \hline
      \textbf{options} & N & Values of all run-time configuration bits\newline
        Number of bits and definitions implementation dependent.  Examples might be\newline
@@ -278,7 +278,7 @@ optional modes supported by the encoder.
 
 When tracing ends, the encoder reports the address of the last traced instruction, and follows this with a format 3, 
 subformat 3 (supporting information) packet.  Two codes are provided for indicating that tracing has ended: 
-\textbf{ended\_rep} and \textbf{ended\_upd}.  This relates to exactly the same ambiguous case described in detail in 
+\textbf{ended\_rep} and \textcolor{green}{\textbf{ended\_ntr}}.  This relates to exactly the same ambiguous case described in detail in 
 section~\ref{sec:updiscon}, and in principle, the mechanism described in that section can be used to disambiguate when the last traced
 instruction is at looplabel.  However, that mechanism relies on knowing when creating the format 1/2 packet, that 
 a format 3 packet will be generated from the next instruction.  This is possible because the encoding algorithm uses 
@@ -291,7 +291,7 @@ by having two codes to indicate that tracing has ended:
 \begin{itemize}
   \item \textbf{ended\_rep} indicates that the preceding packet would not have been issued if tracing hadn't ended, 
     which means that tracing stopped after executing looplabel in the 1st loop iteration;
-  \item \textbf{ended\_upd} indicates that the preceding packet would have been issued anyway because of an uninferable
+  \item \textcolor{green}{\textbf{ended\_ntr}} indicates that the preceding packet would have been issued anyway because of an uninferable
     PC discontinuity, which means that tracing stopped after executing looplabel in the 2nd loop iteration;
 \end{itemize}
 
