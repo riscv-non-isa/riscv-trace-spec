@@ -25,7 +25,7 @@ Accordingly, both unified and split trace packets are defined.
   \centering
   \caption{Packet format for Unified load or store, with address and data}
   \label{tab:te_datadx0y0}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -36,7 +36,7 @@ Accordingly, both unified and split trace packets are defined.
 		011: Store, unaligned address\newline	
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & clog2(\textit{data\_width\_p}/8) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{diff} & 2 & 00: Full address and data (sync)\newline
 		        01: Differential address, XOR-compressed data\newline
@@ -58,7 +58,7 @@ Accordingly, both unified and split trace packets are defined.
   \centering
   \caption{Packet format for Unified load or store, with address only}
   \label{tab:te_datadx0y1}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -69,7 +69,7 @@ Accordingly, both unified and split trace packets are defined.
 		011: Store, unaligned address\newline
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & clog2(\textit{data\_width\_p}/8) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1:  Differential address\\
@@ -84,7 +84,7 @@ Accordingly, both unified and split trace packets are defined.
   \centering
   \caption{Packet format for Unified load or store, with data only}
   \label{tab:te_datadx0y2}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -95,7 +95,7 @@ Accordingly, both unified and split trace packets are defined.
 		011: Store, unaligned address\newline
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & clog2(\textit{data\_width\_p}/8) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{diff} & 1 or 2 & 00: Full data (sync)\newline
 		             01: Compressed data (XOR if 2 bits) \newline
@@ -113,7 +113,7 @@ Accordingly, both unified and split trace packets are defined.
   \centering
   \caption{Packet format for Split load - Address only}
   \label{tab:te_datadx0y3}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -122,7 +122,7 @@ Accordingly, both unified and split trace packets are defined.
 		001: Unified load or split load address, unaligned\newline
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & clog2(\textit{data\_width\_p}/8) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{index} & \textit{index\_width\_p} & Transfer index\\
     \hline
@@ -138,7 +138,7 @@ Accordingly, both unified and split trace packets are defined.
   \centering
   \caption{Packet format for Split load - Data only}
   \label{tab:te_datadx0y4}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -146,7 +146,7 @@ Accordingly, both unified and split trace packets are defined.
 		100: split load data\newline	
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & clog2(\textit{data\_width\_p}/8) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{index} & \textit{index\_width\_p} & Transfer index\\
     \hline
@@ -199,7 +199,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
   \centering
   \caption{Packet format for Unified atomic with address and data}
   \label{tab:te_datadx0y5}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -218,14 +218,14 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		111: reserved\\	
 
     \hline
-    \textbf{size} & 1 & Transfer size is 2\textsuperscript{\textbf{size}+2} bytes\\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes\\
     \hline
     \textbf{diff} & 2 & 00: Full address and data (sync)\newline
 		01: Differential address, XOR-compressed data\newline
 		10: Differential address, full data\newline
 		11: Differential address, differential data\\
     \hline
-    \textbf{op\_len} & 2 + \textbf{size} &	Number of bytes of operand is \textbf{op\_len} + 1\\
+    \textbf{op\_len} & \textcolor{cyan}{\textbf{size}} & Number of bytes of operand is \textbf{op\_len} + 1\\
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
@@ -243,7 +243,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
   \centering
   \caption{Packet format for Unified atomic with address only}
   \label{tab:te_datadx0y6}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -261,7 +261,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		110: MIN\newline	
 		111: conditional store failure\\	
     \hline
-    \textbf{size} & 1 & Transfer size is 2\textsuperscript{\textbf{size}+2} bytes\\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes\\
     \hline
     \textbf{diff} & 1 & 0: Full address \newline
 		1: Differential address\\
@@ -276,7 +276,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
   \centering
   \caption{Packet format for Unified atomic with data only}
   \label{tab:te_datadx0y7}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -294,14 +294,14 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		110: MIN\newline	
 		111: reserved\\	
     \hline
-    \textbf{size} & 1 & Transfer size is 2\textsuperscript{\textbf{size}+2} bytes\\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes\\
     \hline
     \textbf{diff} & 1 or 2 & 00: Full data (sync)\newline
 		             01: Compressed data (XOR if 2 bits) \newline
 		             10: reserved \newline
 		             11: Differential data\\
     \hline
-    \textbf{op\_len} & 2 + \textbf{size} & Number of bytes of operand is \textbf{op\_len} + 1\\
+    \textbf{op\_len} & \textcolor{cyan}{\textbf{size}} & Number of bytes of operand is \textbf{op\_len} + 1\\
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
@@ -316,7 +316,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
   \centering
   \caption{Packet format for Split atomic with operand only}
   \label{tab:te_datadx0y8}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -334,7 +334,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		110: MIN\newline	
 		111: reserved\\	
     \hline
-    \textbf{size} & 1 & Transfer size is 2\textsuperscript{\textbf{size}+2} bytes bytes\\
+    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes bytes\\
     \hline
     \textbf{index} & \textit{index\_length\_p} & Transfer index\\
     \textbf{diff} & 1 or 2 & 00: Full address and data (sync)\newline
@@ -342,7 +342,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		10: Differential address, full data\newline
 		11: Differential address, differential data\\
     \hline
-    \textbf{op\_len} & 2 + \textbf{size} &	Number of bytes of operand is \textbf{op\_len} + 1\\
+    \textbf{op\_len} & \textcolor{cyan}{\textbf{size}} &	Number of bytes of operand is \textbf{op\_len} + 1\\
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
@@ -355,7 +355,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
   \centering
   \caption{Packet format for Split atomic load data only}
   \label{tab:te_datadx0y9}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -369,7 +369,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		10: full data\newline
 		11: differential data\\
     \hline
-    \textbf{data\_len} & 2 + \textbf{size} &	Number of bytes of operand is \textit{data\_len + 1}. Not included if resp indicates an error (sign-extend \textbf{resp} MSB)\\
+    \textbf{data\_len} & \textcolor{cyan}{\textbf{size}} &	Number of bytes of operand is \textit{data\_len + 1}. Not included if resp indicates an error (sign-extend \textbf{resp} MSB)\\
     \hline
     \textbf{data} &  8 * (\textbf{data\_len} + 1) & Data. Not included if resp indicates an error (sign-extend \textbf{resp} MSB)\\
     \hline
@@ -378,7 +378,8 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 
 \subsection{size field} \label{sec:atomic-size}
 
-Only 1 bit as atomics are either 32 or 64 bits.
+\textcolor{cyan}{Strictly, \textbf{size} could be just one bit as atomics are currently either 32 or 64 bits.  
+Defining as per regular loads and stores provisions for future extensions (proprietary or otherwise) that support smaller atomics.}
 
 \subsection{diff field} \label{sec:atomic-diff}
 
@@ -401,7 +402,7 @@ a single 12-bit address is an alternative for consideration.
   \centering
   \caption{Packet format for Unified CSR, with address, data and operand}
   \label{tab:te_datadx0y10}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -439,7 +440,7 @@ a single 12-bit address is an alternative for consideration.
   \centering
   \caption{Packet format for Unified CSR, with address and read-only data (as determined by addr[11:10] = 11)}
   \label{tab:te_datadx0y11}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
@@ -473,7 +474,7 @@ a single 12-bit address is an alternative for consideration.
   \centering
   \caption{Packet format for Unified CSR, with address only}
   \label{tab:te_datadx0y12}
-  \begin{tabulary}{\textwidth}{|l|p{40mm}|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|p{38mm}|p{92mm}|}
     \hline
     {\bf Field name} & {\bf Bits} & {\bf Description} \\
     \hline
