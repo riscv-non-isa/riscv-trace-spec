@@ -584,12 +584,12 @@ reason, the interface also supports splitting loads into two parts:
 
 The two parts of a split load are associated by use of a transaction ID.
 
-\textcolor{green}{The code size working group is proposing push and pop instructions,
+The code size working group is proposing push and pop instructions,
 which will each potentially result in multiple loads or stores.  In this case, the 
 resulting loads and stores must be reported individually on the interface.  If an exception
 occurs part way through the sequence of loads or stores initiated by such an instruction,
 and the instruction is re-executed after the exception handler has been serviced, the
-load or store sequence must recommence from the beginning.}
+load or store sequence must recommence from the beginning.
 
 \section{Data Trace Interface}\label{sec:DataTraceInterface}
 
@@ -668,7 +668,7 @@ one of the following groups:
         12 & Atomic XOR\\
         13 & Atomic max\\
         14 & Atomic min\\
-        15 & \textcolor{green}{Conditional store failure}\\
+        15 & Conditional store failure\\
       \hline
     \end{tabulary}
 \end{table}

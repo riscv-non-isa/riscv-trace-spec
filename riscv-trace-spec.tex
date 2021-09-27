@@ -5,7 +5,7 @@
 \documentclass[twoside,11pt]{book}
 \usepackage{footnote}
 \usepackage{textcomp}
-
+\usepackage{listings}
 \makesavenoteenv{tabulary}
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{4}
@@ -17,7 +17,6 @@
 
 \usepackage{makeidx}
 \makeindex
-
 \usepackage{alltt}
 \usepackage{xspace}
 \usepackage{placeins}
@@ -27,7 +26,7 @@
 
 \usepackage{hyperref}
 
-\newcommand{\versionnum}{1.1.3-Draft}
+\newcommand{\versionnum}{1.1.3-\textcolor{cyan}{Stable}}
 
 \input{vc.tex}
 
@@ -41,9 +40,8 @@ Version \versionnum\\
 
 \author{
   Gajinder Panesar, Iain Robertson \\
- \textless gajinder.panesar@siemens.com\textgreater, \textless iain.robertson@siemens.com\textgreater
- \and
- Mentor Graphics, a Siemens Business.
+ \textless gajinder.panesar@siemens.com\textgreater, \textless iain.robertson@siemens.com\textgreater \\
+\textcolor{cyan}{Siemens}
 }
 
 
@@ -73,6 +71,7 @@ Version \versionnum\\
 \input{discovery.tex}
 \input{decoder.tex}
 \input{exampleCodeSnippets.tex}
+\input{fragmentCodeAndTransport.tex}
 \newpage
 
 

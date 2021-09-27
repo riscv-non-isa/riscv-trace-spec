@@ -173,7 +173,7 @@ function process_support (te_inst)
   options = te_inst.options
     if (te_inst.qual_status != no_change)
       start_of_trace = TRUE # Trace ended, so get ready to start again
-    if (te_inst.qual_status == \textcolor{green}{ended_ntr} and inferred_address)
+    if (te_inst.qual_status == ended_ntr and inferred_address)
       local previous_address = pc
       inferred_address       = FALSE
       while (TRUE)

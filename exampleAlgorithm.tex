@@ -8,7 +8,7 @@ In the diagram, the following terms are used:
 \begin{itemize}
   \item \textit{te\_inst.} The name of the packet type emitted by the encoder (see Chapter~\ref{packets});
   \item \textit{inst.}  Abbreviation for 'instruction';
-  \item \textcolor{green}{\textit{exception.}  Exception or interrupt signalled;}
+  \item \textit{exception.  Exception or interrupt signalled;}
   \item \textit{updiscon.}  Uninferable PC discontinuity.  This identifies an instruction that
     causes the program counter to be changed by an amount that cannot be predicted from the
     source code alone (\textbf{itype} values 8, 10, 12 or 14);
@@ -16,12 +16,12 @@ In the diagram, the following terms are used:
   \item \textit{Branch?} Is the instruction a branch or not (\textbf{itype} values 4 or 5);
   \item \textit{branch map.}  A vector where each bit represents the outcome of a branch.  A 0 indicates the
     branch was taken, a 1 indicates that it was not;
-  \item \textcolor{green}{\textit{ppccd.}} Privilege has changed, or context has changed and needs to be 
-    reported precisely \textcolor{green}{or treated as an uninferable PC discontinuity} (see Table~\ref{tab:context-type});
-  \item \textcolor{green}{\textit{ppccd\_br.}} As above, but branch map not empty;
-  \item \textcolor{green}{\textit{er\_n.}}  Instruction retirement and exception signalled on the same cycle, or
-    \textcolor{green}{Trace-notify trigger (see Table~\ref{tab:debugModuleTriggerSupport})};
-  \item \textit{exc\_only.}  Exception \textcolor{green}{or interrupt} signalled without simultaneous retirement;
+  \item \textit{ppccd.} Privilege has changed, or context has changed and needs to be 
+    reported precisely or treated as an uninferable PC discontinuity (see Table~\ref{tab:context-type});
+  \item \textit{ppccd\_br.} As above, but branch map not empty;
+  \item \textit{er\_n.}  Instruction retirement and exception signalled on the same cycle, or
+    Trace-notify trigger (see Table~\ref{tab:debugModuleTriggerSupport});
+  \item \textit{exc\_only.}  Exception or interrupt signalled without simultaneous retirement;
   \item \textit{cci.}  context change that can be reported imprecisely (see Table~\ref{tab:context-type});
   \item \textit{rpt\_br.} Report branches due to full branch map or misprediction;
   \item \textit{branches.}  The number of branches encountered but not yet reported to the decoder;

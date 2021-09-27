@@ -4,7 +4,7 @@ Data trace packets must be differentiated from instruction trace packets, and th
 this is accomplished is dependent on the trace transport infrastructure.  Several possibilities exist:
 One option is for instruction and data trace to be issued using different IDs (for example, if using ATB transport,
 different \textbf{ATID} values).  Alternatively, an additional field as part of the packet encapsulation can be 
-used (UltraSoC use a 2-bit \textbf{msg\_type} field to differentiate different trace types from the same source).
+used (\textcolor{cyan}{Siemens uses} a 2-bit \textbf{msg\_type} field to differentiate different trace types from the same source).
 
 By default, all data trace packets include both address and data.  However, provision is made for run-time 
 configuration options to exclude either the address or the data, in order to minimize trace bandwidth.  For example,
