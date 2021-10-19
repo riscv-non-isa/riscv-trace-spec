@@ -9,7 +9,7 @@ may be passed in to the design by some means.
 
 \begin{table}[h]
     \centering
-    \caption{Parameters to the encoder \textcolor{cyan}{- instruction trace}}
+    \caption{Parameters to the encoder - instruction trace}
     \label{tab:iparameters}
     \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
         \hline
@@ -82,31 +82,31 @@ may be passed in to the design by some means.
 
 \begin{table}[h]
     \centering
-    \caption{\textcolor{cyan}{Parameters to the encoder - data trace}}
+    \caption{Parameters to the encoder - data trace}
     \label{tab:dparameters}
     \begin{tabulary}{\textwidth}{|l|l|p{100mm}|}
         \hline
-        \textbf{\textcolor{cyan}{Parameter name}} & \textbf{\textcolor{cyan}{Range}} & \textbf{\textcolor{cyan}{Description}} \\
+        \textbf{Parameter name} & \textbf{Range} & \textbf{Description} \\
         \hline
-        \textit{\textcolor{cyan}{daddress\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{daddress} bus}\\
+        \textit{daddress\_width\_p} & & Width of the \textbf{daddress} bus\\
         \hline
-        \textit{\textcolor{cyan}{dblock\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{dblock} bus}\\
+        \textit{dblock\_width\_p} & & Width of the \textbf{dblock} bus\\
         \hline
-        \textit{\textcolor{cyan}{data\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{data} bus}\\
+        \textit{data\_width\_p}   & & Width of the \textbf{data} bus\\
         \hline
-        \textit{\textcolor{cyan}{dsize\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{dsize} bus}\\
+        \textit{dsize\_width\_p}  & & Width of the \textbf{dsize} bus\\
         \hline
-        \textit{\textcolor{cyan}{dtype\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{dtype} bus}\\
+        \textit{dtype\_width\_p}  & & Width of the \textbf{dtype} bus\\
         \hline
-        \textit{\textcolor{cyan}{iaddr\_lsbs\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{iaddr\_lsbs} bus}\\
+        \textit{iaddr\_lsbs\_width\_p} & & Width of the \textbf{iaddr\_lsbs} bus\\
         \hline
-        \textit{\textcolor{cyan}{lrid\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{lrid} bus}\\
+        \textit{lrid\_width\_p}  & & Width of the \textbf{lrid} bus\\
         \hline
-        \textit{\textcolor{cyan}{lresp\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{lresp} bus}\\
+        \textit{lresp\_width\_p} & & Width of the \textbf{lresp} bus\\
         \hline
-        \textit{\textcolor{cyan}{ldata\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{ldata} bus}\\
+        \textit{ldata\_width\_p} & & Width of the \textbf{ldata} bus\\
         \hline
-        \textit{\textcolor{cyan}{sdata\_width\_p}} & & \textcolor{cyan}{Width of the \textbf{sdata} bus}\\
+        \textit{sdata\_width\_p} & & Width of the \textbf{sdata} bus\\
         \hline
     \end{tabulary}
 \end{table}
@@ -118,7 +118,7 @@ at runtime, in the form of discoverable attributes.  These parameters must be di
 decoder, or else be fixed at the default value (in other words, if an encoder does not make a 
 particular parameter discoverable, it must implement only the default value of that parameter, 
 which the decoder will also use).  Table \ref{tab:requiredAttributes} lists the required 
-discoverable attributes \textcolor{cyan}{for instruction trace}.
+discoverable attributes for instruction trace.
 
 To access the discoverable attributes, some external entity, for example a debugger or a 
 supervisory hart, must request it from the encoder. The encoder will
@@ -130,7 +130,7 @@ Section~\ref{sec:ipxact} gives an example of how this may be accomplished.
 
 \begin{table}[!h]
     \centering
-    \caption{Required \textcolor{cyan}{instruction trace} attributes}
+    \caption{Required instruction trace attributes}
     \label{tab:requiredAttributes}
     \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
         \hline
@@ -173,9 +173,9 @@ For ease of use it is further recommended that all of the encoder's parameters b
 discoverable attributes, even if not directly required by the decoder.  In particular, 
 attributes related to filtering capabilities.  Table \ref{tab:optionalAttributes} lists the attributes
 associated with the filtering recommendations discussed in Chapter~\ref{ch:filtering},  
-Table \ref{tab:otherAttributes} lists attributes related to other \textcolor{cyan}{instruction trace}
-parameters mentioned in this document, \textcolor{cyan}{and Table \ref{tab:dataAttributes} lists 
-attributes related to data trace.}
+Table \ref{tab:otherAttributes} lists attributes related to other instruction trace
+parameters mentioned in this document, and Table \ref{tab:dataAttributes} lists 
+attributes related to data trace.
 
 \begin{table}[!h]
     \centering
@@ -229,31 +229,31 @@ attributes related to data trace.}
 
 \begin{table}[!h]
     \centering
-    \caption{\textcolor{cyan}{Data trace attributes}}
+    \caption{Data trace attributes}
     \label{tab:dataAttributes}
     \begin{tabulary}{\textwidth}{|l|l|p{80mm}|}
         \hline
-        \textbf{\textcolor{cyan}{Name}} & \textbf{\textcolor{cyan}{Default}} & \textbf{\textcolor{cyan}{Description}} \\
+        \textbf{Name} & \textbf{Default} & \textbf{Description} \\
         \hline
-        \textit{\textcolor{cyan}{daddress\_width}} & \textcolor{cyan}{31} & \textcolor{cyan}{\textit{daddress\_width\_p} - 1}\\
+        \textit{daddress\_width} & 31 & \textit{daddress\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{dblock\_width}} & \textcolor{cyan}{0} & \textcolor{cyan}{\textit{dblock\_width\_p} - 1}\\
+        \textit{dblock\_width} & 0 & \textit{dblock\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{data\_width}} & \textcolor{cyan}{31} & \textcolor{cyan}{\textit{data\_width\_p} - 1}\\
+        \textit{data\_width} & 31 & \textit{data\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{dsize\_width}} & \textcolor{cyan}{2} & \textcolor{cyan}{\textit{dsize\_width\_p} - 1}\\
+        \textit{dsize\_width} & 2 & \textit{dsize\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{dtype\_width}} & \textcolor{cyan}{0} & \textcolor{cyan}{\textit{dtype\_width\_p} - 1}\\
+        \textit{dtype\_width} & 0 & \textit{dtype\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{iaddr\_lsbs\_width}} & \textcolor{cyan}{0} & \textcolor{cyan}{\textit{iaddr\_lsbs\_width\_p} - 1}\\
+        \textit{iaddr\_lsbs\_width} & 0 & \textit{iaddr\_lsbs\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{lrid\_width}} & \textcolor{cyan}{0} & \textcolor{cyan}{\textit{lrid\_width\_p} - 1}\\
+        \textit{lrid\_width}  & 0  & \textit{lrid\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{lresp\_width}} & \textcolor{cyan}{0} & \textcolor{cyan}{\textit{lresp\_width\_p} - 1}\\
+        \textit{lresp\_width} & 0  & \textit{lresp\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{ldata\_width}} & \textcolor{cyan}{31} & \textcolor{cyan}{\textit{ldata\_width\_p} - 1}\\
+        \textit{ldata\_width} & 31 & \textit{ldata\_width\_p} - 1\\
         \hline
-        \textit{\textcolor{cyan}{sdata\_width}} & \textcolor{cyan}{31} & \textcolor{cyan}{\textit{sdata\_width\_p} - 1}\\
+        \textit{sdata\_width} & 31 & \textit{sdata\_width\_p} - 1\\
         \hline
     \end{tabulary}
 \end{table}

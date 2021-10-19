@@ -4,7 +4,7 @@ Data trace packets must be differentiated from instruction trace packets, and th
 this is accomplished is dependent on the trace transport infrastructure.  Several possibilities exist:
 One option is for instruction and data trace to be issued using different IDs (for example, if using ATB transport,
 different \textbf{ATID} values).  Alternatively, an additional field as part of the packet encapsulation can be 
-used (\textcolor{cyan}{Siemens uses} a 2-bit \textbf{msg\_type} field to differentiate different trace types from the same source).
+used (Siemens uses a 2-bit \textbf{msg\_type} field to differentiate different trace types from the same source).
 
 By default, all data trace packets include both address and data.  However, provision is made for run-time 
 configuration options to exclude either the address or the data, in order to minimize trace bandwidth.  For example,
@@ -18,6 +18,8 @@ The following sections include examples for all three cases.
 As outlined in section~\ref{sec:DataInterfaceRequirements}, two different signaling protocols
 between the RISC-V hart and the encoder are supported: \textit{unified} and \textit{split}.
 Accordingly, both unified and split trace packets are defined.
+
+\textcolor{cyan}{Note: in the following tables, "clog2" is an abbreviation for "ceiling of log2".}
 
 \section{Load and Store} \label{sec:data-loadstore}
 
@@ -36,7 +38,7 @@ Accordingly, both unified and split trace packets are defined.
 		011: Store, unaligned address\newline	
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{diff} & 2 & 00: Full address and data (sync)\newline
 		        01: Differential address, XOR-compressed data\newline
@@ -48,7 +50,7 @@ Accordingly, both unified and split trace packets are defined.
     \textbf{data} & 8 * (\textbf{data\_len} + 1) & 
                 Data\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
+    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -69,12 +71,12 @@ Accordingly, both unified and split trace packets are defined.
 		011: Store, unaligned address\newline
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1:  Differential address\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
+    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -95,7 +97,7 @@ Accordingly, both unified and split trace packets are defined.
 		011: Store, unaligned address\newline
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{diff} & 1 or 2 & 00: Full data (sync)\newline
 		             01: Compressed data (XOR if 2 bits) \newline
@@ -122,14 +124,14 @@ Accordingly, both unified and split trace packets are defined.
 		001: Unified load or split load address, unaligned\newline
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{index} & \textit{index\_width\_p} & Transfer index\\
     \hline
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1: Differential address\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
+    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -146,7 +148,7 @@ Accordingly, both unified and split trace packets are defined.
 		100: split load data\newline	
 		(other codes select other packet formats)\\
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
     \textbf{index} & \textit{index\_width\_p} & Transfer index\\
     \hline
@@ -192,6 +194,13 @@ values.
 
 If only one data compression type is offered, the \textbf{diff} field can be 1 bit wide rather than 2 for table \ref{tab:te_datadx0y2}.
 
+\subsection{\textcolor{cyan}{data\_len field}} \label{sec:loadstore-datalen}
+
+\textcolor{cyan}{However the data is compressed, upper bytes that are all the same value do not need to be 
+included in the packet; the decoder can recreate the full-width value by sign extending from the most significant 
+received bit.  In cases where \textbf{data} is not the final field in the packet, the width of \textbf{data} is 
+indicated by this field.}
+
 \FloatBarrier
 \section{Atomic} \label{sec:data-atomic}
 
@@ -218,14 +227,14 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		111: reserved\\	
 
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes\\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes\\
     \hline
     \textbf{diff} & 2 & 00: Full address and data (sync)\newline
 		01: Differential address, XOR-compressed data\newline
 		10: Differential address, full data\newline
 		11: Differential address, differential data\\
     \hline
-    \textbf{op\_len} & \textcolor{cyan}{\textbf{size}} & Number of bytes of operand is \textbf{op\_len} + 1\\
+    \textbf{op\_len} & \textbf{size} & Number of bytes of operand is \textbf{op\_len} + 1\\
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
@@ -234,7 +243,7 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
     \textbf{data} & 8 * (\textbf{data\_len} + 1) & 
                 Data\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Address, aligned and encoded as per size \\
+    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Address, aligned and encoded as per size \\
     \hline
   \end{tabulary}
 \end{table}
@@ -261,12 +270,12 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		110: MIN\newline	
 		111: conditional store failure\\	
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes\\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes\\
     \hline
     \textbf{diff} & 1 & 0: Full address \newline
 		1: Differential address\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} & Address, aligned and encoded as per size \\
+    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Address, aligned and encoded as per size \\
     \hline
   \end{tabulary}
 \end{table}
@@ -294,14 +303,14 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		110: MIN\newline	
 		111: reserved\\	
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes\\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes\\
     \hline
     \textbf{diff} & 1 or 2 & 00: Full data (sync)\newline
 		             01: Compressed data (XOR if 2 bits) \newline
 		             10: reserved \newline
 		             11: Differential data\\
     \hline
-    \textbf{op\_len} & \textcolor{cyan}{\textbf{size}} & Number of bytes of operand is \textbf{op\_len} + 1\\
+    \textbf{op\_len} & \textbf{size} & Number of bytes of operand is \textbf{op\_len} + 1\\
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
@@ -334,19 +343,20 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		110: MIN\newline	
 		111: reserved\\	
     \hline
-    \textbf{size} & \textcolor{cyan}{max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1))} & Transfer size is 2\textsuperscript{\textcolor{cyan}{\textbf{size}}} bytes bytes\\
+    \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes bytes\\
     \hline
     \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \hline
     \textbf{diff} & 1 or 2 & 00: Full address and data (sync)\newline
 		01:  Differential address, XOR-compressed data\newline
 		10: Differential address, full data\newline
 		11: Differential address, differential data\\
     \hline
-    \textbf{op\_len} & \textcolor{cyan}{\textbf{size}} &	Number of bytes of operand is \textbf{op\_len} + 1\\
+    \textbf{op\_len} & \textbf{size} &	Number of bytes of operand is \textbf{op\_len} + 1\\
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
-    \textbf{address} &  \textit{iaddress\_width\_p} &Address, aligned and encoded as per size \\
+    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} &Address, aligned and encoded as per size \\
     \hline
   \end{tabulary}
 \end{table}
@@ -364,12 +374,13 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 		other codes other packet formats\\
     \hline
     \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \hline
     \textbf{resp} & 2 & 00: Error (no data)\newline
 		01:  XOR-compressed data\newline	
 		10: full data\newline
 		11: differential data\\
     \hline
-    \textbf{data\_len} & \textcolor{cyan}{\textbf{size}} &	Number of bytes of operand is \textit{data\_len + 1}. Not included if resp indicates an error (sign-extend \textbf{resp} MSB)\\
+    \textbf{data\_len} & \textbf{size} &	Number of bytes of operand is \textit{data\_len + 1}. Not included if resp indicates an error (sign-extend \textbf{resp} MSB)\\
     \hline
     \textbf{data} &  8 * (\textbf{data\_len} + 1) & Data. Not included if resp indicates an error (sign-extend \textbf{resp} MSB)\\
     \hline
@@ -378,25 +389,26 @@ If only one data compression type is offered, the \textbf{diff} field can be 1 b
 
 \subsection{size field} \label{sec:atomic-size}
 
-\textcolor{cyan}{Strictly, \textbf{size} could be just one bit as atomics are currently either 32 or 64 bits.  
-Defining as per regular loads and stores provisions for future extensions (proprietary or otherwise) that support smaller atomics.}
+Strictly, \textbf{size} could be just one bit as atomics are currently either 32 or 64 bits.  
+Defining as per regular loads and stores provisions for future extensions (proprietary or otherwise) that support smaller atomics.
 
 \subsection{diff field} \label{sec:atomic-diff}
 
 See section~\ref{sec:loadstore-diff}.
 
+\subsection{\textcolor{cyan}{operand field}} \label{sec:atomic-operand}
+
+\textcolor{cyan}{The operand value for the atomic operation.  Uncompressed, although upper bytes 
+that are all the same value do not need to be included in the packet; the decoder can recreate the 
+full-width value by sign extending from the most significant received bit; see section \ref{sec:atomic-datalen}.} 
+
+\subsection{\textcolor{cyan}{data\_len and op\_len fields}} \label{sec:atomic-datalen}
+
+\textcolor{cyan}{Width of \textbf{data} and \textbf{operand} fields respectively.
+See section \ref{sec:loadstore-datalen}.}
+
 \FloatBarrier
 \section{CSR} \label{sec:data-csr}
-
-\textbf{Discussion points}:
-
-CSR accesses are not typically that frequent, and so there may be little benefit from offering compression at
-all.  Removing compression may simplify the implementation.  
-
-Likewise it may not be worth offering a dedicated format without the operand for read-only accesses.
-
-The benefits of splitting the address are also likely to be minimal, in which case
-a single 12-bit address is an alternative for consideration.
 
 \begin{table}[htp]
   \centering
@@ -427,9 +439,9 @@ a single 12-bit address is an alternative for consideration.
     \hline
     \textbf{addr\_msbs} & 6  &	Address[11:6]\\
     \hline
-    \textbf{op\_len} & 2 or 3  & Number of bytes of data is \textbf{op\_len} + 1\\    
+    \textbf{op\_len} & 2 or 3  & Number of bytes of \textcolor{cyan}{operand} is \textbf{op\_len} + 1\\    
     \hline
-    \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
+    \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from \textcolor{cyan}{rs1} before operator applied\\
     \hline
     \textbf{addr\_lsbs} &  6 & Address[5:0] \\
     \hline
@@ -502,9 +514,15 @@ a single 12-bit address is an alternative for consideration.
 
 See section~\ref{sec:loadstore-diff}.
 
-\subsection{data\_len field} \label{sec:csr-datalen}
+\subsection{\textcolor{cyan}{operand field}} \label{sec:csr-operand}
 
-2 bits wide if hart has 32-bit CSRs, 3 bits if 64-bit.
+\textcolor{cyan}{See section~\ref{sec:atomic-operand}.}
+
+\subsection{data\_len \textcolor{cyan}{and op\_len} fields} \label{sec:csr-datalen}
+
+2 bits wide if hart has 32-bit CSRs, 3 bits if 64-bit.  \textcolor{cyan}{Width of 
+\textbf{data} and \textbf{operand} fields respectively.  See section \ref{sec:loadstore-datalen}.}
+
 
 \subsection{addr fields} \label{sec:csr-addr}
 

@@ -200,13 +200,14 @@ Signals are assigned to one of the  following groups:
         faulting virtual address for address exceptions, as would be
         written to the \textbf{utval/stval/vstval/mtval} CSR. Future optional extensions may define \textbf{tval} 
         to provide ancillary information in cases where it currently supplies zero.
-        Ignored unless \textbf{itype}=1 or 2.\\
+        Ignored unless \textbf{itype}=\textcolor{cyan}{1}.\\
         \hline
         \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions retired on this cycle.
         Encoding given in Table~\ref{tab:priv}.  Codes 4-7 optional.\\
         \hline
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.
-        Invalid if \textbf{iretire}=0 \\
+        Invalid if \textbf{iretire}=0 \textcolor{cyan}{unless \textbf{itype}=1, in which case it indicates the address of the 
+        instruction which incurred the exception.} \\
         \hline
         \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context for all instructions retired on this cycle.\\
         \hline
@@ -443,14 +444,15 @@ will need to be applied via the \textbf{context} input.
     \centering
     \caption{Optional sideband encoder input signals}
     \label{tab:ingress-side-band}
-    \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
+    \begin{tabulary}{\textwidth}{|l|p{18mm}|p{85mm}|}
         \hline
         \textbf{Signal} & \textbf{Group} & \textbf{Function} \\
         \hline
         \textbf{impdef}[\textit{impdef\_width\_p}-1:0] & O &  Implementation defined sideband signals.  A typical use for
         these would be for filtering (see Chapter~\ref{ch:filtering}.\\
         \hline
-        \textbf{trigger}[2:0] & OR & A pulse on bit 0 will cause the encoder to start tracing, and continue until further 
+        \textbf{trigger}[\textcolor{cyan}{2+}:0] & \textcolor{cyan}{[1:0]: O} \newline 
+                                \textcolor{cyan}{[2+]:  OR} & A pulse on bit 0 will cause the encoder to start tracing, and continue until further 
         notice, subject to other filtering criteria also being met.\newline
         A pulse on bit 1 will cause the encoder to stop tracing until further notice.  See section~\ref{sec:trigger}).\\
         \hline
@@ -507,8 +509,9 @@ caused the trigger is retired.
         \textbf{trigger[1]} if the encoder provides it. \\
         \hline
         4 & \textit{Trace-notify}.  This should be connected to 
-        \textbf{trigger[2]} if the encoder provides it. This will cause the encoder to output
-        a packet containing the address of the last instruction in the block if it is enabled.\\
+        \textbf{trigger[\textcolor{cyan}{1 + \textit{blocks}:}2]} if the encoder provides it. This will cause the encoder to output
+        a packet containing the address of the last instruction in the block if it is enabled.
+        \textcolor{cyan}{One bit per block.}\\
         \hline
     \end{tabulary}
 \end{table}
@@ -615,7 +618,7 @@ one of the following groups:
         \hline
         \textbf{dretire} & M & Data access retired (when high)\\
         \hline
-        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in Table~\ref{tab:itype}\\
+        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in \textcolor{cyan}{Table~\ref{tab:dtype}}\\
         \hline
         \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & M & The data access address\\
         \hline
