@@ -3,8 +3,8 @@
 This decoder implementation assumes there is no branch predictor or return address 
 stack (\textit{return\_stack\_size\_p} and \textit{bpred\_size\_p} both zero).
 
-Reference C-code implementations of both the encoder and decoder can be found at 
-\href{https://github.com/riscv/riscv-trace-spec/tree/master/te_codec/src}{https://github.com/riscv/riscv-trace-spec/tree/master/te\_codec/src}.
+Reference \textcolor{cyan}{Python} implementations of both the encoder and decoder can be found at 
+\href{https://github.com/riscv-non-isa/riscv-trace-spec}{https://github.com/riscv-non-isa/riscv-trace-spec}.
 
 \section{Decoder pseudo code}
 
@@ -39,6 +39,8 @@ function process_te_inst (te_inst)
       return
     if (te_inst.subformat == 2) # Context packet
       return
+    \textcolor{cyan}{if (te_inst.subformat == 1 and !te_inst.interrupt) # Exception}
+      \textcolor{cyan}{report_epc(exception_address(te_inst))}
 
     inferred_address = FALSE
     address       = (te_inst.address << discovery_response.iaddress_lsb)
@@ -52,6 +54,7 @@ function process_te_inst (te_inst)
       follow_execution_path(address, te_inst)
     else
       pc           = address
+      \textcolor{cyan}{report_pc(pc)}
       last_pc      = pc # previous pc not known but ensures correct
                         #  operation for is_sequential_jump()
     start_of_trace = FALSE
@@ -75,7 +78,6 @@ function process_te_inst (te_inst)
         branches += 31
       else
         branches += te_inst.branches
-
     follow_execution_path(address, te_inst)
 \end{alltt}
 
@@ -157,12 +159,12 @@ function next_pc (address)
     pc += instr.imm
   else
     pc += instruction_size(instr)
+  \textcolor{cyan}{report_pc(pc)}
 
   if (is_call(instr))
     push_return_stack(this_pc)
 
   last_pc = this_pc
-  
   return stop_here
 
 # Process support packet #
@@ -357,5 +359,27 @@ function pop_return_stack ()
 
   return link
 
+\textcolor{cyan}{# Return the address of an exception #}
+\textcolor{cyan}{function exception_address(te_inst)}
+
+\textcolor{cyan}{  if (!te_inst.thaddr)}
+\textcolor{cyan}{    return te_inst.addrepc}
+
+\textcolor{cyan}{  return next_pc(pc)}
+\end{alltt}
+
+\pagebreak
+
+\begin{alltt}
+\textcolor{cyan}{# Report program counter value (user to populate if desired) #}
+\textcolor{cyan}{function report_pc(address)}
+
+\textcolor{cyan}{  return}
+  
+\textcolor{cyan}{# Report exception program counter value (user to populate if desired) #}
+\textcolor{cyan}{function report_epc(address)}
+
+\textcolor{cyan}{  return}
+  
 \end{alltt}
 %\end{lstlisting}
