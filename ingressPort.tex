@@ -717,10 +717,10 @@ However, that is not the case for data trace.  Consider two scenarios:
 
 \begin{itemize}
   \item Case 1: 1st block contains instructions 1, 2, 3; second block contains 4, 5
-  \item Case 2: 1st block contains instructions 1,2; second block contains 3, 4, 5
+  \item Case 2: 1st block contains instructions 1, 2; second block contains 3, 4, 5
 \end{itemize}
  
-Given that \textbf{dvalid} is high in the same cycle that the data access retires, the encoder knows the address of 
+Given that \textcolor{cyan}{\textbf{iretire} is non-zero} in the same cycle that the data access retires, the encoder knows the address of 
 the 1st and last instructions in a block, but does not know precisely where in the block the data access is.  
 In both cases, the first block matches the filtering criteria (it contains the address of instruction 1), and the second block does not.  
 But if the encoder traced all the data accesses in the matching block, then in case 1 it would trace both instructions 1 and 3, whereas 

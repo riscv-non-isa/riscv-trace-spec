@@ -149,7 +149,7 @@ between.  There are two issues with this:
 This packet also contains all the information the decoder needs to fully identify an instruction.
 It is sent following an \textcolor{cyan}{exception or interrupt, and includes the cause, 
 the 'trap value' (for exceptions), and the address of the trap handler, or
-of the exception itself - see section \ref{sec:addrepc}.}  
+of the exception itself - see section \ref{sec:thaddr}.}  
 
 If the implicit exception mode is enabled (see section~\ref{sec:implicit-exception}), the trap handler 
 address is omitted \textcolor{cyan}{if \textbf{thaddr} is 1}.
@@ -182,10 +182,11 @@ address is omitted \textcolor{cyan}{if \textbf{thaddr} is 1}.
     \textbf{interrupt} & 1 & Interrupt. \\
     \hline
     \textbf{\textcolor{cyan}{thaddr}} & \textcolor{cyan}{1} &
-               \textcolor{cyan}{When set to 1, \textbf{addrepc} points to the trap handler address.  
-                When set to 0,  \textbf{addrepc} points to the EPC for exceptions, and is undefined for interrupts.}\\
+               \textcolor{cyan}{When set to 1, \textbf{address} points to the trap handler address.  
+                When set to 0, \textbf{address} points to the EPC for an exception at the target of an updiscon, 
+                and is undefined for other exceptions and interrupts.}\\
     \hline
-    \textbf{\textcolor{cyan}{addrepc}} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} 
               Address must be left shifted in order to recreate original byte address. \\
     \hline
@@ -196,19 +197,23 @@ address is omitted \textcolor{cyan}{if \textbf{thaddr} is 1}.
   \end{tabulary}
 \end{table}
 
-\subsection{\textcolor{cyan}{Format 3 \textbf{thaddr} and \textbf{addrepc} fields}} \label{sec:addrepc}
+\subsection{\textcolor{cyan}{Format 3 \textbf{thaddr} and \textbf{address} fields}} \label{sec:thaddr}
+
+\textcolor{cyan}{If an exception occurs at the target of an uninferable PC discontinuity, the value of 
+the EPC cannot be infered from the program binary, and so \textbf{address} contains the EPC and 
+\textbf{thaddr} is set to 0.  In this case, the trap handler address will be reported
+via a subsequent format 3, subformat 1 packet.}
 
 \textcolor{cyan}{Usually when an exception or interrupt occurs, the cause is reported along 
 with the 1st address of the trap handler, when that instruction retires.  In this case, 
 \textbf{thaddr} is 1.  However, if a second interrupt or exception occurs immediately, details of 
 this must still be reported, even though the 1st instruction of the handler hasn't retired.  In this 
-situation,  \textbf{thaddr} is 0, and \textbf{addrepc} contains the address at which the exception 
-occurred (i.e. the exception PC, or EPC) for exceptions, and is undefined for interrupts.}
+situation,  \textbf{thaddr} is 0, and \textbf{address} is undefined (unless it contains the EPC as
+outlined in the previous paragraph).}
 
-\textcolor{cyan}{Additionally, if an exception occurs at the target of an uninferable PC discontinuity, the value of 
-the EPC cannot be infered from the program binary, and so \textbf{addrepc} contains the EPC and 
-\textbf{thaddr} is set to 0.  In this case, the trap handler address will be reported
-via a subsequent format 0, subformat 1 packet.}
+\textcolor{cyan}{(The reason for not reporting the EPC for all exceptions when \textbf{thaddr} is 0 is
+that it may be at either the address of the next instruction or current instruction depending on the 
+exception cause, which can be inferred by the decoder without adding complexity to the encoder.)}
 
 \subsection{Format 3 \textbf{\textcolor{cyan}{tval}} field}
 
@@ -270,7 +275,7 @@ optional modes supported by the encoder.
      \hline
      \textbf{subformat}  & 2 & 11 (support): Supporting information for the decoder \\
      \hline
-     \textbf{enable} & 1 & Indicates if the encoder is enabled\\
+     \textbf{\textcolor{cyan}{ienable}} & 1 & Indicates if the \textcolor{cyan}{instruction} trace encoder is enabled\\
      \hline
      \textbf{encoder\_mode} & N & Identifies trace algorithm\newline
        Details and number of bits implementation dependent.  Currently Branch trace is the only mode defined, indicated by the value 0.\\

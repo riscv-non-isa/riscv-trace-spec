@@ -20,14 +20,14 @@ In the diagram, the following terms are used:
     reported precisely or treated as an uninferable PC discontinuity (see Table~\ref{tab:context-type});
   \item \textit{ppccd\_br.} As above, but branch map not empty;
   \item \textit{er\_n.}  Instruction retirement and exception signalled on the same cycle, or
-    Trace-notify trigger (see Table~\ref{tab:debugModuleTriggerSupport});
+     Trace notify trigger (see Table~\ref{tab:debugModuleTriggerSupport});
   \item \textit{exc\_only.}  Exception or interrupt signalled without simultaneous retirement;
   \item \textit{cci.}  context change that can be reported imprecisely (see Table~\ref{tab:context-type});
   \item \textit{rpt\_br.} Report branches due to full branch map or misprediction;
   \item \textit{branches.}  The number of branches encountered but not yet reported to the decoder;
   \item \textit{pbc.} Correctly predicted branches count (always zero if branch predictor disabled or not present);
-  \item \textcolor{cyan}{\textit{Reported?} Exception reported with \textbf{ehaddr} = 0 on the cycle it occured 
-    because it was preceded by an updiscon;}
+  \item \textcolor{cyan}{\textit{Reported?} "Exception previous" reported with \textbf{thaddr} = 0 on the cycle it occured 
+    because it was preceded by an updiscon or immediately followed by another exception;}
   \item \textit{resync count.} A counter used to keep track of when it is necessary to send 
     a synchronization packet (see Section~\ref{sec:resync});
   \item \textit{max\_resync.}  The resync counter value that schedules a synchronization packet (see Section~\ref{sec:resync});

@@ -39,8 +39,12 @@ function process_te_inst (te_inst)
       return
     if (te_inst.subformat == 2) # Context packet
       return
-    \textcolor{cyan}{if (te_inst.subformat == 1 and !te_inst.interrupt) # Exception}
-      \textcolor{cyan}{report_epc(exception_address(te_inst))}
+    \textcolor{cyan}{if (te_inst.subformat == 1) # Trap packet}
+      \textcolor{cyan}{report_trap(te_inst)}
+      \textcolor{cyan}{if (!te_inst.interrupt) # Exception}
+        \textcolor{cyan}{report_epc(exception_address(te_inst))}
+      \textcolor{cyan}{if (!te_inst.thaddr) # Trap only - nothing retired}
+        \textcolor{cyan}{return}
 
     inferred_address = FALSE
     address       = (te_inst.address << discovery_response.iaddress_lsb)
@@ -57,10 +61,16 @@ function process_te_inst (te_inst)
       \textcolor{cyan}{report_pc(pc)}
       last_pc      = pc # previous pc not known but ensures correct
                         #  operation for is_sequential_jump()
+
     start_of_trace = FALSE
     irstack_depth  = 0
 
-  else
+  else # Duplicated at top of next page to show continuity
+\end{alltt}
+\pagebreak
+
+\begin{alltt}
+  else # Duplicate of last line from previous page to show continuity
     if (start_of_trace) # This should not be possible!
       ERROR: Expecting trace to start with format 3
       return
@@ -78,6 +88,7 @@ function process_te_inst (te_inst)
         branches += 31
       else
         branches += te_inst.branches
+
     follow_execution_path(address, te_inst)
 \end{alltt}
 
@@ -93,10 +104,12 @@ function follow_execution_path(address, te_inst)
     if (inferred_address) # iterate again from previously reported address to
                           #   find second occurrence
       stop_here = next_pc(previous_address)
+      \textcolor{cyan}{report_pc(pc)}
       if (stop_here)
         inferred_address = FALSE
     else
       stop_here = next_pc(address)
+      \textcolor{cyan}{report_pc(pc)}
       if (branches == 1 and is_branch(get_instr(pc)) and stop_at_last_branch)
         # Reached final branch - stop here (do not follow to next instruction as
         #  we do not yet know whether it retires)
@@ -159,7 +172,6 @@ function next_pc (address)
     pc += instr.imm
   else
     pc += instruction_size(instr)
-  \textcolor{cyan}{report_pc(pc)}
 
   if (is_call(instr))
     push_return_stack(this_pc)
@@ -180,6 +192,7 @@ function process_support (te_inst)
       inferred_address       = FALSE
       while (TRUE)
         stop_here = next_pc(previous_address)
+        \textcolor{cyan}{report_pc(pc)}
         if (stop_here)
           return
     return
@@ -362,8 +375,13 @@ function pop_return_stack ()
 \textcolor{cyan}{# Return the address of an exception #}
 \textcolor{cyan}{function exception_address(te_inst)}
 
-\textcolor{cyan}{  if (!te_inst.thaddr)}
-\textcolor{cyan}{    return te_inst.addrepc}
+\textcolor{cyan}{  local instr = get_instr(pc)}
+
+\textcolor{cyan}{  if (is_uninferable_discon(instr) and !te_inst.thaddr)}
+\textcolor{cyan}{    return te_inst.address}
+
+\textcolor{cyan}{  if (instr.opcode == ECALL) or (instr.opcode == EBREAK) or (instr.opcode == C.EBREAK))}
+\textcolor{cyan}{    return pc}
 
 \textcolor{cyan}{  return next_pc(pc)}
 \end{alltt}
@@ -371,6 +389,11 @@ function pop_return_stack ()
 \pagebreak
 
 \begin{alltt}
+\textcolor{cyan}{# Report ecause and tval (user to populate if desired) #}
+\textcolor{cyan}{function report_trap(te_inst)}
+
+\textcolor{cyan}{  return}
+  
 \textcolor{cyan}{# Report program counter value (user to populate if desired) #}
 \textcolor{cyan}{function report_pc(address)}
 
