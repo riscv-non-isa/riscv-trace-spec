@@ -1,0 +1,3 @@
+The spike trace for this test has been modified by hand to test a corner case in the encoder
+algorithm. If you run the elf file in spike YOU WILL NOT get the trace file contained in this
+directory.

@@ -1,0 +1,12 @@
+; Comments can be added here
+[required]
+daddress_width_p = 32
+dblock_width_p = 1
+data_width_p = 32
+dsize_width_p = 3
+dtype_width_p = 2
+iaddr_lsbs_width_p = 1
+lrid_width_p = 1
+lresp_width_p = 1
+ldata_width_p = 32
+sdata_width_p = 32
