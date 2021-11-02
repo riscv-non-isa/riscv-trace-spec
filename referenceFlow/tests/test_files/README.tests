@@ -1,0 +1,14 @@
+16th September 2021
+
+Most of the regression tests now run spike as part of testing rather than storing trace files
+in the repository.
+
+Special case handling
+---------------------
+
+However, there are some cases which need special handling to produce the spike trace and this is
+handled by having a file with the .spike_pc_trace extension. This is then picked up by the
+regression script (scripts/ci/run_regression.sh) instead of attempting to run spike.
+
+e.g. xrle.spike_pc_trace
+

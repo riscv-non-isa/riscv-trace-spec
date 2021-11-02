@@ -19,7 +19,7 @@ As outlined in section~\ref{sec:DataInterfaceRequirements}, two different signal
 between the RISC-V hart and the encoder are supported: \textit{unified} and \textit{split}.
 Accordingly, both unified and split trace packets are defined.
 
-\textcolor{cyan}{Note: in the following tables, "clog2" is an abbreviation for "ceiling of log2".}
+Note: in the following tables, "clog2" is an abbreviation for "ceiling of log2".
 
 \section{Load and Store} \label{sec:data-loadstore}
 
@@ -50,7 +50,7 @@ Accordingly, both unified and split trace packets are defined.
     \textbf{data} & 8 * (\textbf{data\_len} + 1) & 
                 Data\\
     \hline
-    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
+    \textbf{address} &  \textit{daddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -76,7 +76,7 @@ Accordingly, both unified and split trace packets are defined.
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1:  Differential address\\
     \hline
-    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
+    \textbf{address} &  \textit{daddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -131,7 +131,7 @@ Accordingly, both unified and split trace packets are defined.
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1: Differential address\\
     \hline
-    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
+    \textbf{address} &  \textit{daddress\_width\_p} & Byte address if format is unaligned, otherwise shift left by \textbf{size} to recover byte address \\
     \hline
   \end{tabulary}
 \end{table}
@@ -194,12 +194,12 @@ values.
 
 If only one data compression type is offered, the \textbf{diff} field can be 1 bit wide rather than 2 for table \ref{tab:te_datadx0y2}.
 
-\subsection{\textcolor{cyan}{data\_len field}} \label{sec:loadstore-datalen}
+\subsection{data\_len field} \label{sec:loadstore-datalen}
 
-\textcolor{cyan}{However the data is compressed, upper bytes that are all the same value do not need to be 
+However the data is compressed, upper bytes that are all the same value do not need to be 
 included in the packet; the decoder can recreate the full-width value by sign extending from the most significant 
 received bit.  In cases where \textbf{data} is not the final field in the packet, the width of \textbf{data} is 
-indicated by this field.}
+indicated by this field.
 
 \FloatBarrier
 \section{Atomic} \label{sec:data-atomic}
@@ -243,7 +243,7 @@ indicated by this field.}
     \textbf{data} & 8 * (\textbf{data\_len} + 1) & 
                 Data\\
     \hline
-    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Address, aligned and encoded as per size \\
+    \textbf{address} &  \textit{daddress\_width\_p} & Address, aligned and encoded as per size \\
     \hline
   \end{tabulary}
 \end{table}
@@ -275,7 +275,7 @@ indicated by this field.}
     \textbf{diff} & 1 & 0: Full address \newline
 		1: Differential address\\
     \hline
-    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} & Address, aligned and encoded as per size \\
+    \textbf{address} &  \textit{daddress\_width\_p} & Address, aligned and encoded as per size \\
     \hline
   \end{tabulary}
 \end{table}
@@ -356,7 +356,7 @@ indicated by this field.}
     \hline
     \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs2 before operator applied\\
     \hline
-    \textbf{address} &  \textcolor{cyan}{\textit{daddress\_width\_p}} &Address, aligned and encoded as per size \\
+    \textbf{address} &  \textit{daddress\_width\_p} &Address, aligned and encoded as per size \\
     \hline
   \end{tabulary}
 \end{table}
@@ -396,15 +396,15 @@ Defining as per regular loads and stores provisions for future extensions (propr
 
 See section~\ref{sec:loadstore-diff}.
 
-\subsection{\textcolor{cyan}{operand field}} \label{sec:atomic-operand}
+\subsection{operand field} \label{sec:atomic-operand}
 
-\textcolor{cyan}{The operand value for the atomic operation.  Uncompressed, although upper bytes 
+The operand value for the atomic operation.  Uncompressed, although upper bytes 
 that are all the same value do not need to be included in the packet; the decoder can recreate the 
-full-width value by sign extending from the most significant received bit; see section \ref{sec:atomic-datalen}.} 
+full-width value by sign extending from the most significant received bit; see section \ref{sec:atomic-datalen}.
 
-\subsection{\textcolor{cyan}{data\_len and op\_len fields}} \label{sec:atomic-datalen}
+\subsection{data\_len and op\_len fields} \label{sec:atomic-datalen}
 
-\textcolor{cyan}{Width of \textbf{data} and \textbf{operand} fields respectively.
+Width of \textbf{data and \textbf{operand} fields respectively.
 See section \ref{sec:loadstore-datalen}.}
 
 \FloatBarrier
@@ -439,9 +439,9 @@ See section \ref{sec:loadstore-datalen}.}
     \hline
     \textbf{addr\_msbs} & 6  &	Address[11:6]\\
     \hline
-    \textbf{op\_len} & 2 or 3  & Number of bytes of \textcolor{cyan}{operand} is \textbf{op\_len} + 1\\    
+    \textbf{op\_len} & 2 or 3  & Number of bytes of operand is \textbf{op\_len} + 1\\    
     \hline
-    \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from \textcolor{cyan}{rs1} before operator applied\\
+    \textbf{operand}	& 8 * (\textbf{op\_len} + 1) & Operand.  Value from rs1 before operator applied\\
     \hline
     \textbf{addr\_lsbs} &  6 & Address[5:0] \\
     \hline
@@ -514,14 +514,14 @@ See section \ref{sec:loadstore-datalen}.}
 
 See section~\ref{sec:loadstore-diff}.
 
-\subsection{\textcolor{cyan}{operand field}} \label{sec:csr-operand}
+\subsection{operand field} \label{sec:csr-operand}
 
-\textcolor{cyan}{See section~\ref{sec:atomic-operand}.}
+See section~\ref{sec:atomic-operand}.
 
-\subsection{data\_len \textcolor{cyan}{and op\_len} fields} \label{sec:csr-datalen}
+\subsection{data\_len and op\_len fields} \label{sec:csr-datalen}
 
-2 bits wide if hart has 32-bit CSRs, 3 bits if 64-bit.  \textcolor{cyan}{Width of 
-\textbf{data} and \textbf{operand} fields respectively.  See section \ref{sec:loadstore-datalen}.}
+2 bits wide if hart has 32-bit CSRs, 3 bits if 64-bit.  Width of 
+\textbf{data} and \textbf{operand} fields respectively.  See section \ref{sec:loadstore-datalen}.
 
 
 \subsection{addr fields} \label{sec:csr-addr}

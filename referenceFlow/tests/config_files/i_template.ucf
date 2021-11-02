@@ -1,0 +1,31 @@
+; Comments can be added here
+[required]
+file-stem = NOT_SET
+;; Debug flags from decoder-algorithm.h
+;;#define TE_DEBUG_PC_TRANSITIONS     (1u)
+;;#define TE_DEBUG_IMPLICIT_RETURN    (1u << 1)
+;;#define TE_DEBUG_FOLLOW_PATH        (1u << 2)
+;;#define TE_DEBUG_PACKETS            (1u << 3)
+;;#define TE_DEBUG_JUMP_TARGET_CACHE  (1u << 4)
+;;#define TE_DEBUG_BRANCH_PREDICTION  (1u << 5)
+;;#define TE_DEBUG_EXCEPTIONS         (1u << 6)
+debug-flags = 0x7f
+ip-version = 6
+object-files = NOT_SET
+
+[codec]
+; These are just single values currently, not a "range".
+cycle-accurate = false
+resync-max = 1
+full-address = false
+implicit-except = false
+si-jump = false
+implicit-return = false
+branch-prediction = false
+jump-target-cache = false
+
+
+[flags]
+; These options just set a flag.
+print-set-pc = false
+use-rv32-isa = false

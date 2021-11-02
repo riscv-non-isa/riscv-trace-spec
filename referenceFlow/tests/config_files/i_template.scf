@@ -1,0 +1,48 @@
+# This is an example static config file including the Required Attributes
+
+# Comments can be added with the '#' symbol and anything after this is ignored
+# Whitespace is also ignored
+# Variables must be defined by a string  followed by '=' and then the designed value.
+# Variables cannot include '#', '=' or '['
+
+# Each line in the config fine cannot exceed 256 characters.
+# Beyond this is will results in 'undefined behaviour'
+
+# Config Headings can be added with square brackets and are ignored by the parser.
+
+# The values listed below are the default values which are populated by the initialization function
+[Required Attributes]
+arch_p=0
+bpred_size_p=0
+cache_size_p=0
+call_counter_size_p=0
+context_width_p=32
+time_width_p=1
+ecause_width_p=5
+f0s_width_p=0
+iaddress_lsb_p=0
+iaddress_width_p=40
+nocontext_p=0
+notime_p=1
+privilege_width_p=2
+return_stack_size_p=0
+sijump_p=0
+
+[Optional Filtering Attributes]
+comparators_p=1
+filters_p=1
+ecause_choice_p=5
+filter_context_p=1
+filter_time_p=1
+filter_excint_p=1
+filter_privilege_p=1
+filter_tval_p=1
+
+[Other Recommended Attributes]
+ctype_width_p=2
+ilastsize_width_p=1
+itype_width_p=3
+iretire_width_p=3
+retires_p=1
+taken_branches_p=1
+impdef_width_p=1

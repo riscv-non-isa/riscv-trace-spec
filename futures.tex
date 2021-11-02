@@ -6,18 +6,6 @@ number of other types of processor trace that would be useful
 should be considered as possible features that maybe added in the future,
 once the current scope has been completed.
 
-\section{Data trace}
-
-The trace encoder will output packets to communicate information
-about loads and stores to an off-chip decoder.  To reduce the amount
-of bandwidth required, reporting data values will be optional, and
-both address and data will be able to be encoded differentially when
-it is beneficial to do so.  This entails outputting the difference
-between the new value and the previous value of the same transfer
-size, irrespective of transfer direction.
-
-Unencoded values will be used for synchronisation and at other times.
-
 \section{Fast profiling}
 
 In this mode the encoder will provide a non-intrusive alternative to

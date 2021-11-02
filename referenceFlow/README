@@ -1,0 +1,145 @@
+End to end instruction and data trace
+-------------------------------------
+
+This release packages up the files required to build and test the end to end flow for the
+Siemens RISCV Instruction and Data Trace.
+
+The code has been developed and tested on various versions of Ubuntu (18.04, 20.04 and 21.04).
+It incorporates pre-built binaries for RISCV spike and objdump that were built on Ubuntu 18.04. The
+rest of the RISCV toolchain is not included as it is not required to run the end to end flow using
+pre-built RISCV binaries of the source applications.
+
+
+Requirements
+------------
+In order to build and test, the following are required:
+   - device tree compiler (sudo apt-get install device-tree-compiler)
+   - cmake (at least version 3.10) (sudo apt-get install cmake)
+
+
+Building
+--------
+The build script is in
+    scripts/build.sh
+
+This will create a directory called
+    build_te
+where the cmake build will take place.
+Note that this directory will always be created in the top level of this release so that the
+test script can find executables.
+
+The build should be very quick, a few seconds, and then it will run three sets of unit tests, again
+which should take a few seconds to run.
+
+The tests should complete with a message such as
+    "100% tests passed, 0 tests failed out of 3"
+There will be a number of "Error" message reports where the testing is trying to provoke error
+conditions, these are expected.
+
+
+Testing instruction trace
+-------------------------
+The test script is in
+    scripts/run_regression.sh
+
+The only required parameter is to select one or more test suites to run. Each test suite
+describes the configuration that is required to be run in terms of hardware settings and user
+settings. A number of these are provided in
+    tests/test_suites
+
+e.g. itype3_debug.sh
+    this is a simple setup that uses itype width 3, and always uses full addresses in all encoding
+    packets. This would not be used for real encoding as the encoder payload size would be very large,
+    but it is useful for debugging.
+
+To run a quick test you can specify a test name on the command line e.g.
+    scripts/run_regression.sh vvadd
+
+This should complete in a few seconds and will actually run tests on two binary files, vvadd.riscv
+and mt-vvadd.riscv
+
+Note that if a test_suite is NOT supplied then it defaults to using itype3_basic.
+
+To run a complete suite of tests, i.e. all of the executable files contained in the tests/test_files
+the command would be
+    scripts/run_regression.sh -t itype4_basic
+
+**** Important: To run all of the tests for one suite may take 20 minutes or more ****
+
+By default each time regression tests are run, a new directory is created, in the current working
+directory, e.g. regression_20210929_193626
+
+To have previous test runs removed automatically use the "--tidy" command line option.
+To use a fixed name for the testing you can specify the name using "--fixed my_fixed_dir".
+
+
+Test results
+------------
+All of the test data is stored in the regression directory that is created. At the top level
+of the regressions directory (if -t itype3_basic is used) there will be directories called
+   spike/
+   itype3_basic/
+
+If more than one test suite is specified then a separate subdirectory is created for each suite.
+
+
+Testing data trace
+------------------
+The test script is the same one used for instruction trace
+    scripts/run_regression.sh
+
+In this case a test suite must be specified since the default is to use instruction trace:
+    scripts/run_regression.sh -t dtype_basic towers rsort
+
+will run data trace on the towers.riscv and rsort.riscv elf files.
+
+The results directory naming is controlled in the same was as for instruction trace.
+
+
+Naming of test suites
+---------------------
+The run script uses the first part of the test suite name to determine whether it should perform
+instruction or data trace.
+   - itype* means instruction trace
+   - dtype* means data trace
+i.e. dtype_debug.sh, or itype3_basic.sh
+
+The run script also assumes that the filename has the extension .sh to make it clear that this is a
+shell script. The file is actually "sourced" as part of the run script which is a bash script, so
+must consist of legal shell script commands and comments.
+
+
+End to end instruction trace flow
+---------------------------------
+This release models the following flow to allow testing of the instruction trace algorithm.
+
+spike instruction trace -> post-iss -> encoder model -> decoder model -> checker
+
+Spike: A custom patch is applied to spike (the RISCV Instruction Set Simulator, ISS) and this allows
+     spike to generate a CSV instruction trace output format from a RISCV elf file.
+Post ISS: This reads the CSV spike trace format and converts it into the input signals expected
+     by the encoder. This format (encoder_input) is also CSV.
+Encoder: This takes the encoder_input format and applies the encoder algorithm to produce the te_inst
+     output. This can be either a CSV format or a byte-stream format.
+Decoder: This takes the te_inst byte-stream format output (but can take the te_inst CSV output),
+     together with the elf files used to produce the original trace, and decodes the trace.
+Checker: This compares the original spike trace with the decoded trace.
+
+In addition to this flow, there is also a phase (check-raw) that checks that the te_inst byte-stream
+data can be used to reproduce the te_inst CSV format. This phase is not required for general use
+but was very useful during development.
+
+
+End to end data trace flow
+---------------------------
+This release models the following flow to allow testing of the data trace algorithm.
+
+spike data trace -> encoder model -> decoder model -> checker
+
+Spike: A custom patch is applied to spike (the RISCV Instruction Set Simulator, ISS) and this allows
+     spike to generate a CSV data trace output format from a RISCV elf file.
+Encoder: This takes the spike CSV data and applies the encoder algorithm to produce the
+     te_data/te_inst output. This can be either a CSV format or a byte-stream format.
+Decoder: This takes the te_data/te_inst byte-stream format output (but can take the CSV output),
+     and decodes the data trace.
+Checker: This compares the original spike trace with the decoded trace.

@@ -80,16 +80,14 @@ Lines labelled 53, 56 and 59 show the packets output from the encoder for this f
 56:    format=2, address=8000010c, irreport=0, notify=0, updiscon=0, Reason[exc_only]
                                                     Payload[32 04 00 00 02]
 57: <  next=800001b0 curr=80000222 prev=8000010c
-58: <  next=800001e0 curr=800001b0 prev=80000222
-59: <  format=3, subformat=EXCEPTION, addrepc=80000222, branch=1, context=0, ecause=2, interrupt=0, ehaddr=0
-                                                 privilege=3, tval=00000000, Reason[exception, prev_updiscon]
-                                                      Payload[77 00 00 00 00 41 44 00 00 20 00 00 00 00 00]
-60: <  format=3, subformat=START, address=800001b0, branch=1, context=0,
+58: <  format=3, subformat=TRAP, address=80000222, branch=1, context=0, ecause=2, interrupt=0, 
+                                                  privilege=3, thaddr=0, tval=0, Reason[prev_updiscon, curr_exc_only] 
+                                                     Payload[77 00 00 00 00 81 88 00 00 20]
+59: <  format=3, subformat=START, address=800001b0, branch=1, context=0,
                                              privilege=3, Reason[exception_prev, reported]
                                                   Payload[73 00 00 00 00 6c 00 00 10]
-61: <  next=800001e4 curr=800001e0 prev=800001b0
-62: <  next=800001e8 curr=800001e4 prev=800001e0
-63:
+60: <  next=800001e4 curr=800001e0 prev=800001b0
+61: <  next=800001e8 curr=800001e4 prev=800001e0
 \end{lstlisting}
 
 \subsection{Packet data}
@@ -203,15 +201,19 @@ Assuming at 32 bit ATB transport results in the following ATB transfers
                                                    Reason[exc_only] Payload[bd aa aa 68 00 00 20]
 62:    next=800001b0 curr=800001a6 prev=800001a2
 63: <  next=800001e0 curr=800001b0 prev=800001a6
-64: <  format=3, subformat=EXCEPTION, addrepc=800001b0, branch=1, context=0, ecause=7, interrupt=0,
-                                                 ehaddr=1, privilege=3, Reason[prev_exception]
-                                                      Payload[77 00 00 00 80 13 36 00 00 10]
+64: <  format=3, subformat=TRAP, address=800001b0, branch=1, context=0, ecause=7, interrupt=1, 
+                                                   privilege=3, thaddr=1, Reason[prev_exception] 
+                                                      Payload[77 00 00 00 80 33 6c 00 00 20]
 65: <  next=800001e4 curr=800001e0 prev=800001b0
 66: <  next=800001e8 curr=800001e4 prev=800001e0
 67: <  next=800001ea curr=800001e8 prev=800001e4
-68:
-  
 \end{lstlisting}
+
+\subsection{Packet data}
+
+The output from the encoder for the fragment of interest is given in
+line 61. The least significant byte is output first, this means 77 is
+byte 0, 00 is byte 1 and and the final value 20 is byte 9.
 
 \subsection{Siemens transport}
 
@@ -303,8 +305,13 @@ Assuming at 32 bit ATB transport results in the following ATB transfers
 49: <  next=2001052e curr=2001052a prev=20010528
 50: <  next=20010530 curr=2001052e prev=2001052a
 51: <  next=20010534 curr=20010530 prev=2001052e
-52:
 \end{lstlisting}
+
+\subsection{Packet data}
+
+The output from the encoder for the fragment of interest is given in
+line 45. The least significant byte is output first, this means 73 is
+byte 0, 00 is byte 1 and and the final value 10 is byte 8.
 
 \subsection{Siemens transport}
 

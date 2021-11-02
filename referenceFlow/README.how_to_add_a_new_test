@@ -1,0 +1,61 @@
+How to add a new trace encoder test
+-----------------------------------
+
+This end to end flow uses spike (the RISCV instruction set simulator) to generate the input
+data from the user's RISCV elf file.
+
+It's important to note that the run_regression.sh script uses the convention that standalone elf
+files are given the file extension .riscv and proxy kernel elf files are given the file extension
+.pk
+
+Using the proxy kernel
+----------------------
+
+The RISCV Proxy kernel is described here
+    https://github.com/riscv-software-src/riscv-pk
+
+"The RISC-V Proxy Kernel, pk, is a lightweight application execution environment that can host
+statically-linked RISC-V ELF binaries. It is designed to support tethered RISC-V implementations
+with limited I/O capability and thus handles I/O-related system calls by proxying them to a host
+computer."
+
+
+If the elf is located in
+    my_tests/test_something.pk
+
+directory and name it "something.pk".
+
+When that is done it should be possible to run
+    scripts/run_regression.sh -t itype4_basic my_tests/test_something.pk
+
+Standalone tests
+----------------
+
+The simple answer to the question "how do I add a new test" is, simply build the elf file and
+provide the full path name to run_regression.sh
+
+HOWEVER, this requires that your elf file
+  - can be run using spike AND
+  - that it will terminate
+
+A number of examples have been provided as part of this release to show how C and ASM
+code can be run within spike. They are all in the directory
+    tests/examples
+
+   - br_j_asm_test: an example provided by Seagate that is pure ASM
+   - minimal_asm: a minimal piece of ASM and a linker script that exits from spike
+   - hello_pk: a C example of using the proxy kernel
+
+Spike memory map
+----------------
+The regression test script uses the following memory map setting when running spike
+    "-m0x20010000:0x40000,0x80000000:0x400000"
+and it's important that tests use these memory ranges, or that the script is altered to match
+the memory requirements of new tests.
+
+How do tohost and fromhost work?
+--------------------------------
+
+This post is currently the best place to find out how the spike HTIF (host/target interface)
+works. It can be used to exit a running spike simulation
+    https://github.com/riscv-software-src/riscv-isa-sim/issues/364

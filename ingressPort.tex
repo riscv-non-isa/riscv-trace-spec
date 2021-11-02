@@ -200,14 +200,14 @@ Signals are assigned to one of the  following groups:
         faulting virtual address for address exceptions, as would be
         written to the \textbf{utval/stval/vstval/mtval} CSR. Future optional extensions may define \textbf{tval} 
         to provide ancillary information in cases where it currently supplies zero.
-        Ignored unless \textbf{itype}=\textcolor{cyan}{1}.\\
+        Ignored unless \textbf{itype}=1.\\
         \hline
         \textbf{priv}[\textit{privilege\_width\_p}-1:0] & M & Privilege level for all instructions retired on this cycle.
         Encoding given in Table~\ref{tab:priv}.  Codes 4-7 optional.\\
         \hline
         \textbf{iaddr}[\textit{iaddress\_width\_p}-1:0] & MR & The address of the 1st instruction retired in this block.
-        Invalid if \textbf{iretire}=0 \textcolor{cyan}{unless \textbf{itype}=1, in which case it indicates the address of the 
-        instruction which incurred the exception.} \\
+        Invalid if \textbf{iretire}=0 unless \textbf{itype}=1, in which case it indicates the address of the 
+        instruction which incurred the exception. \\
         \hline
         \textbf{context}[\textit{context\_width\_p}-1:0] & O & Context for all instructions retired on this cycle.\\
         \hline
@@ -451,8 +451,8 @@ will need to be applied via the \textbf{context} input.
         \textbf{impdef}[\textit{impdef\_width\_p}-1:0] & O &  Implementation defined sideband signals.  A typical use for
         these would be for filtering (see Chapter~\ref{ch:filtering}.\\
         \hline
-        \textbf{trigger}[\textcolor{cyan}{2+}:0] & \textcolor{cyan}{[1:0]: O} \newline 
-                                \textcolor{cyan}{[2+]:  OR} & A pulse on bit 0 will cause the encoder to start tracing, and continue until further 
+        \textbf{trigger}[2+:0] & [1:0]: O \newline 
+                                [2+]:  OR & A pulse on bit 0 will cause the encoder to start tracing, and continue until further 
         notice, subject to other filtering criteria also being met.\newline
         A pulse on bit 1 will cause the encoder to stop tracing until further notice.  See section~\ref{sec:trigger}).\\
         \hline
@@ -509,9 +509,9 @@ caused the trigger is retired.
         \textbf{trigger[1]} if the encoder provides it. \\
         \hline
         4 & \textit{Trace-notify}.  This should be connected to 
-        \textbf{trigger[\textcolor{cyan}{1 + \textit{blocks}:}2]} if the encoder provides it. This will cause the encoder to output
+        \textbf{trigger[1 + \textit{blocks}:}2] if the encoder provides it. This will cause the encoder to output
         a packet containing the address of the last instruction in the block if it is enabled.
-        \textcolor{cyan}{One bit per block.}\\
+        One bit per block.\\
         \hline
     \end{tabulary}
 \end{table}
@@ -618,7 +618,7 @@ one of the following groups:
         \hline
         \textbf{dretire} & M & Data access retired (when high)\\
         \hline
-        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in \textcolor{cyan}{Table~\ref{tab:dtype}}\\
+        \textbf{dtype}[\textit{dtype\_width\_p}-1:0] & M & Data access type.  Encoding given in Table~\ref{tab:dtype}\\
         \hline
         \textbf{daddr}[\textit{daddress\_width\_p}-1:0] & M & The data access address\\
         \hline
@@ -717,10 +717,10 @@ However, that is not the case for data trace.  Consider two scenarios:
 
 \begin{itemize}
   \item Case 1: 1st block contains instructions 1, 2, 3; second block contains 4, 5
-  \item Case 2: 1st block contains instructions 1,2; second block contains 3, 4, 5
+  \item Case 2: 1st block contains instructions 1, 2; second block contains 3, 4, 5
 \end{itemize}
  
-Given that \textbf{dvalid} is high in the same cycle that the data access retires, the encoder knows the address of 
+Given that \textbf{iretire} is non-zero in the same cycle that the data access retires, the encoder knows the address of 
 the 1st and last instructions in a block, but does not know precisely where in the block the data access is.  
 In both cases, the first block matches the filtering criteria (it contains the address of instruction 1), and the second block does not.  
 But if the encoder traced all the data accesses in the matching block, then in case 1 it would trace both instructions 1 and 3, whereas 

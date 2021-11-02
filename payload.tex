@@ -83,7 +83,7 @@ potential solutions to this are as follows:
 
 \section{Format 3 packets} \label{sec:format3}
 
-Format 3 packets are used for synchronization, \textcolor{cyan}{traps}, reporting context and supporting information.  
+Format 3 packets are used for synchronization, traps, reporting context and supporting information.  
 There are 4 sub-formats.
 
 Throughout this document, the term "synchronization packet" is used.  This refers specifically to format 3, 
@@ -92,7 +92,7 @@ subformat 0 and subformat 1 packets.
 \section{Format 3 subformat 0 - Synchronisation} \label{sec:format30}
 
 This packet contains all the information the decoder needs to fully identify an instruction.  It is sent for
-the first traced instruction (unless that instruction also happens to be the first in a \textcolor{cyan}{trap} handler), 
+the first traced instruction (unless that instruction also happens to be the first in a trap handler), 
 and when resynchronization has been scheduled by expiry of the resynchronisation timer.
 
 \begin{table}[htp]
@@ -144,15 +144,15 @@ between.  There are two issues with this:
 \end{itemize}
 
 \FloatBarrier
-\section{Format 3 subformat 1 - \textcolor{cyan}{Trap}} \label{sec:format31}
+\section{Format 3 subformat 1 - Trap} \label{sec:format31}
 
 This packet also contains all the information the decoder needs to fully identify an instruction.
-It is sent following an \textcolor{cyan}{exception or interrupt, and includes the cause, 
+It is sent following an exception or interrupt, and includes the cause, 
 the 'trap value' (for exceptions), and the address of the trap handler, or
-of the exception itself - see section \ref{sec:addrepc}.}  
+of the exception itself - see section \ref{sec:thaddr}.  
 
 If the implicit exception mode is enabled (see section~\ref{sec:implicit-exception}), the trap handler 
-address is omitted \textcolor{cyan}{if \textbf{thaddr} is 1}.
+address is omitted if \textbf{thaddr} is 1.
 
 \begin{table}[htp]
   \centering
@@ -164,7 +164,7 @@ address is omitted \textcolor{cyan}{if \textbf{thaddr} is 1}.
     \hline
     \textbf{format} & 2 & 11 (sync): synchronisation\\
     \hline
-    \textbf{subformat} & 2 & 01 (\textcolor{cyan}{trap}): Exception \textcolor{cyan}{or interrupt} cause and trap handler address.\\
+    \textbf{subformat} & 2 & 01 (trap): Exception or interrupt cause and trap handler address.\\
     \hline
     \textbf{branch} & 1 & Set to 0 if the address points to a branch instruction, and the branch was taken.  
               Set to 1 if the instruction is not a branch or if the branch is not taken. \\
@@ -177,44 +177,49 @@ address is omitted \textcolor{cyan}{if \textbf{thaddr} is 1}.
     \hline
     \textbf{context} &  \textit {context\_width\_p}, or 0 if \textit {nocontext\_p} is 1 & The instruction context  \\
     \hline
-    \textbf{ecause} & \textit {ecause\_width\_p} & Exception \textcolor{cyan}{or interrupt} cause. \\
+    \textbf{ecause} & \textit {ecause\_width\_p} & Exception or interrupt cause. \\
     \hline
     \textbf{interrupt} & 1 & Interrupt. \\
     \hline
-    \textbf{\textcolor{cyan}{thaddr}} & \textcolor{cyan}{1} &
-               \textcolor{cyan}{When set to 1, \textbf{addrepc} points to the trap handler address.  
-                When set to 0,  \textbf{addrepc} points to the EPC for exceptions, and is undefined for interrupts.}\\
+    \textbf{thaddr} & 1 &
+               When set to 1, \textbf{address} points to the trap handler address.  
+                When set to 0, \textbf{address} points to the EPC for an exception at the target of an updiscon, 
+                and is undefined for other exceptions and interrupts.\\
     \hline
-    \textbf{\textcolor{cyan}{addrepc}} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
+    \textbf{address} & \textit {iaddress\_width\_p - iaddress\_lsb\_p} & 
               Full instruction address.  Address alignment is determined by \textit {iaddress\_lsb\_p} 
               Address must be left shifted in order to recreate original byte address. \\
     \hline
-    \textbf{\textcolor{cyan}{tval}} & \textit {iaddress\_width\_p} & 
-           \textcolor{cyan}{Value from appropriate \textbf{utval/stval/vstval/mtval} CSR.  
-           Field omitted for interrupts}\\
+    \textbf{tval} & \textit {iaddress\_width\_p} & 
+           Value from appropriate \textbf{utval/stval/vstval/mtval} CSR.  
+           Field omitted for interrupts\\
     \hline
   \end{tabulary}
 \end{table}
 
-\subsection{\textcolor{cyan}{Format 3 \textbf{thaddr} and \textbf{addrepc} fields}} \label{sec:addrepc}
+\subsection{Format 3 \textbf{thaddr} and \textbf{address} fields} \label{sec:thaddr}
 
-\textcolor{cyan}{Usually when an exception or interrupt occurs, the cause is reported along 
+If an exception occurs at the target of an uninferable PC discontinuity, the value of 
+the EPC cannot be infered from the program binary, and so \textbf{address} contains the EPC and 
+\textbf{thaddr} is set to 0.  In this case, the trap handler address will be reported
+via a subsequent format 3, subformat 1 packet.
+
+Usually when an exception or interrupt occurs, the cause is reported along 
 with the 1st address of the trap handler, when that instruction retires.  In this case, 
 \textbf{thaddr} is 1.  However, if a second interrupt or exception occurs immediately, details of 
 this must still be reported, even though the 1st instruction of the handler hasn't retired.  In this 
-situation,  \textbf{thaddr} is 0, and \textbf{addrepc} contains the address at which the exception 
-occurred (i.e. the exception PC, or EPC) for exceptions, and is undefined for interrupts.}
+situation,  \textbf{thaddr} is 0, and \textbf{address} is undefined (unless it contains the EPC as
+outlined in the previous paragraph).
 
-\textcolor{cyan}{Additionally, if an exception occurs at the target of an uninferable PC discontinuity, the value of 
-the EPC cannot be infered from the program binary, and so \textbf{addrepc} contains the EPC and 
-\textbf{thaddr} is set to 0.  In this case, the trap handler address will be reported
-via a subsequent format 0, subformat 1 packet.}
+(The reason for not reporting the EPC for all exceptions when \textbf{thaddr} is 0 is
+that it may be at either the address of the next instruction or current instruction depending on the 
+exception cause, which can be inferred by the decoder without adding complexity to the encoder.)
 
-\subsection{Format 3 \textbf{\textcolor{cyan}{tval}} field}
+\subsection{Format 3 \textbf{tval} field}
 
-This field reports the \textcolor{cyan}{"trap value" from the appropriate \textbf{utval/stval/vstval/mtval}
+This field reports the "trap value" from the appropriate \textbf{utval/stval/vstval/mtval}
 CSR, the meaning of which is dependent on the nature of the exception.  It is omitted
-from the packet for interrupts.}
+from the packet for interrupts.
 
 \FloatBarrier
 \section{Format 3 subformat 2 - Context} \label{sec:format32}
@@ -270,7 +275,7 @@ optional modes supported by the encoder.
      \hline
      \textbf{subformat}  & 2 & 11 (support): Supporting information for the decoder \\
      \hline
-     \textbf{enable} & 1 & Indicates if the encoder is enabled\\
+     \textbf{ienable} & 1 & Indicates if the instruction trace encoder is enabled\\
      \hline
      \textbf{encoder\_mode} & N & Identifies trace algorithm\newline
        Details and number of bits implementation dependent.  Currently Branch trace is the only mode defined, indicated by the value 0.\\
@@ -278,10 +283,10 @@ optional modes supported by the encoder.
      \textbf{qual\_status} & 2 & Indicates qualification status\newline
        00 (no\_change): No change to filter qualification \newline
        01 (ended\_rep): Qualification ended, preceding \textbf{te\_inst} sent explicitly to indicate last qualification instruction\newline
-       10 (trace\_lost): One or more \textcolor{cyan}{instruction trace} packets lost.\newline
+       10 (trace\_lost): One or more instruction trace packets lost.\newline
        11 (ended\_ntr): Qualification ended, preceding \textbf{te\_inst} would have been sent anyway due to an updiscon, even if it wasn't the last qualified instruction)\\
      \hline
-     \textbf{\textcolor{cyan}{ioptions}} & N & Values of all \textcolor{cyan}{instruction trace} run-time configuration bits\newline
+     \textbf{ioptions} & N & Values of all instruction trace run-time configuration bits\newline
        Number of bits and definitions implementation dependent.  Examples might be\newline
        - 'sequentially inferred jumps' Don't report the targets of sequentially inferable jumps\newline
        - 'implicit return' Don't report function return addresses \newline
@@ -290,14 +295,14 @@ optional modes supported by the encoder.
        - 'jump target cache' Jump target cache enabled\newline
        - 'full address' Always output full addresses (SW debug option)\\
        \hline
-     \textbf{\textcolor{cyan}{denable}} & \textcolor{cyan}{1} & \textcolor{cyan}{Indicates if the data trace is enabled (if supported)}\\
+     \textbf{denable} & 1 & Indicates if the data trace is enabled (if supported)\\
        \hline
-     \textbf{\textcolor{cyan}{dloss}} & \textcolor{cyan}{1} & \textcolor{cyan}{One of more data trace packets lost (if supported)}\\
+     \textbf{dloss} & 1 & One of more data trace packets lost (if supported)\\
        \hline
-     \textbf{\textcolor{cyan}{doptions}} & \textcolor{cyan}{M} & \textcolor{cyan}{Values of all data trace run-time configuration bits}\newline
-       \textcolor{cyan}{Number of bits and definitions implementation dependent.  Examples might be}\newline
-       - \textcolor{cyan}{'no data' Exclude data (just report addresses)}\newline
-       - \textcolor{cyan}{'no addr' Exclude address (just report data)}\\
+     \textbf{doptions} & M & Values of all data trace run-time configuration bits\newline
+       Number of bits and definitions implementation dependent.  Examples might be\newline
+       - 'no data' Exclude data (just report addresses)\newline
+       - 'no addr' Exclude address (just report data)\\
        \hline
   \end{tabulary}
 \end{table}

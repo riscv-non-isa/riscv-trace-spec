@@ -1,0 +1,16 @@
+; Comments can be added here
+[required]
+file-stem = NOT_SET
+ip-version = 6
+object-files = NOT_SET
+
+[codec]
+full-daddress = false
+full-data = false
+no-address = false
+no-data = false
+;; 0 = Only send full (unmodified) addresses
+;; 1 = XOR compression
+;; 2 = Differential compression
+;; 3 = Dynamically use XOR or differential compression on a per-packet basis to minimize packet length
+data-compress = 0
