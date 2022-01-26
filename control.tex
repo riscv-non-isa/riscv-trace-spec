@@ -39,13 +39,13 @@ The following fields control basic encoding behavior.
     \hline
     {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
     \hline
-    \textbf{Active} & 1 & M & RW & 0 & Master enable for trace system.  When 0, the trace system may have clocks gated off or be powered down,
+    \textbf{Active} & 1 & M & RW & 0 & Primary enable for trace system.  When 0, the trace system may have clocks gated off or be powered down,
      and other register locations may be inaccessible.
       Hardware may take arbitrarily long to process power-up or power-down and will indicate completion when the read value of this bit
       matches the value written.\\
     \hline
     \textbf{teEnable} & 1 & M & RW & 0 & 
-      Master trace enable.  Trace can be enabled via \textbf{iTracing}
+      Primary trace enable.  Trace can be enabled via \textbf{iTracing}
       or \textbf{dTracing} when 1. Setting to 0 flushes any queued trace data to the designated sink.\\
     \hline
     \textbf{iTracing} & 1 & M & RW & 0 & Instruction trace enable.  When 1, trace will be generated,
