@@ -477,7 +477,7 @@ function run_instruction_suite() {
         if [ "$pk" == "" ]; then
             args=${SPIKE_MEM_MAP}
         fi
-        add_test ${test_name}.$phase ${EXECUTER} ${SPIKE} ${args} --ust-trace $i_spike_output --isa=$isa_type $pk $test_path
+        add_test ${test_name}.$phase ${EXECUTER} ${SPIKE} ${args} ${SPIKE_INST_OPTION} $i_spike_output --isa=$isa_type $pk $test_path
     done
 
     wait_for_tests_to_complete $phase
@@ -962,6 +962,12 @@ proxy_kernel=
 set_riscv_toolchain
 SPIKE=$TOP_LEVEL/bin/spike.sh
 SPIKE_MEM_MAP="-m0x20010000:0x40000,0x80000000:0x400000"
+
+if ( ${SPIKE} -h 3>&1 1>&2- 2>&3- ) | grep "ust-trace" > /dev/null; then
+    SPIKE_INST_OPTION="--ust-trace"
+else
+    SPIKE_INST_OPTION="--inst-trace"
+fi
 
 D_ENCODER=$TOP_LEVEL/scripts/data_encoder_model.py
 check_executable $D_ENCODER
