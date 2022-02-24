@@ -4,12 +4,10 @@ End to end instruction and data trace
 This release packages up the files required to build and test the end to end flow for the
 Siemens RISCV Instruction and Data Trace.
 
-The code has been developed and tested on various versions of Ubuntu
-(18.04, 20.04 and 21.04).  It incorporates pre-built binaries for
-RISCV spike and objdump that were built on Ubuntu 18.04. These
-pre-built binaries will not work on Centos 7. The rest of the RISCV
-toolchain is not included as it is not required to run the end to end
-flow using pre-built RISCV binaries of the source applications.
+The code has been developed and tested on various versions of Ubuntu (18.04, 20.04 and 21.04).
+It incorporates pre-built binaries for RISCV spike and objdump that were built on Ubuntu 18.04. The
+rest of the RISCV toolchain is not included as it is not required to run the end to end flow using
+pre-built RISCV binaries of the source applications.
 
 
 Requirements
