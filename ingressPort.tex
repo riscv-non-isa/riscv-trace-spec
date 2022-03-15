@@ -587,9 +587,17 @@ reason, the interface also supports splitting loads into two parts:
 
 The two parts of a split load are associated by use of a transaction ID.
 
-The code size working group is proposing push and pop instructions,
-which will each potentially result in multiple loads or stores.  In this case, the 
-resulting loads and stores must be reported individually on the interface.  If an exception
+\textcolor{red}{The push and pop instructions proposed by the code size working group
+will each result in multiple loads or stores.  To allow the resulting loads or stores to be
+associated with the correct instruction, the push or pop must be reported 
+on the instruction trace interface multiple times (once for each individual load or store)
+using \textbf{itype} 0 except for the final load resulting from a popret instruction which 
+must use \textbf{itype} 13 to signal the return}.  
+If an exception
+occurs part way through the sequence of loads or stores initiated by such an instruction,
+and the instruction is re-executed after the exception handler has been serviced, the
+load or store sequence must recommence from the beginning.
+If an exception
 occurs part way through the sequence of loads or stores initiated by such an instruction,
 and the instruction is re-executed after the exception handler has been serviced, the
 load or store sequence must recommence from the beginning.
