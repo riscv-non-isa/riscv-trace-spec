@@ -775,7 +775,21 @@ static bool convert_iss_data(void)
       post_iss_data[current].iretire[0] = is_exception_call(&decoded_inst_s[current]) ? 1 : 0;
   else
       post_iss_data[current].iretire[0] = 1;
-  post_iss_data[current].ilastsize[0] = iss_data[current].inst_length;
+
+  /* ilastsize is such that 2^ilastsize is the length of the instruction in half-words */
+  uint8_t ilastsize = 0;
+  switch (iss_data[current].inst_length) {
+  case 2: ilastsize = 0; break;
+  case 4: ilastsize = 1; break;
+  case 6:
+      perror("Error: Unable to encode 48-bit instruction in ilastsize");
+      exit(EXIT_FAILURE);
+  case 8: ilastsize = 2; break;
+  default:
+      perror("Error: Unknown instruction length");
+      exit(EXIT_FAILURE);
+  }
+  post_iss_data[current].ilastsize[0] = ilastsize;
 
   // Check previous branch status
   infer_previous_itype();
