@@ -170,9 +170,9 @@ sensitive to.
     \hline
     \textbf{comp2} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 2nd comparison.\\
     \hline
-    \textbf{matchComp2} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp3} must be high in order for the filter to match.\\
+    \textbf{\color{red}{matchComp3}} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp3} must be high in order for the filter to match.\\
     \hline
-    \textbf{comp2} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 3rd comparison.\\
+    \textbf{\color{red}{comp3}} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 3rd comparison.\\
     \hline
     \textbf{matchPrivilege} & 1 & O & RW & 0 & When set, match privilege levels specified by \textbf{matchChoicePrivilege}.\\
     \hline
@@ -264,7 +264,7 @@ The fields in tables~\ref{tab:ctl-comp} must be replicated for each comparator.
     6: use \textbf{sMatch} as a mask for \textbf{pMatch} (always match)\newline
     7: always match\\
     \hline
-    \textbf{matchMode} & 2 & O & RW & SD & Determines which input bus to compare against the primary comparator\newline
+    \textbf{matchMode} & 2 & O & RW & SD & \textcolor{red}{Selects the match condition used to assert the comparator output}\newline
     0: primary function matches\newline
     1: primary and secondary functions both match: (P\&\&S)\newline
     2: either primary or secondary function doesn't match: !(P\&\&S)\newline
