@@ -8,7 +8,7 @@ A recommended register map can be found at \href{https://github.com/riscv-non-is
 {\color{red}{N.B. When the E-Trace v1.1.3 specification was released
     the draft versions of common controls v0 and v1 were incompatible with
     it. However, when the common control is completed the E-Trace
-    specification will be ammended to use the names given in the common control.}}
+    specification will be amended to use the names given in the common control.}}
 
 Fields are categorized into the following groups:
 
@@ -102,7 +102,7 @@ See section~\ref{optional} for details of the modes covered in this section.
     \textbf{ImplicitExcept} & 1 & O & RW & SD & When set, do not send exception address, only exception cause in 
       Exception packets (see table~\ref{sec:format31})\\
     \hline
-    \textbf{siJump} & 1 & O & RW & SD & Do not treat sequentially inferrable jumps as uninferable PC discontinuities when set.\\
+    \textbf{siJump} & 1 & O & RW & SD & Do not treat sequentially {\color{red}{inferable}} jumps as uninferable PC discontinuities when set.\\
     \hline
     \textbf{ImplicitReturn} & 1 & O & RW & SD & Do not treat returns as uninferable PC discontinuities when set.\\
     \hline
