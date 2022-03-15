@@ -294,7 +294,7 @@ class Encoder:
         self.branches = 0
         self.branch_map = []
         resync_max = self.settings["resync-max"]
-        self.resync_max = 1 << 16 if resync_max == 0 else resync_max << 4
+        self.resync_max = 1 << (resync_max + 4)
         self.resync_count = 0
         self.trap_reported = False
 
