@@ -5,10 +5,11 @@ How fields are organized and accessed (e.g packet based or memory mapped) is out
 A recommended register map can be found at \href{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc\#register-map}
 {https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc\#register-map}.
 
-{\color{red}{N.B. When the E-Trace v1.1.3 specification was released
-    the draft versions of common controls v0 and v1 were incompatible with
-    it. However, when the common control is completed the E-Trace
-    specification will be amended to use the names given in the common control.}}
+N.B. When the E-Trace v1.1.3 specification was released the draft
+versions of common controls v0 and v1 were incompatible with
+it. However, when the common control is completed the E-Trace
+specification will be amended to use the names given in the common
+control.
 
 Fields are categorized into the following groups:
 
@@ -44,13 +45,13 @@ The following fields control basic encoding behavior.
     \hline
     {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
     \hline
-    \textbf{Active} & 1 & M & RW & 0 & {\color{red}{Primary}} enable for trace system.  When 0, the trace system may have clocks gated off or be powered down,
+    \textbf{Active} & 1 & M & RW & 0 & Primary enable for trace system.  When 0, the trace system may have clocks gated off or be powered down,
      and other register locations may be inaccessible.
       Hardware may take arbitrarily long to process power-up or power-down and will indicate completion when the read value of this bit
       matches the value written.\\
     \hline
     \textbf{teEnable} & 1 & M & RW & 0 & 
-      {\color{red}{Primary}} trace enable.  Trace can be enabled via \textbf{iTracing}
+      Primary trace enable.  Trace can be enabled via \textbf{iTracing}
       or \textbf{dTracing} when 1. Setting to 0 flushes any queued trace data to the designated sink.\\
     \hline
     \textbf{iTracing} & 1 & M & RW & 0 & Instruction trace enable.  When 1, trace will be generated,
@@ -102,7 +103,7 @@ See section~\ref{optional} for details of the modes covered in this section.
     \textbf{ImplicitExcept} & 1 & O & RW & SD & When set, do not send exception address, only exception cause in 
       Exception packets (see table~\ref{sec:format31})\\
     \hline
-    \textbf{siJump} & 1 & O & RW & SD & Do not treat sequentially {\color{red}{inferable}} jumps as uninferable PC discontinuities when set.\\
+    \textbf{siJump} & 1 & O & RW & SD & Do not treat sequentially inferable jumps as uninferable PC discontinuities when set.\\
     \hline
     \textbf{ImplicitReturn} & 1 & O & RW & SD & Do not treat returns as uninferable PC discontinuities when set.\\
     \hline
@@ -170,9 +171,9 @@ sensitive to.
     \hline
     \textbf{comp2} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 2nd comparison.\\
     \hline
-    \textbf{\color{red}{matchComp3}} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp3} must be high in order for the filter to match.\\
+    \textbf {matchComp3} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp3} must be high in order for the filter to match.\\
     \hline
-    \textbf{\color{red}{comp3}} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 3rd comparison.\\
+    \textbf{comp3} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 3rd comparison.\\
     \hline
     \textbf{matchPrivilege} & 1 & O & RW & 0 & When set, match privilege levels specified by \textbf{matchChoicePrivilege}.\\
     \hline
@@ -264,7 +265,7 @@ The fields in tables~\ref{tab:ctl-comp} must be replicated for each comparator.
     6: use \textbf{sMatch} as a mask for \textbf{pMatch} (always match)\newline
     7: always match\\
     \hline
-    \textbf{matchMode} & 2 & O & RW & SD & \textcolor{red}{Selects the match condition used to assert the comparator output}\newline
+    \textbf{matchMode} & 2 & O & RW & SD & Selects the match condition used to assert the comparator output\newline
     0: primary function matches\newline
     1: primary and secondary functions both match: (P\&\&S)\newline
     2: either primary or secondary function doesn't match: !(P\&\&S)\newline
