@@ -202,7 +202,7 @@ address is omitted if \textbf{thaddr} is 1.
 If an exception occurs at the target of an uninferable PC discontinuity, the value of 
 the EPC cannot be infered from the program binary, and so \textbf{address} contains the EPC and 
 \textbf{thaddr} is set to 0.  In this case, the trap handler address will be reported
-via a subsequent format 3, subformat 1 packet.
+via a subsequent format 3, subformat 0 packet.
 
 Usually when an exception or interrupt occurs, the cause is reported along 
 with the 1st address of the trap handler, when that instruction retires.  In this case, 

@@ -6,6 +6,7 @@
 \usepackage{footnote}
 \usepackage{textcomp}
 \usepackage{listings}
+\usepackage{float}
 \makesavenoteenv{tabulary}
 \setcounter{tocdepth}{4}
 \setcounter{secnumdepth}{4}
@@ -33,7 +34,15 @@
 \begin{document}
 \setcounter{footnote}{0}
 
-\title{Efficient Trace for RISC-V\\
+
+\title{
+
+\begin{figure}[H]
+\centering
+\includegraphics{riscvLogo.png}
+\end{figure} 
+
+  Efficient Trace for RISC-V\\
 Version \versionnum\\
 \GITHash
 }
@@ -45,7 +54,22 @@ Siemens
 }
 
 
+%\begin{figure}[b]
+%\begin{center}
+%  \includegraphics{riscvLogo.png}
+%  \label{fig:riscvLogo}
+%\end{center}
+%\end{figure}
+
+
+%\begin{figure}[H]
+%\centering
+%\includegraphics[height=1cm, width=5cm]{riscvLogo.png}
+%\end{figure} 
+
+
 \maketitle
+
 
 \markboth{Efficient Trace for RISC-V Version \versionnum}
 {Efficient Trace for RISC-V Version \versionnum}
