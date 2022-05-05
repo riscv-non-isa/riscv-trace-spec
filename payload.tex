@@ -800,7 +800,7 @@ field to be compressed away.
 
 When a branch count is reported without an address it is because a branch has failed the prediction.  However, when an address is 
 reported along with a branch count, it will be because the packet was initiated by an uninferable discontinuity, an exception, or 
-because a branch has been encountered when \textbf{branch\_count} is 0xffff\_ffff.  For the latter case, the 
+because a branch has been encountered that increments \textbf{branch\_count} to 0xffff\_ffff.  For the latter case, the 
 reported address will always be for a branch, and in the former cases it may be.  If it is a branch, 
 it is necessary to be explicit about whether or not the prediction was met or not.  If it is met, then the reported address is 
 that of the last correctly predicted branch.
