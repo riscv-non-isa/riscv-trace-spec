@@ -587,7 +587,6 @@ reason, the interface also supports splitting loads into two parts:
 
 The two parts of a split load are associated by use of a transaction ID.
 
-
 Any extensions that result in multiple memory accesses such as the
 push and pop instructions proposed by the code size working group will
 each result in multiple loads or stores. To allow the resulting loads
@@ -597,16 +596,33 @@ trace interface multiple times (once for each individual load or
 store) using \textbf{itype} 0 except for the final load or store,
 which must retire using the natural \textbf{itype} for the instruction
 (for example, a popret instruction must use \textbf{itype} 13 for the
-final load to signal the return).
+final load to signal the return).  The instruction address reported will be the same for
+each occurrence.  
+
+For example, if instructions are retired in blocks, and assuming the hart can perform one load or store per cycle,
+the following retirement sequences could be reported when pushing and popping 4 registers from the stack:
+
+\begin{enumerate}
+  \item Last instruction in block is \textit{push}, \textbf{itype} 0 (data trace interface reports 1st store);
+  \item Single \textit{push}, \textbf{itype} 0 (data trace interface reports 2nd store);
+  \item Single \textit{push}, \textbf{itype} 0 (data trace interface reports 3rd store);
+  \item First instruction in block is \textit{push}, \textbf{itype} dependent on last instruction in block (data trace interface reports 4th store);
+\end{enumerate}
+
+\begin{enumerate}
+  \item Last instruction in block is \textit{popret}, \textbf{itype} 0 (data trace interface reports 1st load);
+  \item Single \textit{popret}, \textbf{itype} 0 (data trace interface reports 2nd load);
+  \item Single \textit{popret}, \textbf{itype} 0 (data trace interface reports 3rd load);
+  \item Single \textit{popret}, \textbf{itype} 13 (data trace interface reports 4th load);
+\end{enumerate}
 
 If an exception
 occurs part way through the sequence of loads or stores initiated by such an instruction,
 and the instruction is re-executed after the exception handler has been serviced, the
 load or store sequence must recommence from the beginning.
-If an exception
-occurs part way through the sequence of loads or stores initiated by such an instruction,
-and the instruction is re-executed after the exception handler has been serviced, the
-load or store sequence must recommence from the beginning.
+
+\textbf{Note:} This is required for data trace only.  If data trace is not implemented, the push or pop
+may instead be reported just once in the normal way when all associated loads or stores complete successfully.
 
 \section{Data Trace Interface}\label{sec:DataTraceInterface}
 
