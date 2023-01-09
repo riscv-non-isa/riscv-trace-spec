@@ -321,7 +321,7 @@ class Decoder:
         self.flags["updiscon"] = None
         self.flags["irreport"] = None
         if te_inst.format == format_t.ADDR or (
-            (te_inst.format == format_t.BRANCH) and te_inst.branches == 31
+            (te_inst.format == format_t.BRANCH) and te_inst.branches != 0
         ):
             assert te_inst.notify is not None
             assert te_inst.updiscon is not None
