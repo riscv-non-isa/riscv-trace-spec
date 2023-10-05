@@ -60,7 +60,7 @@ The following fields control basic encoding behavior.
     \hline
     \textbf{trTeDataStallEn} & OD & \\
     \hline
-    \textbf{trTeEmpty} & O & \\
+    \textbf{trTeEmpty} & O & Recommended if the trace datapath requires manual flushing when trace is disabled.\\
     \hline
     \textbf{trTeDataDrop} & OD & \\
     \hline
@@ -82,7 +82,7 @@ The following fields control basic encoding behavior.
     \hline
     \textbf{trTeProtocolMajor} & M & Must be 0 to indicate this version (2.0.x) of the E-Trace protocol.\\
     \hline
-    \textbf{trTeVerMinor} & M & Must be 0.\\
+    \textbf{trTeProtocolMinor} & M & Must be 0.\\
     \hline
     \textbf{trTeSrcID} & O & \\
     \hline
@@ -120,6 +120,8 @@ See section~\ref{optional} for details of the modes covered in this section.
     \textbf{trTeDataNoAddr} & OD & \\
     \hline
     \textbf{trTeDataAddrCompress} & OD & \\
+    \hline
+    \textbf{trTeContext} & N & Hardcode to 0.\\
     \hline
     \textbf{trInstMode} & N & Hardcode to 7.\\
     \hline
