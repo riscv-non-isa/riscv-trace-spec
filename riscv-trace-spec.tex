@@ -27,7 +27,7 @@
 
 \usepackage{hyperref}
 
-\newcommand{\versionnum}{2.0.1-draft}
+\newcommand{\versionnum}{2.0.1}
 
 \input{vc.tex}
 
@@ -39,14 +39,14 @@
 \centering
 \includegraphics{riscvLogo.png}
 \end{figure} 
- Efficient Trace for RISC-V\\
+  Efficient Trace for RISC-V\\
 Version \versionnum\\
 \GITHash
 }
 
 \author{
   Gajinder Panesar, Iain Robertson \\
- \textless gajinder.panesar@siemens.com\textgreater, \textless iain.robertson@siemens.com\textgreater \\
+ \textless gajinder.panesar@gmail.com\textgreater, \textless iain.robertson@siemens.com\textgreater \\
 Siemens
 }
 
@@ -73,6 +73,26 @@ Siemens
 \thispagestyle{empty}
 
 \frontmatter
+
+\chapter{Change History}
+\begin{table}[htp]
+  \centering
+  \label{tab:change-history}
+  \begin{tabulary}{\textwidth}{|l|p{145mm}|}
+    \hline
+    {\bf Version} & {\bf Changes}  \\
+    \hline
+    2.0 & Baseline \\
+    \hline
+    2.0.1 & Clarifications only - no changes to normative behaviour.\newline
+    - Control field definitions removed from section \ref{encoderControl}, which now references the 
+    \href{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc}{RISC-V Trace Control Interface Specification} \newline
+    - Added detail on handling of multi-load/store instructions for data trace to section \ref{sec:DataInterfaceRequirements}. \newline
+    - Removed references to tail-calls in jump classifications in section \ref{sec:InstructionInterfaceRequirements}. \newline
+    - Corrected typos where \textbf{lrid} was inadvertently refered to by an earlier name (\textbf{index}) in section \ref{sec:data-loadstore}.\\
+    \hline
+  \end{tabulary}
+\end{table}
 
 \tableofcontents
 \listoffigures
