@@ -50,13 +50,13 @@ The following information is optional:
     \begin{itemize}
       \item Calls with a target that \textit{cannot} be inferred from the source code;
       \item Calls with a target that \textit{can} be inferred from the source code;
-      \item Tail-calls with a target that \textit{cannot} be inferred from the source code;
-      \item Tail-calls with a target that \textit{can} be inferred from the source code;
+      \item Jumps with a target that \textit{cannot} be inferred from the source code;
+      \item Jumps with a target that \textit{can} be inferred from the source code;
       \item Returns with a target that \textit{cannot} be inferred from the source code;
       \item Returns with a target that \textit{can} be inferred from the source code;
       \item Co-routine swap;
-      \item Jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
-      \item Jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code.
+      \item Other jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
+      \item Other jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code.
     \end{itemize}
   \item If context or time is supported then the \textit{instruction\_address} for:
     \begin{itemize}
@@ -116,7 +116,7 @@ Jumps may optionally be further classified according to the recommended calling 
       \item \textbf{\textit{c.jalr}} rs1 where rs1 != x5;
       \item \textbf{\textit{c.jal}}.
     \end{itemize}
-  \item \textit{Tail-calls}: 
+  \item \textit{Jumps}: 
     \begin{itemize}
       \item \textbf{\textit{jal}} x0;
       \item \textbf{\textit{c.j}};
@@ -136,7 +136,7 @@ Jumps may optionally be further classified according to the recommended calling 
     \end{itemize}
   \item \textit{Other}: 
     \begin{itemize}
-      \item \textbf{\textit{jal}} rd where rd != x1 and rd != x5;
+      \item \textbf{\textit{jal}} rd where rd != x0 and rd != x1 and rd != x5;
       \item \textbf{\textit{jalr}} rd, rs where rs != x1 and rs != x5 and rd != x0 and rd != x1 and rd != x5.
     \end{itemize}
 \end{itemize}
@@ -272,8 +272,8 @@ Signals are assigned to one of the  following groups:
       7  & reserved\\
       8  & Uninferable call\\
       9  & Inferrable call\\
-      10 & Uninferable tail-call\\
-      11 & Inferrable tail-call\\
+      10 & Uninferable jump\\
+      11 & Inferrable jump\\
       12 & Co-routine swap\\
       13 & Return\\
       14 & Other uninferable jump\\
@@ -587,26 +587,50 @@ reason, the interface also supports splitting loads into two parts:
 
 The two parts of a split load are associated by use of a transaction ID.
 
-
-Any extensions that result in multiple memory accesses such as the
-push and pop instructions proposed by the code size working group will
-each result in multiple loads or stores. To allow the resulting loads
-or stores to be associated with the correct instruction, these
-multi-memory-access instructions must be reported on the instruction
-trace interface multiple times (once for each individual load or
-store) using \textbf{itype} 0 except for the final load or store,
+The Zc (code-size reduction) extension introduced push and pop instructions
+(\textit{cm.push}, \textit{cm.pop}, \textit{cm.popret} and \textit{cm.popretz})
+that each result in multiple loads or stores.  To allow the resulting loads
+or stores to be associated with the correct instruction, these multi-memory-access 
+instructions (and any other future instructions with similar characteristics)
+must be reported on the instruction trace interface multiple times (once for each 
+individual load or store) using \textbf{itype} 0 except for the final load or store,
 which must retire using the natural \textbf{itype} for the instruction
-(for example, a popret instruction must use \textbf{itype} 13 for the
-final load to signal the return).
+(for example, a \textit{cm.popret} instruction must use \textbf{itype} 13 for the
+final load to signal the return).  The instruction address reported will be the same for
+each occurrence.  
+
+The following illustrations show the retirement sequences when a single 
+\textit{cm.push} or \textit{cm.popret} is used to push or pop 4 registers from the stack.
+They assume a RISC-V to encoder interface that can report a block of 1 or more retired instructions 
+and one load or store per cycle.  Each comprises 4 elements, and shows the instruction information 
+reported for each load and store.  As detailed in section \ref{sec:InstructionTraceInterface}, this takes the 
+form of the address of an instruction, the length of the block (1 for a single instruction) and the type of the final 
+instruction in the block.  In each element, 'Block' indicates a block of 1 or more instructions 
+(i.e. could also be a single instruction), whereas 'Single' indicates a single instruction (i.e. a block with a length of 1).
+
+A \textit{cm.push} is equivalent to 4 store instructions:
+\begin{enumerate}
+  \item Block - last instruction is \textit{cm.push}, \textbf{itype} 0 (data trace interface reports 1st store);
+  \item Single - \textit{cm.push}, \textbf{itype} 0 (data trace interface reports 2nd store);
+  \item Single - \textit{cm.push}, \textbf{itype} 0 (data trace interface reports 3rd store);
+  \item Block - 1st instruction is \textit{cm.push}, \textbf{itype} dependent on last instruction in block (data trace interface reports 4th store);
+\end{enumerate}
+
+A \textit{cm.popret} is equivalent to 4 loads and a return:
+\begin{enumerate}
+  \item Block - last instruction is \textit{cm.popret}, \textbf{itype} 0 (data trace interface reports 1st load);
+  \item Single - \textit{cm.popret}, \textbf{itype} 0 (data trace interface reports 2nd load);
+  \item Single - \textit{cm.popret}, \textbf{itype} 0 (data trace interface reports 3rd load);
+  \item Single - \textit{cm.popret}, \textbf{itype} 13 (data trace interface reports 4th load);
+\end{enumerate}
 
 If an exception
 occurs part way through the sequence of loads or stores initiated by such an instruction,
 and the instruction is re-executed after the exception handler has been serviced, the
 load or store sequence must recommence from the beginning.
-If an exception
-occurs part way through the sequence of loads or stores initiated by such an instruction,
-and the instruction is re-executed after the exception handler has been serviced, the
-load or store sequence must recommence from the beginning.
+
+\textbf{Note:} This is required for data trace only.  If data trace is not implemented, the push or pop
+may instead be reported just once in the normal way when all associated loads or stores complete successfully.
 
 \section{Data Trace Interface}\label{sec:DataTraceInterface}
 

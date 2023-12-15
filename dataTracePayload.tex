@@ -126,7 +126,7 @@ Note: in the following tables, "clog2" is an abbreviation for "ceiling of log2".
     \hline
     \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
-    \textbf{index} & \textit{index\_width\_p} & Transfer index\\
+    \textbf{lrid} & \textit{lrid\_width\_p} & Load request ID\\
     \hline
     \textbf{diff} & 1 & 0: Full address (sync)	\newline
 		        1: Differential address\\
@@ -150,7 +150,7 @@ Note: in the following tables, "clog2" is an abbreviation for "ceiling of log2".
     \hline
     \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes \\
     \hline
-    \textbf{index} & \textit{index\_width\_p} & Transfer index\\
+    \textbf{lrid} & \textit{lrid\_width\_p} & Load request ID\\
     \hline
     \textbf{resp} & 	2	& 
 		00: Error (no data)\newline	
@@ -345,7 +345,7 @@ indicated by this field.
     \hline
     \textbf{size} & max(1, clog2(clog2( \textit{data\_width\_p}/8 + 1)) & Transfer size is 2\textsuperscript{\textbf{size}} bytes bytes\\
     \hline
-    \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \textbf{lrid} & \textit{lrid\_width\_p} & Load request ID\\
     \hline
     \textbf{diff} & 1 or 2 & 00: Full address and data (sync)\newline
 		01:  Differential address, XOR-compressed data\newline
@@ -373,7 +373,7 @@ indicated by this field.
 		111: Split atomic data\newline	
 		other codes other packet formats\\
     \hline
-    \textbf{index} & \textit{index\_length\_p} & Transfer index\\
+    \textbf{lrid} & \textit{lrid\_width\_p} & Load request ID\\
     \hline
     \textbf{resp} & 2 & 00: Error (no data)\newline
 		01:  XOR-compressed data\newline	
