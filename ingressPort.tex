@@ -50,13 +50,13 @@ The following information is optional:
     \begin{itemize}
       \item Calls with a target that \textit{cannot} be inferred from the source code;
       \item Calls with a target that \textit{can} be inferred from the source code;
-      \item Tail-calls with a target that \textit{cannot} be inferred from the source code;
-      \item Tail-calls with a target that \textit{can} be inferred from the source code;
+      \item Jumps with a target that \textit{cannot} be inferred from the source code;
+      \item Jumps with a target that \textit{can} be inferred from the source code;
       \item Returns with a target that \textit{cannot} be inferred from the source code;
       \item Returns with a target that \textit{can} be inferred from the source code;
       \item Co-routine swap;
-      \item Jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
-      \item Jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code.
+      \item Other jumps which don't fit any of the above classifications with a target that \textit{cannot} be inferred from the source code;
+      \item Other jumps which don't fit any of the above classifications with a target that \textit{can} be inferred from the source code.
     \end{itemize}
   \item If context or time is supported then the \textit{instruction\_address} for:
     \begin{itemize}
@@ -116,7 +116,7 @@ Jumps may optionally be further classified according to the recommended calling 
       \item \textbf{\textit{c.jalr}} rs1 where rs1 != x5;
       \item \textbf{\textit{c.jal}}.
     \end{itemize}
-  \item \textit{Tail-calls}: 
+  \item \textit{Jumps}: 
     \begin{itemize}
       \item \textbf{\textit{jal}} x0;
       \item \textbf{\textit{c.j}};
@@ -136,7 +136,7 @@ Jumps may optionally be further classified according to the recommended calling 
     \end{itemize}
   \item \textit{Other}: 
     \begin{itemize}
-      \item \textbf{\textit{jal}} rd where rd != x1 and rd != x5;
+      \item \textbf{\textit{jal}} rd where rd != x0 and rd != x1 and rd != x5;
       \item \textbf{\textit{jalr}} rd, rs where rs != x1 and rs != x5 and rd != x0 and rd != x1 and rd != x5.
     \end{itemize}
 \end{itemize}
@@ -272,8 +272,8 @@ Signals are assigned to one of the  following groups:
       7  & reserved\\
       8  & Uninferable call\\
       9  & Inferrable call\\
-      10 & Uninferable tail-call\\
-      11 & Inferrable tail-call\\
+      10 & Uninferable jump\\
+      11 & Inferrable jump\\
       12 & Co-routine swap\\
       13 & Return\\
       14 & Other uninferable jump\\
