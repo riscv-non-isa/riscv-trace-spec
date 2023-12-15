@@ -1,38 +1,33 @@
 \chapter{Encoder Control} \label{encoderControl}
 
-This chapter describes the fields required to control the Trace Encoder.  
+The fields required to control a Trace Encoder are defined in the 
+\href{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc}{RISC-V Trace Control Interface Specification},
+which is intended to apply to any and all RISC-V trace encoders, regardless of encoding protocol.
+This chapter details which of those fields apply to E-Trace.  To avoid replication, descriptions are not provided here; 
+additional E-Trace specific context or clarification is provided only where required.
+
 How fields are organized and accessed (e.g packet based or memory mapped) is outside the scope of this document.  
-A recommended register map can be found at \href{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc\#register-map}
-{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc\#register-map}.
+If a memory mapped approach is adopted, \href{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc\#register-map}
+{this register map} from the RISC-V Trace Control Interface Specification should be used.
 
-N.B. When the E-Trace v1.1.3 specification was released the draft
-versions of common controls v0 and v1 were incompatible with
-it. However, when the common control is completed the E-Trace
-specification will be amended to use the names given in the common
-control.
+Note: Upto and including the E-Trace v2.0.0 specification, which predated
+the creation of the RISC-V Trace Control Interface Specification, the full field definitions 
+were included in this chapter.  For versions later than this, the field definitions have simply moved from this
+specification to the RISC-V Trace Control Interface Specification, without any change to their meaning.  However, in order to 
+create a more widely applicable protocol agnostic specification it has been necessary to change the field names in the 
+process.
 
-Fields are categorized into the following groups:
+The applicability of fields for E-trace is categorized as follows:
 
 \begin{itemize}
+  \item N: Not applicable
   \item M: Mandatory
   \item O: Optional
   \item MD: Mandatory if data trace is supported
   \item OD: Optional for data trace
-  \item F: Optional for filtering
 \end{itemize}
 
-Where an optional field provides a number of encoded options, implementers can chose to implement a subset of the options, 
-in which case the standard RISC-V WARL (write any, read legal) approach can be used to determine which options are available.
-
-Other abbreviations used in the tables are:
-\begin{itemize}
-  \item \textbf{W} column heading indicates field width (in bits)
-  \item \textbf{G} column heading indicates field group
-  \item \textbf{RW} column heading indicates whether bit is read-only (R), or read-write (RW).  
-    For the latter, it is allowed but not required that the bit be writable
-  \item \textbf{Rst} column heading indicates field reset value. SD in this column indicates a system dependent reset value
-\end{itemize}
-
+\FloatBarrier
 \section{Basic Control} \label{sec:ctl-basic}
 
 The following fields control basic encoding behavior.
@@ -41,51 +36,61 @@ The following fields control basic encoding behavior.
   \centering
   \caption{Basic Control}
   \label{tab:ctl-basic}
-  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
     \hline
-    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
+    {\bf Field} & {\bf Applicability} & {\bf E-Trace Specific Details} \\
     \hline
-    \textbf{Active} & 1 & M & RW & 0 & Primary enable for trace system.  When 0, the trace system may have clocks gated off or be powered down,
-     and other register locations may be inaccessible.
-      Hardware may take arbitrarily long to process power-up or power-down and will indicate completion when the read value of this bit
-      matches the value written.\\
+    \textbf{trTeActive} & M & \\
     \hline
-    \textbf{teEnable} & 1 & M & RW & 0 & 
-      Primary trace enable.  Trace can be enabled via \textbf{iTracing}
-      or \textbf{dTracing} when 1. Setting to 0 flushes any queued trace data to the designated sink.\\
+    \textbf{trTeEnable} & M & \\
     \hline
-    \textbf{iTracing} & 1 & M & RW & 0 & Instruction trace enable.  When 1, trace will be generated,
-       subject to any optional filtering.  May be written by software, or via triggers if \textbf{iTrigEnable} is 1.  \\
+    \textbf{trTeInstTracing} & M & \\
     \hline
-    \textbf{dTracing} & 1 & MD & RW & 0 & Data trace enable.  When 1, trace will be generated,
-       subject to any optional filtering.  May be written by software, or via triggers if \textbf{dTrigEnable} is 1.  \\
+    \textbf{trTeDataTracing} & MD & \\
     \hline
-    \textbf{iTrigEnable} & 1 & O & RW & 0 & When 1, allows iTracing to be set or cleared by \textit{trace-on} and \textit{trace-off} 
-      Debug module triggers respectively (see \ref{sec:trigger}).\\
+    \textbf{trTeInstTrigEnable} & O & \\
     \hline
-    \textbf{dTrigEnable} & 1 & OD & RW & 0 & When 1, allows dTracing to be set or cleared by \textit{trace-on} and \textit{trace-off} 
-      Debug module triggers respectively (see \ref{sec:trigger}).\\
+    \textbf{trTeDataTrigEnable} & OD & \\
     \hline
-    \textbf{stallEnable} & 1 & O & RW & 0 & When 0, if the encoder cannot accept trace input from the RISC-V hart, trace is lost, and is
-      indicated via the \textit{Support} trace packet (see section~\ref{sec:format33}).\newline
-      When 1, the \textbf{stall} output signal is asserted to stall the RISC-V hart until trace can be accepted (see table~\ref{tab:egress-side-band}).\\
+    \textbf{trTeInstStallOrOverflow} & O & \\
     \hline
-    \textbf{Empty} & 1 & O & R & 1 & Reads as 1 when all trace has been emitted.  Note: this status is also indicated via the 
-      \textit{Support} trace packet (see table~\ref{tab:te_inst3-3}).\\
+    \textbf{trTeDataStallOrOverflow} & OD & \\
     \hline
-    \textbf{ResyncMode} & 2 & M & RW & SD & Selects the resynchronization mechanism.  At least one non-zero mechanism must be implemented.\newline
-    0: Off\newline
-    1: Count trace packets\newline
-    2: Count clock cycles\newline
-    3: Count instruction (16-bit) half-words\\
+    \textbf{trTeInstStallEn} & O & \\
     \hline
-    \textbf{ResyncMax} & 4 & O & RW & SD & The maximum interval (in units determined by \textbf{ResyncMode}) between synchronization packets
-    (see sections~\ref{sec:format30} and~\ref{sec:format31}) is 2\textsuperscript{\textbf{ResyncMax} + 4}.\\
+    \textbf{trTeDataStallEn} & OD & \\
+    \hline
+    \textbf{trTeEmpty} & O & Recommended if the trace datapath requires manual flushing when trace is disabled.\\
+    \hline
+    \textbf{trTeDataDrop} & OD & \\
+    \hline
+    \textbf{trTeDataDropEn} & OD & \\
+    \hline
+    \textbf{trTeInhibitSrc} & O & \\
+    \hline
+    \textbf{trTeInstSyncMode} & M & If hardcoded, must be to a non-zero value. \\
+    \hline
+    \textbf{trTeInstSyncMax} & M & May be hardcoded.\\
+    \hline
+    \textbf{trTeFormat} & M & Must be set to 0 (denoting E-Trace format).\\
+    \hline
+    \textbf{trTeVerMajor} & M & \\
+    \hline
+    \textbf{trTeVerMinor} & M & \\
+    \hline
+    \textbf{trTeCompType} & M & \\
+    \hline
+    \textbf{trTeProtocolMajor} & M & Must be 0 to indicate this version (2.0.x) of the E-Trace protocol.\\
+    \hline
+    \textbf{trTeProtocolMinor} & M & Must be 0.\\
+    \hline
+    \textbf{trTeSrcID} & O & \\
+    \hline
+    \textbf{trTeSrcBits} & O & \\
     \hline
   \end{tabulary}
 \end{table}
 
-\FloatBarrier
 \section{Optional Modes} \label{sec:ctl-modes}
 
 See section~\ref{optional} for details of the modes covered in this section.
@@ -94,195 +99,64 @@ See section~\ref{optional} for details of the modes covered in this section.
   \centering
   \caption{Optional and run-time configurable modes}
   \label{tab:ctl-resync}
-  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{80mm}|}
+  \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
     \hline
-    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
+    {\bf Field} & {\bf Applicability} & {\bf E-Trace Specific Details} \\
     \hline
-    \textbf{FullAddress} & 1 & O & RW & SD & Send only full (non-differential) addresses when set\\
+    \textbf{trTeInstNoAddrDiff} & O & \\
     \hline
-    \textbf{ImplicitExcept} & 1 & O & RW & SD & When set, do not send exception address, only exception cause in 
-      Exception packets (see table~\ref{sec:format31})\\
+    \textbf{trTeInstNoTrapAddr} & O & \\
     \hline
-    \textbf{siJump} & 1 & O & RW & SD & Do not treat sequentially inferable jumps as uninferable PC discontinuities when set.\\
+    \textbf{trTeInstEnSequentialJump} & O & \\
     \hline
-    \textbf{ImplicitReturn} & 1 & O & RW & SD & Do not treat returns as uninferable PC discontinuities when set.\\
+    \textbf{trTeInstEnImplicitReturn} & O & \\
     \hline
-    \textbf{BranchPrediction} & 1 & O & RW & SD & Branch predictor enabled when set.\\
+    \textbf{trTeInstEnBranchPrediction} & O & \\
     \hline
-    \textbf{JumpTargetCache} & 1 & O & RW & SD & Jump target cache enabled when set.\\
+    \textbf{trTeInstJumpTargetCache} & O & \\
     \hline
-    \textbf{noData} & 1 & OD & RW & SD & Omit data from data trace packets when set.\\
+    \textbf{trTeDataNoValue} & OD & \\
     \hline
-    \textbf{noAddress} & 1 & OD & RW & SD & Omit address from data trace packets when set.\\
+    \textbf{trTeDataNoAddr} & OD & \\
     \hline
-    \textbf{DataCompress} & 2 & OD & RW & SD & Data trace compression selection:\newline
-    0: Only send full (unmodified) addresses\newline
-    1: Use XOR compression\newline
-    2: Use differential compression\newline
-    3: Dynamically select XOR or differential on a per-packet basis in order to minimize packet length\\
+    \textbf{trTeDataAddrCompress} & OD & \\
+    \hline
+    \textbf{trTeContext} & N & Hardcode to 0.\\
+    \hline
+    \textbf{trTeInstMode} & N & Hardcode to 7.\\
+    \hline
+    \textbf{trTeInstImplicitReturnMode} & N & Hardcode to 0.\\
+    \hline
+    \textbf{trTeInstEnRepeatedHistory} & N & Hardcode to 0.\\
+    \hline
+    \textbf{trTeInstEnAllJumps} & N & Hardcode to 0.\\
+    \hline
+    \textbf{trTeInstExtendAddrMSB} & N & Hardcode to 0.\\
     \hline
   \end{tabulary}
 \end{table}
-
 
 \section{Filtering} \label{sec:ctl-filter}
 
 See section~\ref{ch:filtering} for details of the filtering capabilities covered in this section.
 
-The fields in table~\ref{tab:ctl-filtersel} determine how filtering is applied to instruction and data trace.  These are an extension of
-the basic controls in table~\ref{tab:ctl-basic}.  Grouping all filters together as a single vector makes it possible to 
-enable or change the filtering selection of multiple filters simultaneously.
-
 \begin{table}[htp]
   \centering
   \caption{Trace filtering selection}
   \label{tab:ctl-filtersel}
-  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{90mm}|}
+  \begin{tabulary}{\textwidth}{|l|l|p{90mm}|}
     \hline
-    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
+    {\bf Field} & {\bf Applicability} & {\bf E-Trace Specific Details} \\
     \hline
-    \textbf{iFilters} & 16 & O & RW & 0 & Determine which filters qualify instruction trace.  If bit \textit{N} is a 1 then instructions will be traced
-      when filter \textit{N} matches.  If all bits are 0, all instructions are traced.\\
+    \textbf{trTeInstFilters} & O & \\
     \hline
-    \textbf{dFilters} & 16 & OD & RW & 0 & Determine which filters qualify data trace.  If bit \textit{N} is a 1 then data accesses will be traced
-      when filter \textit{N} matches.  If all bits are 0, all data accesses are traced.\\
+    \textbf{trTeDataFilters} & OD & \\
     \hline
-  \end{tabulary}
-\end{table}
-
-The fields in table~\ref{tab:ctl-filter} must be replicated for each filter, and determine which HART inputs the filter is 
-sensitive to.
-
-\begin{table}[htp]
-  \centering
-  \caption{Filter Control}
-  \label{tab:ctl-filter}
-  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{80mm}|}
+    \textbf{trTeFilter...} & O & \\
     \hline
-    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
+    \textbf{trTeComp...} & O & \\
     \hline
-    \textbf{filterEnable} & 1 & O & RW & 0 & Overall filter enable.\\
-    \hline
-    \textbf{matchComp1} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp1} must be high in order for the filter to match.\\
-    \hline
-    \textbf{comp1} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 1st comparison.\\
-    \hline
-    \textbf{matchComp2} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp2} must be high in order for the filter to match.\\
-    \hline
-    \textbf{comp2} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 2nd comparison.\\
-    \hline
-    \textbf {matchComp3} & 1 & O & RW & 0 & When set, the output of the comparator selected by \textbf{comp3} must be high in order for the filter to match.\\
-    \hline
-    \textbf{comp3} & 3 & O & RW & 0 & Specifies the comparator unit to use for the 3rd comparison.\\
-    \hline
-    \textbf{matchPrivilege} & 1 & O & RW & 0 & When set, match privilege levels specified by \textbf{matchChoicePrivilege}.\\
-    \hline
-    \textbf{matchEcause} & 1 & O & RW & 0 & When set, start matching from exception cause codes specified by \textbf{matchChoiceEcause}, 
-      and stop matching upon return from the 1st matching exception.\\
-    \textbf{matchInterupt} & 1 & O & RW & 0 & When set, start matching from a trap with the interrupt level codes specified by \textbf{matchValueInterrupt}, 
-      and stop matching upon return from the 1st matching trap.\\
-    \hline
-    \textbf{matchImpdef} & 1 & O & RW & 0 & When set, match \textbf{impdef} values as specified by \textbf{matchValueImpdef} and \textbf{matchMaskImpdef}.\\
-    \hline
-    \textbf{matchDtype} & 1 & OD & RW & 0 & When set, match \textbf{dtype} values as specified by \textbf{matchChoiceDtype}.\\
-    \hline
-    \textbf{matchDsize} & 1 & OD & RW & 0 & When set, match \textbf{dsize} values as specified by \textbf{matchChoiceDsize}.\\
+    \textbf{trTeTrig...} & N & Hardcode to 0.\\
     \hline
   \end{tabulary}
 \end{table}
-
-The fields in table~\ref{tab:ctl-match} must be replicated for each filter, and determine the values the
-filter must match for the HART inputs enabled via the fields in table~\ref{tab:ctl-filter}.  
-
-\begin{table}[htp]
-  \centering
-  \caption{Filter Match Control}
-  \label{tab:ctl-match}
-  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{80mm}|}
-    \hline
-    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
-    \hline
-    \textbf{matchChoicePrivilege} & 8 & O & RW & SD & When \textbf{matchPrivilege} is set, match all privilege levels for which the corresponding bit is set.
-       For example, if bit \textit{N} is 1, then match if the \textbf{priv} value is \textit{N} (see table~\ref{tab:priv} for privilege level encoding).\\
-    \hline
-    \textbf{matchValueInterrupt} & 1 & O & RW & SD & When \textbf{matchinterrupt} is set, match \textbf{itype} of 2 or 1 depending on whether this bit is 
-       1 or 0 respectively.\\
-    \hline
-    \textbf{matchChoiceEcause} & 32 & O & RW & SD & When \textbf{matchEcause} is set, match all excepion causes for which the corresponding bit is set.
-       For example, if bit \textit{N} is 1, then match if the cause is \textit{N}.\\
-    \hline
-    \textbf{matchMaskImpdef} & See\textsuperscript{1} & O & RW & SD & When \textbf{matchImpdef} is set, match if \newline
-       (\textbf{impdef} \& \textbf{matchMaskImpdef}) == (\textbf{matchValueImpdef} \& \textbf{matchMaskImpdef})\\
-    \hline
-    \textbf{matchValueImpdef} & See\textsuperscript{1} & O & RW & SD & \\
-    \hline
-    \textbf{matchChoiceDtype} & 16 & O & RW & SD & When \textbf{matchDtype} is set, match all data access types for which the corresponding bit is set.
-       For example, if bit \textit{N} is 1, then match if the \textbf{dtype} is \textit{N}.\\
-    \hline
-    \textbf{matchChoiceDsize} & 8 & O & RW & SD & When \textbf{matchDsize} is set, match all data access sizes for which the corresponding bit is set.
-       For example, if bit \textit{N} is 1, then match if the \textbf{dsize} is \textit{N}.\\
-    \hline
-    \multicolumn{6}{|l|}{1: \textit{impdef\_width\_p}}\\
-    \hline
-  \end{tabulary}
-\end{table}
-
-The fields in tables~\ref{tab:ctl-comp} must be replicated for each comparator.
-
-\begin{table}[htp]
-  \centering
-  \caption{comparator Control}
-  \label{tab:ctl-comp}
-  \begin{tabulary}{\textwidth}{|l|l|l|l|l|p{90mm}|}
-    \hline
-    {\bf Field} & {\bf W} & {\bf G} & {\bf RW} & {\bf Rst} & {\bf Description} \\
-    \hline
-    \textbf{pInput} & 2 & O & RW & SD & Determines which input bus to compare against the primary comparator\newline
-    0: \textbf{iaddr}\newline
-    1: \textbf{context}\newline
-    2: \textbf{tval}\newline
-    3: \textbf{daddr}\\
-    \hline
-    \textbf{sInput} & 2 & O & RW & SD & Determines which input bus to compare against the secondary comparator.  Encoding as per \textbf{pInput}\\
-    \hline
-    \textbf{pFunction} & 3 & O & RW & SD & Selects the primary comparator function\newline
-    0: selected input equal to \textbf{pMatch}\newline
-    1: selected input not equal to \textbf{pMatch}\newline
-    2: selected input less than \textbf{pMatch}\newline
-    3: selected input less than or equal to \textbf{pMatch}\newline
-    4: selected input greater than \textbf{pMatch}\newline
-    5: selected input greater than or equal to \textbf{pMatch}\newline
-    6: reserved (always match)\newline
-    7: always match\\
-    \hline
-    \textbf{sFunction} & 3 & O & RW & SD & Selects the secondary comparator function\newline
-    0: selected input equal to \textbf{sMatch}\newline
-    1: selected input not equal to \textbf{sMatch}\newline
-    2: selected input less than \textbf{sMatch}\newline
-    3: selected input less than or equal to \textbf{sMatch}\newline
-    4: selected input greater than \textbf{sMatch}\newline
-    5: selected input greater than or equal to \textbf{sMatch}\newline
-    6: use \textbf{sMatch} as a mask for \textbf{pMatch} (always match)\newline
-    7: always match\\
-    \hline
-    \textbf{matchMode} & 2 & O & RW & SD & Selects the match condition used to assert the comparator output\newline
-    0: primary function matches\newline
-    1: primary and secondary functions both match: (P\&\&S)\newline
-    2: either primary or secondary function doesn't match: !(P\&\&S)\newline
-    3: set when primary matches and continue to match until after secondary matches\\
-    \hline
-    \textbf{pMatch} & See\textsuperscript{1} & O & RW & SD & The match value for the primary comparator\\
-    \hline
-    \textbf{sMatch} & See\textsuperscript{1} & O & RW & SD & The match value for the secondary comparator\\
-    \hline
-    \textbf{pNotify} & 1 & O & RW & 0 & Generate a trace packet explicitly reporting the address of the final instruction in a block
-      that causes a primary match (requires \textbf{pInput} to be 0).  This is also known as a watchpoint.\\
-    \hline
-    \textbf{sNotify} & 1 & O & RW & 0 & Generate a trace packet explicitly reporting the address of the final instruction in a block
-      that causes a secondary match (requires \textbf{sInput} to be 0).  This is also known as a watchpoint.\\
-    \hline
-    \multicolumn{6}{|l|}{1: Max of supported input widths \textit{iaddress\_width\_p}, \textit{context\_width\_p}, \textit{daddress\_width\_p}}\\
-    \hline
-  \end{tabulary}
-\end{table}
-
