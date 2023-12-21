@@ -1,0 +1,158 @@
+== Example code and packets
+
+In the following examples *_ret_* is referred to as uninferable, this is
+only true if implicit-return mode is off
+
+. *Call to debug_printf(), from 80001a84, in main():*
++
+`00000000800019e8``<main>:` +
+`........:``...` +
+`80001a80:``f6d42423`*_`sw``a3,-152(s0)`_* +
+`80001a84:``ef4ff0ef`*_`jal``x1,80001178`_*`<debug_printf>`
++
+PC: 80001a84 ->80001178 +
+The target of the *_jal_* is inferable, thus NO te_inst packet is
+sent. +
++
+`0000000080001178``<debug_printf>:` +
+`80001178:``7139`*_`addi``sp,sp,-64`_* +
+`8000117a:``...`
+. *Return from debug_printf():*
++
+`80001186:``...` +
+`80001188:``6121`*_`addi``sp,sp,64`_* +
+`8000118a:``8082`*_`ret`_*
++
+PC: 8000118a ->80001a88 +
+The target of the *_ret_* is uninferable, thus a *_te_inst_* packet IS
+sent: +
+*_te_inst_*[format=2 (ADDR_ONLY): address=0x80001a88, updiscon=0]
++
+`80001a88:``00000597`*_`auipc``a1,0x0`_* +
+`80001a8c:``65058593`*_`addi``a1,a1,1616`_*`#``800020d8``<main+0x6f0>`
+. *exiting from Func_2(), with a final taken branch, followed by a
+_ret_*
++
+`00000000800010b6``<Func_2>:` +
+`........:``....` +
+`800010da:``4781`*_`li``a5,0`_* +
+`800010dc:``00a05863`*_`blez``a0,800010ec`_*`<Func_2+0x36>`
++
+PC: 800010dc ->800010ec, add branch TAKEN to branch_map, but no packet
+sent yet. +
+branches = 0; branch_map = 0; +
+branch_map = 0 <<branches++;
++
+`800010ec:``60e2`*_`ld``ra,24(sp)`_* +
+`800010ee:``6442`*_`ld``s0,16(sp)`_* +
+`800010f0:``64a2`*_`ld``s1,8(sp)`_* +
+`800010f2:``853e`*_`mv``a0,a5`_* +
+`800010f4:``6105`*_`addi``sp,sp,32`_* +
+`800010f6:``8082`*_`ret`_*
++
+PC: 800010f6 ->80001b8a +
+The target of the *_ret_* is uninferable, thus a *_te_inst_* packet is
+sent, with ONE branch in the branch_map +
+*_te_inst_*[ format=1 (DIFF_DELTA): branches=1, branch_map=0x0,
+address=0x80001b8a (latexmath:[$\Delta$]=0xab0) updiscon=0 ]
++
+`00000000800019e8``<main>:` +
+`........:``....` +
+`80001b8a:``f4442603`*_`lw``a2,-188(s0)`_* +
+`80001b8e:``....`
+. *3 branches, then a function return back to Proc_1()*
++
+`0000000080001100``<Proc_6>:` +
+`........:``....` +
+`80001112:``c080`*_`sw``s0,0(s1)`_* +
+`80001114:``4785`*_`li``a5,1`_* +
+`80001116:``02f40463`*_`beq``s0,a5,8000113e``<Proc_6+0x3e>`_*
++
+PC: 80001116 ->8000111a, add branch NOT taken to branch_map, but no
+packet sent yet. branches = 0; branch_map = 0; branch_map = 1
+<<branches++;
++
+`8000111a:``c81d`*_`beqz``s0,80001150``<Proc_6+0x50>`_*
++
+PC: 8000111a ->8000111c, add branch NOT taken to branch_map, but no
+packet sent yet. +
+branch_map = 1 <<branches++;
++
+`8000111c:``4709`*_`li``a4,2`_* +
+`8000111e:``04e40063`*_`beq``s0,a4,8000115e``<Proc_6+0x5e>`_*
++
+PC: 8000111e ->8000115e, add branch TAKEN to branch_map, but no packet
+sent yet. +
+branch_map = 0 <<branches++;
++
+`8000115e:``60e2`*_`ld``ra,24(sp)`_* +
+`80001160:``6442`*_`ld``s0,16(sp)`_* +
+`80001162:``c09c`*_`sw``a5,0(s1)`_* +
+`80001164:``64a2`*_`ld``s1,8(sp)`_* +
+`80001166:``6105`*_`addi``sp,sp,32`_* +
+`80001168:``8082`*_`ret`_*
++
+`00000000800011d6``<Proc_1>:` +
+`........:``....` +
+`80001258:``00093783`*_`ld``a5,0(s2)`_* +
+`8000125c:``....`
++
+PC: 80001168 ->80001258 +
+The target of the *_ret_* is uninferable, thus a *_te_inst_* packet is
+sent, with THREE branches in the branch_map +
+*_te_inst_*[ format=1 (DIFF_DELTA): branches=3, branch_map=0x3,
+address=0x80001258 (latexmath:[$\Delta$]=0x148), updiscon=0 ]
+. *A complex example with 2 branches, 2 jal, and a ret*
++
+`00000000800011d6``<Proc_1>:` +
+`........:``....` +
+`8000121c:``441c`*_`lw``a5,8(s0)`_* +
+`8000121e:``c795`*_`beqz``a5,8000124a`_*`<Proc_1+0x74>`
++
+PC: 8000121e ->8000124a, add branch TAKEN to branch_map, but no packet
+sent yet. +
+branches = 0; branch_map = 0; +
+branch_map = 0 <<branches++;
++
+`8000124a:``44c8`*_`lw``a0,12(s1)`_* +
+`8000124c:``4799`*_`li``a5,6`_* +
+`8000124e:``00c40593`*_`addi``a1,s0,12`_* +
+`80001252:``c81c`*_`sw``a5,16(s0)`_* +
+`80001254:``eadff0ef`*_`jal``x1,80001100`_*`<Proc_6>`
++
+PC: 80001254 ->80001100 +
+The target of the *_jal_* is inferable, thus no *_te_inst_* packet needs
+be sent. +
++
+`0000000080001100``<Proc_6>:` +
+`80001100:``1101`*_`addi``sp,sp,-32`_* +
+`80001102:``e822`*_`sd``s0,16(sp)`_* +
+`80001104:``e426`*_`sd``s1,8(sp)`_* +
+`80001106:``ec06`*_`sd``ra,24(sp)`_* +
+`80001108:``842a`*_`mv``s0,a0`_* +
+`8000110a:``84ae`*_`mv``s1,a1`_* +
+`8000110c:``fedff0ef`*_`jal``x1,800010f8`_*`<Func_3>`
++
+PC: 8000110c ->800010f8 +
+The target of the *_jal_* is inferable, thus no *_te_inst_* packet needs
+to be sent.
++
+`00000000800010f8``<Func_3>:` +
+`800010f8:``1579`*_`addi``a0,a0,-2`_* +
+`800010fa:``00153513`*_`seqz``a0,a0`_* +
+`800010fe:``8082`*_`ret`_*
++
+PC: 800010fe ->80001110 +
+The target of the *_ret_* is uninferable, thus a *_te_inst_* packet will
+be sent shortly.
++
+`0000000080001100``<Proc_6>:` +
+`........:``....` +
+`80001110:``c115`*_`beqz``a0,80001134`_*`<Proc_6+0x34>` +
+`80001112:``....`
++
+PC: 80001110 ->80001112, add branch NOT TAKEN to branch_map. +
+branch_map = 1 <<branches++; +
+*_te_inst_*[ format=1 (DIFF_DELTA): branches=2, branch_map=0x2,
+address=0x80001110 (latexmath:[$\Delta$]=0xfffffffffffffef4), updiscon=1
+]
