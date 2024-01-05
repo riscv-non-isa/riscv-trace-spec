@@ -262,8 +262,7 @@ function is_uninferable_jump (instr)
 # Determine if instruction is a return from trap #
 function is_return_from_trap (instr)
 
-  if ((instr.opcode == URET)      or
-      (instr.opcode == SRET)      or
+  if ((instr.opcode == SRET)      or
       (instr.opcode == MRET)      or
       (instr.opcode == DRET))
     return TRUE
