@@ -12,7 +12,7 @@ However, the following information must be provided to the encapsulator:
 * The packet payload.
 
 Two example transport schemes are the Siemens Messaging Infrastructure,
-and the Arm Trace Bus. Figure #fig:packet-format[1.1] shows the
+and the Arm Trace Bus. <<fig:packet-format>> shows the
 encapsulation used for the Siemens infrastructure:
 
 * The header byte contains a 5-bit field specifying the payload length
@@ -25,7 +25,9 @@ is zero (it gets adjusted as it propagates through the infrastructure);
 * An optional 2-byte timestamp;
 * The packet payload.
 
-image::newPacket.jpg[newPacket,width=340,height=37]
+[[fig:packet-format]]
+.Example encapsulated packet format
+image::newPacket.jpg[newPacket,width=340,height=37,align="center"]
 
 Alternatively, for ATB, the source of the packet is indicated by the
 *ATID* bus field, and there is no equivalent of "flow", so an example
