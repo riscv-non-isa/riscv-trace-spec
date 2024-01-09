@@ -1,4 +1,4 @@
-[[Branch Trace]]
+[[BranchTrace]]
 == Branch Trace
 
 Instruction delta tracing, also known as branch tracing, works by
@@ -35,10 +35,10 @@ often mapping directly to physical memory. Dynamically linked programs
 require the debugger to keep track of memory allocation operations using
 either trace or stop-mode debugging.
 
-[[Trace Concepts]]
+[[TraceConcepts]]
 === Instruction delta trace concepts
 
-[[Sequential Instructions]]
+[[SequentialInstructions]]
 ==== Sequential instructions
 
 For instruction set architectures such as RISC-V where all instructions
@@ -81,7 +81,7 @@ are the only type of branch that is supported by the RISC-V ISA.
 ==== Interrupts and exceptions
 
 Interrupts are a different type of delta that generally occur
-asynchronously to the program’s execution rather than intentionally as a
+asynchronously to the program's execution rather than intentionally as a
 result of a specific instruction or event. Exceptions can be thought of
 in the same way, even though they can be typically linked back to a
 specific instruction address.
@@ -95,9 +95,9 @@ beforehand must be traced. Following this the next valid instruction
 address (the first of the trap handler) must be traced.
 
 Note: not all exceptions and interrupts cause traps (see
-section #sec:terminology[[sec:terminology]] for definitions). Most
+<<sec:terminology>> for definitions). Most
 notably, floating point exceptions and disabled interrupts do not trap.
-If an exception or interrupt doesn’t trap, the program counter does not
+If an exception or interrupt doesn't trap, the program counter does not
 change. So, there is no need to trace all exceptions/interrupts, just
 traps. In this document, interrupts and exceptions are only traced when
 they cause traps to be taken.
@@ -131,7 +131,7 @@ Some examples of why tracing may stop are:
 * The hart may be halted (entered debug mode);
 * The hart may be reset;
 * Encoding may be stopped (for example via a _Trace-off_ trigger - see
-section #sec:trigger[[sec:trigger]]);
+<<sec:trigger>>);
 * The matching criteria for any filtering capabilities implemented by
 the encoder may no longer be met;
 * The encoder may be disabled.
@@ -165,8 +165,7 @@ encoded as taken/non-taken, but as a more efficient branch count number.
 uninferable jump target, efficiency can be improved by caching recent
 jump targets, and reporting the cache entry index instead.
 
-Modes may have associated parameters; see
-Table #tab:iparameters[[tab:iparameters]] for further details.
+Modes may have associated parameters; see <<tab:iparameters>> for further details.
 
 All modes are optional apart from delta address mode, which must be
 supported.
@@ -224,7 +223,7 @@ sequentially inferable targets and provide this information separately
 to the encoder. The final decision as to whether to treat the jump as
 inferable or not must be made by the encoder. Both the constant load and
 the jump must be traced in order for the decoder to be able to infer the
-jump target. See Section link:#Jump Classes[[Jump Classes]] for details
+jump target. See <<JumpClasses>> for details
 of what constitutes a sequentially inferable jump.
 
 [[sec:implicit-return]]
@@ -246,7 +245,7 @@ already been reported in an earlier packet. The encoder must ensure that
 this is the case. This can be accomplished by utilizing a counter to
 keep track of the number of nested calls being traced. The counter
 increments on calls (but not tail calls), and decrements on returns (see
-Section link:#Jump Classes[[Jump Classes]] for definitions). The counter
+<<JumpClasses>> for definitions). The counter
 will not over or underflow, and is reset to 0 whenever a synchronization
 packet is sent. Returns will be treated as inferable and will not
 generate a trace packet if the count is non-zero (i.e. the associated
@@ -294,7 +293,7 @@ implemented in the decoder software.
 The predictor shall comprise a lookup table of 2^_bpred_size_p_^
 entries. Each entry is indexed by bits _bpred_size_p_:1 of the
 instruction address (or __bpred_size_p__+1:2 if compressed instructions
-aren’t supported), and each contains a 2-bit prediction state:
+aren't supported), and each contains a 2-bit prediction state:
 
 * 00: predict not taken, transition to 01 if prediction fails;
 * 01: predict not taken, transition to 00 if prediction succeeds, else
@@ -332,7 +331,7 @@ software. Even a small cache can provide significant improvement.
 The cache shall comprise 2^_cache_size_p_^ entries, each of which can
 contain an instruction address. It will be direct mapped, with each
 entry indexed by bits _cache_size_p_:1 of the instruction address (or
-__cache_size_p__+1:2 if compressed instructions aren’t supported).
+__cache_size_p__+1:2 if compressed instructions aren't supported).
 
 Each uninferable jump target is first compared with the entry at its
 index in the cache. If it is found in the cache, the index number is

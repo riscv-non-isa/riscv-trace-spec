@@ -79,7 +79,7 @@ _support_ packet. Following this, tracing will resume with a sync
 packet.
 
 Note: if the *halted* or *reset* sideband signals are asserted (see
-Table #tab:ingress-side-band[[tab:ingress-side-band]]) the encoder will
+Table <<tab:ingress-side-band>>) the encoder will
 behave as if it has received an unqualified instruction (output
 _te_inst_ reporting the address of the previous instruction, followed by
 _te_support_);
