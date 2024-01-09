@@ -25,7 +25,7 @@ is zero (it gets adjusted as it propagates through the infrastructure);
 * An optional 2-byte timestamp;
 * The packet payload.
 
-image:newPacket.jpg[newPacket,width=340,height=37]
+image::newPacket.jpg[newPacket,width=340,height=37]
 
 Alternatively, for ATB, the source of the packet is indicated by the
 *ATID* bus field, and there is no equivalent of "flow", so an example
