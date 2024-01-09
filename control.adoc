@@ -74,35 +74,42 @@ the E-Trace protocol.
 [[sec:ctl-modes]]
 === Optional Modes
 
-See section link:#optional[[optional]] for details of the modes covered
-in this section.
+See <<optional>> for details of the modes covered in this section.
 
-|l|l|p90mm| *Field* | *Applicability* | *E-Trace Specific Details*
-*trTeInstNoAddrDiff* | O |
-*trTeInstNoTrapAddr* | O |
-*trTeInstEnSequentialJump* | O |
-*trTeInstEnImplicitReturn* | O |
-*trTeInstEnBranchPrediction* | O |
-*trTeInstJumpTargetCache* | O |
-*trTeDataNoValue* | OD |
-*trTeDataNoAddr* | OD |
-*trTeDataAddrCompress* | OD |
-*trTeContext* | N | Hardcode to 0.
-*trTeInstMode* | N | Hardcode to 7.
-*trTeInstImplicitReturnMode* | N | Hardcode to 0.
-*trTeInstEnRepeatedHistory* | N | Hardcode to 0.
-*trTeInstEnAllJumps* | N | Hardcode to 0.
-*trTeInstExtendAddrMSB* | N | Hardcode to 0.
+[[optional-modes]]
+.Optional and run-time configurable modes.
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field* | *Applicability* | *E-Trace Specific Details*
+|*trTeInstNoAddrDiff* | O |
+|*trTeInstNoTrapAddr* | O |
+|*trTeInstEnSequentialJump* | O |
+|*trTeInstEnImplicitReturn* | O |
+|*trTeInstEnBranchPrediction* | O |
+|*trTeInstJumpTargetCache* | O |
+|*trTeDataNoValue* | OD |
+|*trTeDataNoAddr* | OD |
+|*trTeDataAddrCompress* | OD |
+|*trTeContext* | N | Hardcode to 0.
+|*trTeInstMode* | N | Hardcode to 7.
+|*trTeInstImplicitReturnMode* | N | Hardcode to 0.
+|*trTeInstEnRepeatedHistory* | N | Hardcode to 0.
+|*trTeInstEnAllJumps* | N | Hardcode to 0.
+|*trTeInstExtendAddrMSB* | N | Hardcode to 0.
+|===
 
 [[sec:ctl-filter]]
 === Filtering
 
-See section #ch:filtering[[ch:filtering]] for details of the filtering
-capabilities covered in this section.
+See [[ch:filtering]] for details of the filtering capabilities covered in this section.
 
-|l|l|p90mm| *Field* | *Applicability* | *E-Trace Specific Details*
-*trTeInstFilters* | O |
-*trTeDataFilters* | OD |
-*trTeFilter...* | O |
-*trTeComp...* | O |
-*trTeTrig...* | N | Hardcode to 0.
+[[trace-filtering]]
+.Trace filtering selection
+|===
+|*Field* | *Applicability* | *E-Trace Specific Details*
+|*trTeInstFilters* | O |
+|*trTeDataFilters* | OD |
+|*trTeFilter...* | O |
+|*trTeComp...* | O |
+|*trTeTrig...* | N | Hardcode to 0.
+|===
