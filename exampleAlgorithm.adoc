@@ -99,7 +99,7 @@ predicted correctly, nothing is output at this time, and the encoder
 continues to count correctly predicted branch outcomes. As soon as one
 of the branch outcomes is not correctly predicted, the encoder will
 output a format 0, subformat 0 packet. See also
-<<sec:format0[[sec:format0]].
+<<sec:format0>>.
 
 The choice between formats for the "format 0/1/2" case in the middle of
 the diagram also needs further explanation.
@@ -113,19 +113,19 @@ address. This will include branch information if there are any branches
 to report. However, the encoder may chose to output the equivalent
 format 1 or 2 packet (containing the differential address, with or
 without branch information) if that will result in a shorter packet (see
-<<sec:format0[[sec:format0]]);
+<<sec:format0>>);
 * Else, if there are branches to report, format 1 is used, otherwise
 format 2.
 
 Packet formats 0, 1 and 2 are organized so that the address is usually
 the final field. Minimizing the number of bits required to represent the
 address reduces the total packet size and significantly improves
-efficiency. See Chapter link:#packets[[packets]].
+efficiency. See <<packets>>.
 
 [[sec:resync]]
 === Resynchronisation
 
-Per Section link:#synchronization[[synchronization]], a format 3
+Per <<synchronization>>, a format 3
 synchronisation packet must be output after "a prolonged period of
 time". The exact mechanism for determining this is not specified, but
 options might be to count the number of _te_inst_ packets emitted, or
@@ -152,7 +152,7 @@ reference algorithm is applied to each retired instruction. When
 instructions are retired in blocks, only the first and last instruction
 in a block need be considered, as all those in between are
 "uninteresting", and will have no effect on the encoder's state (their
-route through figure #fig:algo[1.1] does not pass through any of the
+route through <<fig:algo>> does not pass through any of the
 rectangular boxes).
 
 In most cases, either the first or last instruction of a block (but not
@@ -202,3 +202,5 @@ cycles between blocks 2 and 3, which will allow the encoder to 'catch
 up'. It is recommended that encoders implement sufficient elastic
 buffering to handle this case, and if for some reason the elastic buffer
 overflows, it should issue a support packet indicating trace lost.
+
+
