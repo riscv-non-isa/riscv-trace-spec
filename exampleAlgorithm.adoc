@@ -4,11 +4,11 @@
 The contents of this chapter are informative only.
 
 A reference algorithm for compressed branch trace is given in
-figure #fig:algo[1.1]. In the diagram, the following terms are used:
+<<fig:algo>>. In the diagram, the following terms are used:
 
 * _te_inst._ The name of the packet type emitted by the encoder (see
-Chapter link:#packets[[packets]]);
-* _inst._ Abbreviation for ’instruction’;
+<<packets>>);
+* _inst._ Abbreviation for 'instruction';
 * _exception. Exception or interrupt signalled;_
 * _updiscon._ Uninferable PC discontinuity. This identifies an
 instruction that causes the program counter to be changed by an amount
@@ -22,7 +22,7 @@ branch. A 0 indicates the branch was taken, a 1 indicates that it was
 not;
 * _ppccd._ Privilege has changed, or context has changed and needs to be
 reported precisely or treated as an uninferable PC discontinuity (see
-Table #tab:context-type[[tab:context-type]]);
+<<tab:context-type>>);
 * _ppccd_br._ As above, but branch map not empty;
 * _er_n._ Instruction retirement and exception signalled on the same
 cycle, or Trace notify trigger (see
@@ -30,7 +30,7 @@ Table #tab:debugModuleTriggerSupport[[tab:debugModuleTriggerSupport]]);
 * _exc_only._ Exception or interrupt signalled without simultaneous
 retirement;
 * _cci._ context change that can be reported imprecisely (see
-Table #tab:context-type[[tab:context-type]]);
+<<tab:context-type>>);
 * _rpt_br._ Report branches due to full branch map or misprediction;
 * _branches._ The number of branches encountered but not yet reported to
 the decoder;
@@ -40,16 +40,14 @@ predictor disabled or not present);
 cycle it occured because it was preceded by an updiscon or immediately
 followed by another exception;
 * _resync count._ A counter used to keep track of when it is necessary
-to send a synchronization packet (see Section #sec:resync[1.2]);
+to send a synchronization packet (see <<sec:resync>>);
 * _max_resync._ The resync counter value that schedules a
-synchronization packet (see Section #sec:resync[1.2]);
+synchronization packet (see <<sec:resync>>);
 * _resync_br._ The resync counter has reached the maximum value and
 there are entries in the branch map that have not yet been output (see
-Section #sec:resync[1.2]).
+<<sec:resync>>).
 
-image:algo.png[algo,width=566,height=869]
-
-Figure #fig:algo[1.1] shows instruction by instruction behavior, as
+<<fig:algo>> shows instruction by instruction behavior, as
 would be seen in a single-retirement system only. Whilst the core to
 encoder interface allows the RISC-V hart to provide information on
 multiple retiring instructions simultaneously, the resultant packet
@@ -66,27 +64,29 @@ instruction.
 
 Additionally, the encoder can generate one further packet type, not
 shown on the diagram for clarity. The _support_ packet (format 3,
-subformat 3 - see section #sec:format33[[sec:format33]]) is sent when:
+subformat 3 - see <<sec:format33>>) is sent when:
 
 * The encoder is enabled or disabled, or its configuration is changed,
 to inform the decoder of the operating mode of the encoder;
 * After the final qualified instruction has been traced, to inform the
 decoder that tracing has stopped;
 * If trace packets are lost (for example if the buffer into which
-packets are being written fills up. In this situation, the 1st packet
+packets are being written fills up), in this situation, the 1st packet
 loaded into the buffer when space next becomes available must be a
 _support_ packet. Following this, tracing will resume with a sync
 packet.
 
 Note: if the *halted* or *reset* sideband signals are asserted (see
-Table <<tab:ingress-side-band>>) the encoder will
-behave as if it has received an unqualified instruction (output
-_te_inst_ reporting the address of the previous instruction, followed by
+<<tab:ingress-side-band>>) the encoder will behave as if it has received an unqualified instruction (output _te_inst_ reporting the address of the previous instruction, followed by
 _te_support_);
+
+[[fig:algo]]
+.Instruction delta trace algorithm
+image::algo.png[algo,width=566,height=869,align="center"]
 
 === Format selection
 
-In all cases but two, the packet format is determined only by a ’yes’
+In all cases but two, the packet format is determined only by a 'yes'
 outcome from the associated decision.
 
 When reporting branch information on its own (without an address), the
@@ -99,7 +99,7 @@ predicted correctly, nothing is output at this time, and the encoder
 continues to count correctly predicted branch outcomes. As soon as one
 of the branch outcomes is not correctly predicted, the encoder will
 output a format 0, subformat 0 packet. See also
-section #sec:format0[[sec:format0]].
+<<sec:format0[[sec:format0]].
 
 The choice between formats for the "format 0/1/2" case in the middle of
 the diagram also needs further explanation.
@@ -113,7 +113,7 @@ address. This will include branch information if there are any branches
 to report. However, the encoder may chose to output the equivalent
 format 1 or 2 packet (containing the differential address, with or
 without branch information) if that will result in a shorter packet (see
-section #sec:format0[[sec:format0]]);
+<<sec:format0[[sec:format0]]);
 * Else, if there are branches to report, format 1 is used, otherwise
 format 2.
 
@@ -151,7 +151,7 @@ As noted earlier in this section, for a single-retirement system the
 reference algorithm is applied to each retired instruction. When
 instructions are retired in blocks, only the first and last instruction
 in a block need be considered, as all those in between are
-"uninteresting", and will have no effect on the encoder’s state (their
+"uninteresting", and will have no effect on the encoder's state (their
 route through figure #fig:algo[1.1] does not pass through any of the
 rectangular boxes).
 
@@ -171,7 +171,7 @@ the encoder, and as situations such as this will only occur
 infrequently, some elastic buffering in the encoder is the preferred
 approach. This will allow subsequent blocks to be queued whilst the
 encoder generates two successive packets from a block. The encoder can
-drain the elastic buffer any time there is a cycle when the hart doesn’t
+drain the elastic buffer any time there is a cycle when the hart doesn't
 report anything, or if there is a block with *itype* = 0 (which is
 uninteresting to the encoder).
 
@@ -194,11 +194,11 @@ interrupt);
 * Block 3: Generate packet from first instruction (other exception or
 interrupt trap handler)
 
-Because the ecall is known to the hart’s fetch unit and can be
+Because the ecall is known to the hart's fetch unit and can be
 predicted, it may be possible for block 2 to occur the cycle after block
 1. However, it is reasonable to assume that the other exception or
 interrupt will not be predictable, and as a result there will be several
-cycles between blocks 2 and 3, which will allow the encoder to ’catch
-up’. It is recommended that encoders implement sufficient elastic
+cycles between blocks 2 and 3, which will allow the encoder to 'catch
+up'. It is recommended that encoders implement sufficient elastic
 buffering to handle this case, and if for some reason the elastic buffer
 overflows, it should issue a support packet indicating trace lost.
