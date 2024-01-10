@@ -749,11 +749,11 @@ or nested call count. If *irreport* is the same value as
 The width of this field depends on the number of optional formats
 supported. Currently, two optional formats are defined (correctly
 predicted branches and jump target cache). The width is specified by the
-_f0s_width_ discovery field (see section #sec:disco[[sec:disco]]). If
+_f0s_width_ discovery field (see <<sec:disco>>). If
 multiple optional formats are supported, the field width must be
 non-zero. However, if only one optional format is supported, the field
 can be omitted, and the value of the field inferred from the *options*
-field in the support packet (see section #sec:format33[1.5]. This
+field in the support packet (see <<sec:format33>>. This
 provision allows additional formats to be added in future without
 reducing the efficiency of the existing formats.
 
@@ -779,7 +779,7 @@ branch.
 These bits are encoded so that most of the time they will take the same
 value as the immediately preceding bit (*updiscon*, *branch_map[MSB]* or
 *branches[MSB]* depending on the specific packet format). Purpose and
-behavior is as described in section #sec:irxx[1.6.3].
+behavior is as described in <<sec:irxx>>.
 
 For the jump target cache (subformat 1), they are included to allow
 return addresses that fail the implicit return prediction but which
