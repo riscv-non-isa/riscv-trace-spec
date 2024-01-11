@@ -432,7 +432,8 @@ encoder will need to be applied via the *context* input.
 |*impdef*[_impdef_width_p_-1:0] | O | Implementation defined sideband
 signals. A typical use for these would be for filtering (see
 <<ch:filtering>>.
-|*trigger*[2+:0] | [1:0]: O : OR | A pulse on bit 0 will cause the
+|*trigger*[2+:0] | [1:0]: O +
+[2+]: OR | A pulse on bit 0 will cause the
 encoder to start tracing, and continue until further notice, subject to
 other filtering criteria also being met. A pulse on bit 1 will cause the
 encoder to stop tracing until further notice. See <<sec:trigger>>).
@@ -503,15 +504,18 @@ is sometimes known as a watchpoint.
 [%autowidth,align="center",float="center",cols="<,<",options="header"]
 |===
 | *Retired* | *Instruction Trace Block*
-|1000: : *_divuw_* | **iretire**=7, **iaddr**=0x1000, **itype**=8
-|1004: *_add_* |
-|1008: *_or_* |
-|100C: *_c.jalr_* |
-|0940: *_addi_* | **iretire**=3, **iaddr**=0x0940, **itype**=4
-|0944: *_c.beq_* |
+|1000: *_divuw_* +
+1004: *_add_* +
+1008: *_or_* +
+100C: *_c.jalr_*
+| **iretire**=7, **iaddr**=0x1000, **itype**=8
+|0940: *_addi_* +
+0944: *_c.beq_*
+| **iretire**=3, **iaddr**=0x0940, **itype**=4
 |0946: *_c.bnez_* | **iretire**=1, **iaddr**=0x0946, **itype**=5
-|0988: *_lbu_* | **iretire**=4, **iaddr**=0x0988, **itype**=0
-|098C: *_csrrw_* |
+|0988: *_lbu_* +
+098C: *_csrrw_* 
+| **iretire**=4, **iaddr**=0x0988, **itype**=0
 |===
 
 [[sec:DataInterfaceRequirements]]
