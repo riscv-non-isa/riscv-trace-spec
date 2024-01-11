@@ -101,7 +101,7 @@ See <<optional>> for details of the modes covered in this section.
 [[sec:ctl-filter]]
 === Filtering
 
-See [[ch:filtering]] for details of the filtering capabilities covered in this section.
+See <<ch:filtering>> for details of the filtering capabilities covered in this section.
 
 [[trace-filtering]]
 .Trace filtering selection
