@@ -482,8 +482,7 @@ retired.
 provides it.
 | 3 |_Trace-off_. This should be connected to *trigger[1]* if the encoder
 provides it.
-| 4 |_Trace-notify_. This should be connected to **trigger[1
-_blocks_:**2] if the encoder provides it. This will cause the encoder to
+| 4 |_Trace-notify_. This should be connected to **trigger[1 + _blocks_:**2] if the encoder provides it. This will cause the encoder to
 output a packet containing the address of the last instruction in the
 block if it is enabled. One bit per block.
 |===
