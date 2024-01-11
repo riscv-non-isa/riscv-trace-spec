@@ -3,8 +3,8 @@ Authors: Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.r
 :docgroup: RISC-V Task Group
 :description: Efficient Trace for RISC-V (Zexmpl)
 :company: RISC-V.org
-:revdate: May 5, 2022
-:revnumber: 1.0
+:revdate: Jan 5, 2024
+:revnumber: 2.0.1
 :revremark: This document is under development. Expect potential changes. Visit http://riscv.org/spec-state for further details.
 :revinfo:
 :url-riscv: http://riscv.org
