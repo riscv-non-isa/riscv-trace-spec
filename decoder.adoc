@@ -246,7 +246,7 @@ function is_return_from_trap (instr)
 
     if ((instr.opcode == SRET)    or  
       (instr.opcode == MRET)      or
-      (instr.opcode == SRET))
+      (instr.opcode == DRET))
       return TRUE
 
     return false
@@ -325,7 +325,7 @@ function unprocessed_branches (address)
 
   # Check all branches processed (except 1 if this instruction is a branch)
     return (branches != (is_branch(get_instr(address)) ? 1 : 0))
-    
+
 # Push address onto return stack #
 function push_return_stack (address)
 
