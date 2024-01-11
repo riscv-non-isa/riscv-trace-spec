@@ -25,7 +25,7 @@ global bool  inferred_address = FALSE    # Flag to indicate that reported addres
 global bool  start_of_trace = TRUE       # Flag indicating 1st trace packet still
                                          #   to be processed
 global       address                     # Reconstructed address from te_inst messages
-global       privilege                   # Privilege from ti_inst messages
+global       privilege                   # Privilege from te_inst messages
 global       options                     # Operating mode flags
 global array return_stack                # Array holding return address stack
 global       irstack_depth = 0           # Depth of the return address stack
@@ -118,7 +118,7 @@ function follow_execution_path(address, te_inst)
         return
       if (te_inst.format != 3 and pc == address and !stop_at_last_branch and
         (te_inst.notify != get_preceding_bit(te_inst, "notify")) and 
-        (unprocessed_branches(pc))
+        !unprocessed_branches(pc))
           # All branches processed, and reached reported address due to notification,
           # not as an uninferable jump target
         return
@@ -244,7 +244,8 @@ function is_uninferable_jump (instr)
 # Determine if instruction is a return from trap #
 function is_return_from_trap (instr)
 
-    if ((instr.opcode == SRET)    or  
+    if ((instr.opcode == URET)    or  
+      (instr.opcode == SRET)      or
       (instr.opcode == MRET)      or
       (instr.opcode == DRET))
       return TRUE
