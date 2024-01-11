@@ -1,4 +1,4 @@
-= Efficient Trace for RISC-V (Zexmpl)
+= Efficient Trace for RISC-V
 Authors: Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@siemens.com>
 :docgroup: RISC-V Task Group
 :description: Efficient Trace for RISC-V (Zexmpl)
