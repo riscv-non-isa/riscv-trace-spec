@@ -50,9 +50,8 @@ Allowing for up to 3 comparators allows for simultaneous matching on
 Address, Trap value and context (unlikely, but should not be
 architecturally precluded).
 
-The filtering configuration fields are detailed in
-<<encoderControl>>. These support the
-architecture described above, though will also support simpler
+The filtering configuration fields are detailed in <<encoderControl>>. These support the architecture described above, though will also support simpler
 implementations, for example where the comparator function is more
 tightly coupled with each filter, or where filtering is provided on only
 some inputs (such as just instruction address).
+
