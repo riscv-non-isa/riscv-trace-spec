@@ -1,12 +1,10 @@
 = Efficient Trace for RISC-V
-Authors: Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@siemens.com>
-:docgroup: RISC-V Task Group
-:description: Efficient Trace for RISC-V (Zexmpl)
+Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@siemens.com>
+//2.0.1, January 5, 2024
+:revdate: 05012024
+:revnumber: v2.0.1
+:description: Efficient Trace for RISC-V
 :company: RISC-V.org
-:revdate: Jan 5, 2024
-:revnumber: 2.0.1
-:revremark: This document is under development. Expect potential changes. Visit http://riscv.org/spec-state for further details.
-:revinfo:
 :url-riscv: http://riscv.org
 :doctype: book
 :preface-title: Preamble
@@ -38,14 +36,6 @@ endif::[]
 :footnote:
 :xrefstyle: short
 
-//[WARNING]
-//.This document is in the link:http://riscv.org/spec-state[Development state]
-//====
-//Expect potential changes. This draft specification is likely to evolve before
-//it is accepted as a standard. Implementations based on this draft
-//may not conform to the future standard.
-//====
-
 [preface]
 == Copyright and license information
 This specification is licensed under the Creative Commons
@@ -55,7 +45,6 @@ https://creativecommons.org/licenses/by/4.0/.
 
 Copyright 2023 by RISC-V International.
 
-//[preface]
 include::introduction.adoc[]
 include::control.adoc[]
 include::branchTrace.adoc[]
@@ -70,7 +59,5 @@ include::decoder.adoc[]
 include::exampleCodeSnippets.adoc[]
 include::fragmentCodeAndTransport.adoc[]
 include::future.adoc[]
-
-// The index must precede the bibliography
 //include::index.adoc[]
 //include::bibliography.adoc[]

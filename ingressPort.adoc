@@ -431,7 +431,7 @@ encoder will need to be applied via the *context* input.
 | *Signal* | *Group* | *Function*
 |*impdef*[_impdef_width_p_-1:0] | O | Implementation defined sideband
 signals. A typical use for these would be for filtering (see
-Chapter #ch:filtering[[ch:filtering]].
+<<ch:filtering>>.
 |*trigger*[2+:0] | [1:0]: O : OR | A pulse on bit 0 will cause the
 encoder to start tracing, and continue until further notice, subject to
 other filtering criteria also being met. A pulse on bit 1 will cause the
