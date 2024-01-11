@@ -26,7 +26,7 @@ reported precisely or treated as an uninferable PC discontinuity (see
 * _ppccd_br._ As above, but branch map not empty;
 * _er_n._ Instruction retirement and exception signalled on the same
 cycle, or Trace notify trigger (see
-Table #tab:debugModuleTriggerSupport[[tab:debugModuleTriggerSupport]]);
+<<tab:debugModuleTriggerSupport>>);
 * _exc_only._ Exception or interrupt signalled without simultaneous
 retirement;
 * _cci._ context change that can be reported imprecisely (see
