@@ -510,7 +510,7 @@ included, the address is in differential format unless full address mode
 is enabled (see <<sec:full-address>>).
 
 .Packet format 1 - address, branch map
-[align="center",float="center",cols="<1,<2,<3",options="header"]
+[align="center",float="center",cols="<1,<1,<3",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -631,7 +631,7 @@ address is zero, or very small.
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
 extensions
-|*subformat*| See section #sec:f0s[1.8.1]| 0 (correctly predicted
+|*subformat*| See <<sec:f0s>>| 0 (correctly predicted
 branches)
 |*branch_count*| 32| Count of the number of correctly predicted
 branches, minus 31.
