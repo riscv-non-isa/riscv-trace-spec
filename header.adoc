@@ -2,11 +2,13 @@
 Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@siemens.com>
 //2.0.1, January 5, 2024
 :revdate: 05012024
-:revnumber: v2.0.1
+:revnumber: 2.0.1
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
 :url-riscv: http://riscv.org
 :doctype: book
+:pdf-theme: docs-resources/themes/riscv-pdf.yml
+:pdf-fontsdir: ../src/resources/fonts/
 :preface-title: Preamble
 :colophon:
 :appendix-caption: Appendix
