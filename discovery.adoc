@@ -158,7 +158,7 @@ data trace.
 |_impdef_width_ | 0 | _impdef_width_p_ - 1
 |===
 
-[[tab:dataAttributes>]]
+[[tab:dataAttributes]]
 .Data trace attributes
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
