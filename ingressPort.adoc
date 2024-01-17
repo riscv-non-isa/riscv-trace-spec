@@ -181,7 +181,7 @@ multiple instructions in a block. Replication as per OR. If omitted, the
 interface must include SR group signals instead.
 * SR: Single, may be replicated. Mandatory for harts that can only
 retire one instruction in a block. Replication as per OR (see
-<<alt-multi>>). If omitted, the interface must include
+<<sec:alt-multi>>). If omitted, the interface must include
 BR group signals instead.
 
 "Special" instructions are those that require *itype* to be non-zero.
