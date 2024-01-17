@@ -125,7 +125,7 @@ efficiency. See <<packets>>.
 [[sec:resync]]
 === Resynchronisation
 
-Per <<synchronization>>, a format 3
+Per <<sec:synchronization>>, a format 3
 synchronisation packet must be output after "a prolonged period of
 time". The exact mechanism for determining this is not specified, but
 options might be to count the number of _te_inst_ packets emitted, or

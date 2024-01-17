@@ -102,6 +102,7 @@ change. So, there is no need to trace all exceptions/interrupts, just
 traps. In this document, interrupts and exceptions are only traced when
 they cause traps to be taken.
 
+[[sec:synchronization]]
 ==== Synchronization
 
 In order to make the trace robust there must be regular synchronization
