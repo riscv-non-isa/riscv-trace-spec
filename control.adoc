@@ -2,7 +2,7 @@
 == Encoder Control
 
 The fields required to control a Trace Encoder are defined in the
-https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc[RISC-V
+xref:https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc[RISC-V
 Trace Control Interface Specification], which is intended to apply to
 any and all RISC-V trace encoders, regardless of encoding protocol. This
 chapter details which of those fields apply to E-Trace. To avoid
@@ -12,7 +12,7 @@ specific context or clarification is provided only where required.
 How fields are organized and accessed (e.g packet based or memory
 mapped) is outside the scope of this document. If a memory mapped
 approach is adopted,
-https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc#register-map[this
+xref:https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc#register-map[this
 register map] from the RISC-V Trace Control Interface Specification
 should be used.
 
