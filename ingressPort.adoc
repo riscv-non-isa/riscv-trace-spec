@@ -424,7 +424,7 @@ functionality, as described in
 Note, any user defined information that needs to be output by the
 encoder will need to be applied via the *context* input.
 
-[[ingress-side-band]]
+[[tab:ingress-side-band]]
 .Optional sideband encoder input signals
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
