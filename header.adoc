@@ -6,6 +6,8 @@ Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@
 :revnumber: 2.0.1
 :url-riscv: http://riscv.org
 :doctype: book
+:pdf-theme: docs-resources/themes/riscv-pdf.yml
+:pdf-fontsdir: ../src/resources/fonts/
 :preface-title: Preamble
 :colophon:
 :pdf-theme: docs-resources/themes/riscv-pdf.yml
