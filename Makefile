@@ -26,14 +26,10 @@ ASCIIDOCTOR_PDF := asciidoctor-pdf
 OPTIONS := --trace \
            -a compress \
            -a mathematical-format=svg \
-           -a revnumber=${VERSION} \
-           -a revremark=${REVMARK} \
-           -a revdate=${DATE} \
-           -a pdf-fontsdir=docs-resources/fonts \
-           -a pdf-theme=docs-resources/themes/riscv-pdf.yml \
            --failure-level=ERROR
 REQUIRES := --require=asciidoctor-diagram \
             --require=asciidoctor-mathematical
+#			--require=~/bin/pdf-converter-colophon-placement.rb
 #--require=asciidoctor-bibtex \
 
 .PHONY: all build clean build-container build-no-container

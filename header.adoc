@@ -1,14 +1,15 @@
 = Efficient Trace for RISC-V
 Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@siemens.com>
-//2.0.1, January 5, 2024
-:revdate: 05012024
-:revnumber: v2.0.1
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
+:revdate: January 5, 2024
+:revnumber: 2.0.1
 :url-riscv: http://riscv.org
 :doctype: book
 :preface-title: Preamble
 :colophon:
+:pdf-theme: docs-resources/themes/riscv-pdf.yml
+:pdf-fontsdir: docs-resources/fonts/
 :appendix-caption: Appendix
 :imagesdir: docs-resources/images
 :title-logo-image: image:risc-v_logo.png[pdfwidth=3.25in,align=center]
@@ -24,6 +25,7 @@ Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@
 :lang: en
 :listing-caption: Listing
 :sectnums:
+:media: prepress
 :toc: left
 :toclevels: 4
 :source-highlighter: pygments
@@ -35,6 +37,19 @@ endif::[]
 :stem: latexmath
 :footnote:
 :xrefstyle: short
+
+[colophon]
+== Change History
+[%autowidth,align="center",float="center",cols="<,<",options="header"]
+|===
+|2.0|Baseline
+|2.0.1 |Clarifications only - no changes to normative behaviour. +
+- Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc[RISC-V Trace Control Interface Specification] +
+- Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>. +
+- Removed references to tail-calls in jump classifications in <<sec:InstructionInterfaceRequirements>>. +
+- Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>. +
+- Corrected reference decoder in <<Decoder>> to cover a corner-case related to trap returns.
+|===
 
 [preface]
 == Copyright and license information
