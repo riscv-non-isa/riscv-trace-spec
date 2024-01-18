@@ -13,13 +13,13 @@ Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@
 :pdf-theme: docs-resources/themes/riscv-pdf.yml
 :pdf-fontsdir: docs-resources/fonts/
 :appendix-caption: Appendix
-:imagesdir: docs-resources/images
+:imagesdir: images
 :title-logo-image: image:risc-v_logo.png[pdfwidth=3.25in,align=center]
 // Settings:
 :experimental:
 :reproducible:
 //:WaveDromEditorApp: app/wavedrom-editor.app
-:imagesoutdir: docs-resources/images
+:imagesoutdir: images
 //:bibtex-file: example.bib
 //:bibtex-order: alphabetical
 //:bibtex-style: apa
