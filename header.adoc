@@ -1,5 +1,5 @@
 = Efficient Trace for RISC-V
-Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@siemens.com>
+Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
 :revdate: January 5, 2024
