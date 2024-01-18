@@ -14,7 +14,7 @@ Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@
 :pdf-fontsdir: docs-resources/fonts/
 :appendix-caption: Appendix
 :imagesdir: images
-:title-logo-image: image:risc-v_logo.png[pdfwidth=3.25in,align=center]
+:title-logo-image: image:risc-v_logo.svg[pdfwidth=3.25in,align=center]
 // Settings:
 :experimental:
 :reproducible:
