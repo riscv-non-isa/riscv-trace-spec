@@ -27,7 +27,8 @@ Gajinder Panesar <gajinder.panesar@siemens.com>, Iain Robertson <iain.robertson@
 :lang: en
 :listing-caption: Listing
 :sectnums:
-//:media: prepress
+:media: prepress
+:!show-link-uri:
 :toc: left
 :toclevels: 4
 :source-highlighter: pygments
