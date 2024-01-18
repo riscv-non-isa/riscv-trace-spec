@@ -5,7 +5,6 @@ only true if implicit-return mode is off
 
 . *Call to debug_printf(), from 80001a84, in main():*
 +
-[source,c]
 ----
 00000000800019e8 <main>:
     ........:	...
@@ -16,7 +15,7 @@ PC: 80001a84 ->80001178 +
 The target of the *_jal_* is inferable, thus NO te_inst packet is
 sent.
 +
-[source,c]
+
 ----
 0000000080001178 <debug_printf>:
     80001178:	7139                	{addi	sp,sp,-64}
@@ -25,7 +24,7 @@ sent.
 +
 . Return from debug_printf():
 +
-[source,c]
+
 ----
     80001186:	...
     80001188:	6121                	{addi	sp,sp,64}
@@ -38,7 +37,7 @@ The target of the *_ret_* is uninferable, thus a *_te_inst_* packet IS
 sent:
 *_te_inst_*[format=2 (ADDR_ONLY): address=0x80001a88, updiscon=0]
 +
-[source,c]
+
 ----
     80001a88:	00000597          	{auipc	a1,0x0}}
     80001a8c:	65058593          	{addi	a1,a1,1616}} # 800020d8 <main+0x6f0>
@@ -46,7 +45,7 @@ sent:
 +
 . *exiting from Func_2(), with a final taken branch, followed by a _ret_*
 +
-[source,c]
+
 ----
 00000000800010b6 <Func_2>:
     ........:   ....
@@ -59,7 +58,7 @@ sent yet. +
 branches = 0; branch_map = 0; +
 branch_map = 0 <<branches++;
 +
-[source,c]
+
 ----
     800010ec:   60e2                    {ld      ra,24(sp)}
     800010ee:   6442                    {ld      s0,16(sp)}
@@ -75,7 +74,7 @@ sent, with ONE branch in the branch_map +
 *_te_inst_*[ format=1 (DIFF_DELTA): branches=1, branch_map=0x0,
 address=0x80001b8a (latexmath:[$\Delta$]=0xab0) updiscon=0 ]
 +
-[source,c]
+
 ----
 00000000800019e8 <main>:
     ........:   ....
@@ -85,7 +84,7 @@ address=0x80001b8a (latexmath:[$\Delta$]=0xab0) updiscon=0 ]
 +
 . *3 branches, then a function return back to Proc_1()*
 +
-[source,c]
+
 ----
 0000000080001100 <Proc_6>:
     ........:   ....
@@ -98,7 +97,7 @@ PC: 80001116 ->8000111a, add branch NOT taken to branch_map, but no
 packet sent yet. branches = 0; branch_map = 0; branch_map = 1
 <<branches++;
 +
-[source,c]
+
 ----
     8000111a:	c81d                    {beqz	s0,80001150 <Proc_6+0x50>}
 ----
@@ -107,7 +106,7 @@ PC: 8000111a ->8000111c, add branch NOT taken to branch_map, but no
 packet sent yet. +
 branch_map = 1 <<branches++;
 +
-[source,c]
+
 ----
     8000111c:   4709                    {li      a4,2}
     8000111e:   04e40063                {beq     s0,a4,8000115e <Proc_6+0x5e>}
@@ -117,7 +116,7 @@ PC: 8000111e ->8000115e, add branch TAKEN to branch_map, but no packet
 sent yet. +
 branch_map = 0 <<branches++;
 +
-[source,c]
+
 ----
     8000115e:	60e2                	{ld	ra,24(sp)}
     80001160:	6442                	{ld	s0,16(sp)}
@@ -127,7 +126,7 @@ branch_map = 0 <<branches++;
     80001168:	8082                	{ret}
 ----
 +
-[source,c]
+
 ----
 00000000800011d6 <Proc\_1>:
     ........:   ....
@@ -143,7 +142,7 @@ address=0x80001258 (latexmath:[$\Delta$]=0x148), updiscon=0 ]
 +
 . *A complex example with 2 branches, 2 jal, and a ret*
 +
-[source,c]
+
 ----
 00000000800011d6 <Proc\_1>:
     ........:   ....
@@ -156,7 +155,7 @@ sent yet. +
 branches = 0; branch_map = 0; +
 branch_map = 0 <<branches++;
 +
-[source,c]
+
 ----
     8000124a:	44c8                	{lw	a0,12(s1)}
     8000124c:	4799                	{li	a5,6}
@@ -169,7 +168,7 @@ PC: 80001254 ->80001100 +
 The target of the *_jal_* is inferable, thus no *_te_inst_* packet needs
 be sent. +
 +
-[source,c]
+
 ----
     0000000080001100 <Proc_6>:
     80001100:	1101                    {addi	sp,sp,-32}
@@ -185,7 +184,7 @@ PC: 8000110c ->800010f8 +
 The target of the *_jal_* is inferable, thus no *_te_inst_* packet needs
 to be sent.
 +
-[source,c]
+
 ----
 00000000800010f8 <Func_3>:
     800010f8:	1579                    {addi	a0,a0,-2}
@@ -197,7 +196,7 @@ PC: 800010fe ->80001110 +
 The target of the *_ret_* is uninferable, thus a *_te_inst_* packet will
 be sent shortly.
 +
-[source,c]
+
 ----
 0000000080001100 <Proc_6>:
     ........:   ....
@@ -208,6 +207,7 @@ be sent shortly.
 PC: 80001110 ->80001112, add branch NOT TAKEN to branch_map. +
 branch_map = 1 <<branches++; +
 *_te_inst_*[ format=1 (DIFF_DELTA): branches=2, branch_map=0x2,
-address=0x80001110 (latexmath:[$\Delta$]=0xfffffffffffffef4), updiscon=1
+address=0x80001110 
+(latexmath:[$\Delta$]=0xfffffffffffffef4), updiscon=1
 ]
 
