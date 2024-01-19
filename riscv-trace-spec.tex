@@ -1,0 +1,122 @@
+%=======================================================================
+% riscv-trace.tex
+%-----------------------------------------------------------------------
+
+\documentclass[twoside,11pt]{book}
+\usepackage{footnote}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{float}
+\makesavenoteenv{tabulary}
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\input{preamble}
+
+% All registers are named here. That way when we rename one we'll get errors if
+% there are still references to the old name.
+
+\usepackage{makeidx}
+\makeindex
+\usepackage{alltt}
+\usepackage{xspace}
+\usepackage{placeins}
+\usepackage{algorithm}
+\PassOptionsToPackage{noend}{algpseudocode}% comment out if want end's to show
+\usepackage{algpseudocode}
+
+\usepackage{hyperref}
+
+\newcommand{\versionnum}{2.0.1}
+
+\input{vc.tex}
+
+\begin{document}
+\setcounter{footnote}{0}
+
+\title{
+\begin{figure}[H]
+\centering
+\includegraphics{riscvLogo.png}
+\end{figure} 
+  Efficient Trace for RISC-V\\
+Version \versionnum\\
+\GITHash
+}
+
+\author{
+  Gajinder Panesar, Iain Robertson \\
+ \textless gajinder.panesar@gmail.com\textgreater, \textless iain.robertson@siemens.com\textgreater \\
+Siemens
+}
+
+
+%\begin{figure}[b]
+%\begin{center}
+%  \includegraphics{riscvLogo.png}
+%  \label{fig:riscvLogo}
+%\end{center}
+%\end{figure}
+
+
+%\begin{figure}[H]
+%\centering
+%\includegraphics[height=1cm, width=5cm]{riscvLogo.png}
+%\end{figure} 
+
+
+\maketitle
+
+
+\markboth{Efficient Trace for RISC-V Version \versionnum}
+{Efficient Trace for RISC-V Version \versionnum}
+\thispagestyle{empty}
+
+\frontmatter
+
+\chapter{Change History}
+\begin{table}[htp]
+  \centering
+  \label{tab:change-history}
+  \begin{tabulary}{\textwidth}{|l|p{145mm}|}
+    \hline
+    {\bf Version} & {\bf Changes}  \\
+    \hline
+    2.0 & Baseline \\
+    \hline
+    2.0.1 & Clarifications only - no changes to normative behaviour.\newline
+    - Control field definitions removed from section \ref{encoderControl}, which now references the 
+    \href{https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc}{RISC-V Trace Control Interface Specification} \newline
+    - Added detail on handling of multi-load/store instructions for data trace to section \ref{sec:DataInterfaceRequirements}. \newline
+    - Removed references to tail-calls in jump classifications in section \ref{sec:InstructionInterfaceRequirements}. \newline
+    - Corrected typos where \textbf{lrid} was inadvertently refered to by an earlier name (\textbf{index}) in section \ref{sec:data-loadstore}. \newline
+    - Corrected reference decoder in section \ref{Decoder} to cover a corner-case related to trap returns. \\
+    \hline
+  \end{tabulary}
+\end{table}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+\input{introduction}
+\input{control.tex}
+\input{branchTrace.tex}
+\input{ingressPort.tex}
+\input{filtering.tex}
+\input{timestamping.tex}
+\input{payload.tex}
+\input{dataTracePayload.tex}
+\input{exampleAlgorithm.tex}
+\input{discovery.tex}
+\input{decoder.tex}
+\input{exampleCodeSnippets.tex}
+\input{fragmentCodeAndTransport.tex}
+\input{future.tex}
+\newpage
+
+
+\end{document}
+
