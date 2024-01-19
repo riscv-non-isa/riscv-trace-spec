@@ -2,3 +2,4 @@ vc.tex
 .vscode
 *.pdf
 docs-resources\images\stem*.svg
+images\stem*.svg
