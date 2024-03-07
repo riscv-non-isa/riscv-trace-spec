@@ -1,11 +1,18 @@
+## RISC-V Processor Trace Specification
 
+For the latest released version of the specification please see the link on the right hand side of the page.
 
+### Build this repo's PDF using github actions
 
-To recreate the PDF file, first install the Ubuntu following packages:
+* Navigate to [github actions](https://github.com/riscv-non-isa/riscv-trace-spec/actions/workflows/build-pdf.yml) for this repo.
+* In the _Run workflow_ dropdown that displays, click the down arrow, then click the green _Run workflow_ button in the list.
+* The build starts running and its progress displays in the list.
+* Github actions indicates a successful build with a green button, or an unsuccessful build with a red button.
 
-```sudo apt-get install texlive-base texlive-latex-base texlive-latex-extra texlive-fonts-extra texlive-science```
+NOTE: If problems arise with the build, let us know by emailing help@riscv.org.
 
-Then type `make`.  
+== Build a PDF using a Docker container
 
-You may have to press [ENTER] a couple of times to skip past some error messages.
+You can easily build the documentation by leveraging a pre-built container image with all dependencies already installed. Follow the steps [here](https://github.com/riscv/riscv-docs-base-container-image).
 
+Note that the GitHub action utilizes the Docker container to build the PDF.
