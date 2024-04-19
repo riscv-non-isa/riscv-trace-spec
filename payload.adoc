@@ -348,8 +348,8 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p (return_stack_size_p > 0 ? 1 : 0)
-call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
+ + call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
@@ -542,8 +542,8 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p (return_stack_size_p > 0 ? 1 : 0)
-call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
+ + call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
@@ -673,8 +673,8 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p (return_stack_size_p > 0 ? 1 : 0)
-call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
+ + call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
@@ -706,8 +706,8 @@ differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
 to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p (return_stack_size_p > 0 ? 1 : 0)
-call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
+ + call_counter_size_p_| If the value of *irreport* is different from
 *branch_map[MSB]*, this field indicates the number of entries on the
 return address stack (i.e. the entry number of the return that failed)
 or nested call count. If *irreport* is the same value as
@@ -734,8 +734,8 @@ differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
 to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p (return_stack_size_p > 0 ? 1 : 0)
-call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
+ + call_counter_size_p_| If the value of *irreport* is different from
 *branches[MSB]*, this field indicates the number of entries on the
 return address stack (i.e. the entry number of the return that failed)
 or nested call count. If *irreport* is the same value as
