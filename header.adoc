@@ -2,8 +2,8 @@
 Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
-:revdate: March 5, 2024
-:revnumber: 2.0.2
+:revdate: April 19, 2024
+:revnumber: 2.0.3
 :url-riscv: http://riscv.org
 :doctype: book
 :pdf-theme: docs-resources/themes/riscv-pdf.yml
@@ -53,6 +53,7 @@ endif::[]
 - Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>. +
 - Corrected reference decoder in <<Decoder>> to cover a corner-case related to trap returns.
 |2.0.2 |First version in AsciiDoc format.
+|2.0.3 |Formatting and typo fixes.
 |===
 
 [preface]
