@@ -395,7 +395,7 @@ uninferable discontinuity. It can therefore continue reconstructing the
 execution path until it reaches the *_JALR_*, from where it can deduce
 that *_opcode B_* at looplabel is the final retired instruction.
 However, there are circumstances where this approach does not work. For
-example, consider the case where there is an exception at looplabel 4.
+example, consider the case where there is an exception at looplabel + 4.
 In this case, the decoder cannot tell whether this occurred during the
 1st or 2nd loop iterations, without additional information from the
 encoder. This is the purpose of the *updiscon* field. In more detail:
@@ -408,7 +408,7 @@ carries on executing the 2nd pass of the loop. In this case *updiscon*
 == *notify*. The next packet will be a format 1/2;
 . Code executes through to the end of the 1st loop iteration and jumps
 back to looplabel, but there is then an exception, privilege change or
-resync in the second iteration at looplabel 4. In this case, the
+resync in the second iteration at looplabel + 4. In this case, the
 encoder reports looplabel using format 1/2 following the *_JALR_*, with
 *updiscon* == !*notify*, and the next packet is a format 3;
 . An exception occurs immediately after the 1st execution of looplabel.
@@ -440,8 +440,8 @@ continue until it encounters looplabel a 2nd time.
 * If *notify* == !*address[MSB]*, this indicates case 4, 1st iteration.
 The decoder has reached the correct instruction.
 
-This example uses an exception at looplabel 4, but anything that could
-cause a format 3 for looplabel 4 would result in the same behavior: a
+This example uses an exception at looplabel + 4, but anything that could
+cause a format 3 for looplabel + 4 would result in the same behavior: a
 privilege change, or the expiry of the resync timer. It could also occur
 if looplabel was the last traced instruction (because tracing was
 disabled for some reason). See <<sec:qual-status>> for
