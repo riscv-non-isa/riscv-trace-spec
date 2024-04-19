@@ -657,7 +657,7 @@ failed the prediction. ,01: (cannot occur for this format)
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
 instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
-|*address*, it indicates that this packet is reporting an instruction
+*address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
 notification was requested via *trigger[2]* (see
 <<sec:trigger>>).
