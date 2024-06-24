@@ -374,8 +374,7 @@ change can be deduced from the source code (e.g. a CSR write).
 retired in this block, and the new context. If there were unreported
 branches beforehand, these need to be reported first. Treated the same
 as a privilege change.
-| Report context as an | 3 | An example would be a change of hart.
-asynchronous discontinuity | | Need to report the last instruction
+| Report context as an asynchronous discontinuity| 3 | An example would be a change of hart. Need to report the last instruction
 retired on the previous context, as well as the 1st on the new context.
 Treated the same as an exception.
 |===
