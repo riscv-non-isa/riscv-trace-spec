@@ -257,28 +257,33 @@ optional modes supported by the encoder.
 |*encoder_mode*| N| Identifies trace algorithm Details and number of
 bits implementation dependent. Currently Branch trace is the only mode
 defined, indicated by the value 0.
-|*qual_status*| 2| Indicates qualification status (no_change): No
-change to filter qualification (ended_rep): Qualification ended,
-preceding *te_inst* sent explicitly to indicate last qualification
-instruction (trace_lost): One or more instruction trace packets lost.
-(ended_ntr): Qualification ended, preceding *te_inst* would have been
+|*qual_status*| 2| 00 (no_change): No change to filter qualification +
+01 (ended_rep): Qualification ended, preceding *te_inst* sent explicitly to indicate last qualification
+instruction +
+10 (trace_lost): One or more instruction trace packets lost. +
+11 (ended_ntr): Qualification ended, preceding *te_inst* would have been
 sent anyway due to an updiscon, even if it wasn't the last qualified
-instruction)
+instruction
 |*ioptions*| N| Values of all instruction trace run-time configuration
-bits Number of bits and definitions implementation dependent. Examples
-might be - 'sequentially inferred jumps' Don't report the targets of
-sequentially inferable jumps - 'implicit return' Don't report function
-return addresses - 'implicit exception' Exclude address from format 3,
+bits +
+Number of bits and definitions implementation dependent. Examples
+might be +
+- 'sequentially inferred jumps' Don't report the targets of
+sequentially inferable jumps +
+- 'implicit return' Don't report function return addresses +
+- 'implicit exception' Exclude address from format 3,
 sub-format 1 _te_inst_ packets if trap vector can be determined from
-_ecause_ - 'branch prediction' Branch predictor enabled - 'jump target
-cache' Jump target cache enabled - 'full address' Always output full
-addresses (SW debug option)
+_ecause_ +
+- 'branch prediction' Branch predictor enabled +
+- 'jump target cache' Jump target cache enabled +
+- 'full address' Always output full addresses (SW debug option)
 |*denable*| 1| Indicates if the data trace is enabled (if supported)
 |*dloss*| 1| One of more data trace packets lost (if supported)
 |*doptions*| M| Values of all data trace run-time configuration bits
 Number of bits and definitions implementation dependent. Examples might
-be - 'no data' Exclude data (just report addresses) - 'no addr' Exclude
-address (just report data)
+be +
+- 'no data' Exclude data (just report addresses) +
+- 'no addr' Exclude address (just report data)
 |===
 
 [[sec:qual-status]]
