@@ -81,6 +81,7 @@ the RISC-V hart
 * *delta*: a change in the program counter that is other than the
 difference between two instructions placed consecutively in memory
 * *discontinuity*: another name for ’delta’ (see above)
+* *E-Trace*: Abbreviation of _Efficient Trace for RISC-V_.
 * *ELF*: executable and linkable format
 * *encoder*: a piece of hardware that takes in instruction execution
 information from a RISC-V hart and transforms it into trace packets

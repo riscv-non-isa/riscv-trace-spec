@@ -13,8 +13,8 @@ The following information is mandatory:
 
 * The number of instructions that are being retired;
 * Whether there has been an exception or interrupt, and if so the cause
-(from the *_ucause/scause/vscause/mcause_* CSR) and trap value (from the
-*_utval/stval/vstval/mtval_* CSR).
+(from the *_scause/vscause/mcause_* CSR) and trap value (from the
+*_stval/vstval/mtval_* CSR).
 +
 The register set to output should be the set that is updated as a result
 of the exception (i.e. the set associated with the privilege level
@@ -194,10 +194,10 @@ BR group signals instead.
 |*itype*[_itype_width_p_-1:0] | MR | Termination type of the instruction
 block. Encoding given in <<tab:itype>> (see <<JumpClasses>> for definitions of codes 6 - 15).
 |*cause*[_ecause_width_p_-1:0] | M | Exception or interrupt cause
-(*_ucause/scause/ vscause/mcause_*). Ignored unless **itype**=1 or 2.
+(*_scause/ vscause/mcause_*). Ignored unless **itype**=1 or 2.
 |*tval*[_iaddress_width_p_-1:0] | M | The associated trap value, e.g. the
 faulting virtual address for address exceptions, as would be written to
-the *utval/stval/vstval/mtval* CSR. Future optional extensions may
+the *stval/vstval/mtval* CSR. Future optional extensions may
 define *tval* to provide ancillary information in cases where it
 currently supplies zero. Ignored unless **itype**=1.
 |*priv*[_privilege_width_p_-1:0] | M | Privilege level for all
