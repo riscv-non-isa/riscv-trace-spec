@@ -654,10 +654,8 @@ access instruction is retired. Required if there are replicated
 instruction block signals
 |*lrid*[_lrid_width_p_-1:0] | S | Load request ID. Valid when *dretire*
 is high
-|*lresp*[_lresp_width_p_-1:0] | S | Load response: +
-  - None: reserved +
-  - Okay. Load successful; *ldata* valid +
-  - Error. Load failed; *ldata* not valid
+|*lresp*[_lresp_width_p_-1:0] | S | Load response:: None: reserved: Okay.
+Load successful; *ldata* valid: Error. Load failed; *ldata* not valid
 |*lid*[_lrid_width_p_-1:0] | S | Split Load ID. Valid when *lresp* is
 non-zero
 |*sdata*[_sdata_width_p_-1:0] | S | Store data. Valid when *dretire* is
