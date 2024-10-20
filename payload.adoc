@@ -235,13 +235,13 @@ instruction context.
 [[sec:format33]]
 === Format 3 subformat 3 - Support
 
-This packet provides supporting information to aid the decoder. It is
-issued when
+This packet provides supporting information to aid the decoder.  It must be issued:
 
-* Trace is enabled or disabled;
-* The operating mode changes;
-* One or more trace packets cannot be sent (for example, due
-back-pressure from the packet transport infrastructure).
+* Before the first sync packet, in order to ensure the decoder is aware of how the encoder is configured.  It is recommended this be sent as soon as the encoder is enabled (*trTeEnable* changes from 0 to 1). This reduces the likelihood of having to generate two packets (support and sync-start) at the point tracing actually starts;
+* When tracing ceases for any reason (*trTeEnable* set to 0, trace-off trigger, halt, reset, loss of filter qualification, etc.), in order to inform the decoder that the preceding packet reported the address of the final traced instruction;
+* If one or more trace packets cannot be sent (for example, due back-pressure from the packet transport infrastructure);
+* If the operating mode of the encoder changes.
+
 
 The *options* field is a placeholder that must be replaced by an
 implementation specific set of individual bits - one for each of the
