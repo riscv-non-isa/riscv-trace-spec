@@ -4,43 +4,15 @@
 The bulk of this section describes the payload of packets output from
 the Instruction Trace Encoder. The infrastructure used to transport
 these packets is outside the scope of this document, and as such the
-manner in which packets are encapsulated for transport is not specified.
-However, the following information must be provided to the encapsulator:
+manner in which packets are encapsulated for transport is not mandated, but the https://drive.google.com/file/d/1R-_koXIpdb9_qW6jpz74TSnNXOfJGhfn/view?usp=drive_link[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
+
+Any encapsulation must include the following information:
 
 * The packet type;
 * The packet length, in bytes;
 * The packet payload.
 
-Two example transport schemes are the Siemens Messaging Infrastructure,
-and the Arm Trace Bus. <<fig:packet-format>> shows the
-encapsulation used for the Siemens infrastructure:
-
-* The header byte contains a 5-bit field specifying the payload length
-in bytes, a 2-bit field indicating the "flow" (destination routing
-indicator), and a bit to indicate whether an optional 16-bit timestamp
-is present;
-* The index field indicates the source of the packet. The number of bits
-is system dependent, And the initial value emitted by the trace encoder
-is zero (it gets adjusted as it propagates through the infrastructure);
-* An optional 2-byte timestamp;
-* The packet payload.
-
-[[fig:packet-format]]
-.Example encapsulated packet format
-image::newPacket.jpg[newPacket,width=340,height=37,align="center"]
-
-Alternatively, for ATB, the source of the packet is indicated by the
-*ATID* bus field, and there is no equivalent of "flow", so an example
-encapsulation might be:
-
-* A 5-bit field specifying the payload length in bytes
-* A bit to indicate whether an optional 16-bit timestamp is present;
-* An optional 2-byte timestamp;
-* The packet payload.
-
-It may be desirable for packets to start aligned to an ATB word, in
-which the *ATBYTES* bus field in the last beat of a packet can be used
-to indicate the number of valid bytes.
+Two example transport schemes are the Siemens Messaging Infrastructure, and the Arm AMBA Trace Bus.  The Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification is well suited to either of these.
 
 The remainder of this section describes the contents of the payload
 portion which should be independent of the infrastructure. In each
