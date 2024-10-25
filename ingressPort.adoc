@@ -657,7 +657,7 @@ is high
 |*lresp*[_lresp_width_p_-1:0] | S | Load response: +
 0: None +
 1: reserved +
-2 : Okay. Load successful; *ldata* valid +
+2: Okay. Load successful; *ldata* valid +
 3: Error. Load failed; *ldata* not valid
 |*lid*[_lrid_width_p_-1:0] | S | Split Load ID. Valid when *lresp* is
 non-zero
