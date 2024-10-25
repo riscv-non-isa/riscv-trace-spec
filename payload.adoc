@@ -242,7 +242,6 @@ This packet provides supporting information to aid the decoder.  It must be issu
 * If one or more trace packets cannot be sent (for example, due back-pressure from the packet transport infrastructure);
 * If the operating mode of the encoder changes such that the the information output in a previous support packet no longer applies (i.e. if *encoder_mode*, *ioptions*, *doptions* or *denable* change).
 
-
 The *ioptions* and *doptions* fields are placeholders that must be replaced by an
 implementation specific set of individual bits - one for each of the
 optional modes supported by the encoder.
