@@ -521,8 +521,15 @@ is enabled (see <<sec:full-address>>).
 |*format*| 2| 01 (diff-delta): includes branch information and may
 include differential address
 |*branches*| 5| Number of valid bits *branch_map*. The number of bits
-of *branch_map* is determined as follows: : (cannot occur for this
-format) : 1 bit -3: 3 bits -7: 7 bits -15: 15 bits -31: 31 bits For
+of *branch_map* is determined as follows: +
+0: (cannot occur for this
+format) +
+1: 1 bit +
+2-3: 3 bits +
+4-7: 7 bits +
+8-15: 15 bits +
+16-31: 31 bits +
+For
 example if branches = 12, *branch_map* is 15 bits long, and the 12 LSBs
 are valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
@@ -562,8 +569,9 @@ bits in this field will also be the same value as *updiscon*.
 |*format*| 2| 01 (diff-delta): includes branch information and may
 include differential address
 |*branches*| 5| Number of valid bits in *branch_map*. The length of
-*branch_map* is determined as follows: : 31 bits, no *address* in packet
--31: (cannot occur for this format)
+*branch_map* is determined as follows: +
+0: 31 bits, no *address* in packet +
+1-31: (cannot occur for this format)
 |*branch_map*| 31| An array of bits indicating whether branches are
 taken or not. Bit 0 represents the oldest branch instruction executed.
 For each bit: : branch taken : branch not taken
@@ -697,8 +705,14 @@ extensions
 |*index*| __cache_size_p__| Jump target cache index of entry containing
 target address.
 |*branches*| 5| Number of valid bits in *branch_map*. The length of
-*branch_map* is determined as follows: : (cannot occur for this format)
-: 1 bit -3: 3 bits -7: 7 bits -15: 15 bits -31: 31 bits For example if
+*branch_map* is determined as follows:+
+0: (cannot occur for this format) +
+1: 1 bit +
+2-3: 3 bits +
+4-7: 7 bits +
+8-15: 15 bits +
+16-31: 31 bits +
+For example if
 branches = 12, *branch_map* is 15 bits long, and the 12 LSBs are
 valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
