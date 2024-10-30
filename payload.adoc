@@ -4,7 +4,7 @@
 The bulk of this section describes the payload of packets output from
 the Instruction Trace Encoder. The infrastructure used to transport
 these packets is outside the scope of this document, and as such the
-manner in which packets are encapsulated for transport is not mandated, but the https://drive.google.com/file/d/1R-_koXIpdb9_qW6jpz74TSnNXOfJGhfn/view?usp=drive_link[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
+manner in which packets are encapsulated for transport is not mandated, but the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
 
 Any encapsulation must include the following information:
 
