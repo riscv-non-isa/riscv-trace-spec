@@ -481,7 +481,7 @@ addresses, and a _te_inst_ packet will be generated with *irreport* set
 to the opposite value to *updiscon* if a misprediction occurs.
 
 In some cases it is also necessary to report the current stack depth or
-call count if the packet is reporting the  nstruction innediately before an
+call count if the packet is reporting the instruction immediately before an
 exception, interrupt, privilege change or resync. There are two cases of
 concern:
 
