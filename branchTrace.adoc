@@ -330,7 +330,8 @@ cache with identical behavior will need to be implemented in the decoder
 software. Even a small cache can provide significant improvement.
 
 The cache shall comprise 2^_cache_size_p_^ entries, each of which can
-contain an instruction address. It will be direct mapped, with each
+contain an instruction address.  The addresses stored in the cache are 
+the targets of uninferable jumps.  It will be direct mapped, with each
 entry indexed by bits _cache_size_p_:1 of the instruction address (or
 __cache_size_p__+1:2 if compressed instructions aren't supported).
 
