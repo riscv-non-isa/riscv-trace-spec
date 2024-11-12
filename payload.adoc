@@ -665,7 +665,7 @@ branches)
 branches, minus 31.
 |*branch_fmt*| 2| 10 (addr): Packet contains an *address*. If this
 points to a branch instruction, then the branch was predicted correctly. +
-10 (addr-fail): Packet contains an *address* that points to a branch which
+11 (addr-fail): Packet contains an *address* that points to a branch which
 failed the prediction. +
 00, 01: (cannot occur for this format)
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
