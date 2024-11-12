@@ -115,10 +115,10 @@ Since the Siemens transport is byte stream based the data seen will be:
 The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte
-* SrcID - 0 bits as the SrcID is carried via the ATID field.
+* SrcID - 0 bits as the SrcID is carried via the ATID bus.
 * This example has no timestamp
 * No type field (encoder has no data trace support)
-* trace_payload - [32 04 00 00 02]
+* trace_payload - [0x32 0x04 0x00 0x00 0x02] carried via ATDATA bus.
 
 Assuming a 32 bit ATB transport results in the following ATB transfers
 
@@ -227,10 +227,10 @@ The packet is encapsulated according to the https://github.com/riscv-non-isa/e-t
 The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte
-* SrcID - 0 bits as the SrcID is carried via the ATID field.
+* SrcID - 0 bits as the SrcID is carried via the ATID bus.
 * This example has no timestamp
 * No type field (encoder has no data trace support)
-* trace_payload - [0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20]
+* trace_payload - [0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20] carried via the ATDATA bus
 
 Assuming at 32 bit ATB transport results in the following ATB transfers
 
@@ -321,10 +321,10 @@ The packet is encapsulated according to the https://github.com/riscv-non-isa/e-t
 The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte
-* SrcID - 0 bits as the SrcID is carried via the ATID field.
+* SrcID - 0 bits as the SrcID is carried via the ATID bus.
 * This example has no timestamp
 * No type field (encoder has no data trace support)
-* trace_payload - [0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10]
+* trace_payload - [0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10] carried via the ATDATA bus.
 
 Assuming at 32 bit ATB transport results in the following ATB transfers
 
