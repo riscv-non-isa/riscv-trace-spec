@@ -237,8 +237,8 @@ instruction context.
 
 This packet provides supporting information to aid the decoder.  It must be issued:
 
-* Before the first sync packet, in order to ensure the decoder is aware of how the encoder is configured.  It is recommended this be sent as soon as the encoder is enabled (*trTeEnable* changes from 0 to 1). This reduces the likelihood of having to generate two packets (support and sync-start) at the point tracing actually starts;
-* When tracing ceases for any reason (*trTeEnable* set to 0, trace-off trigger, halt, reset, loss of filter qualification, etc.), in order to inform the decoder that the preceding packet reported the address of the final traced instruction;
+* When trace is enabled, and before the first sync packet, in order to ensure the decoder is aware of how the encoder is configured.  This could be as late as when *trTeInstTracing* becomes 1, but it is recommended this be sent as soon as *trTeEnable* changes from 0 to 1. This reduces the likelihood of having to generate two packets (support and sync-start) at the point tracing actually starts;
+* When tracing ceases for any reason (*trTeEnable* or *trTeInstTracing* set to 0, trace-off trigger, halt, reset, loss of filter qualification, etc.), in order to inform the decoder that the preceding packet reported the address of the final traced instruction;
 * If one or more trace packets cannot be sent (for example, due back-pressure from the packet transport infrastructure);
 * If the operating mode of the encoder changes such that the the information output in a previous support packet no longer applies (i.e. if *encoder_mode*, *ioptions*, *doptions* or *denable* change).
 
