@@ -104,7 +104,7 @@ The packet is encapsulated according to the https://github.com/riscv-non-isa/e-t
 * SrcID - N bits. As an example use 6 bits and the value of 1.
 * This example has no timestamp
 * A 2-bit type field with ’10’ meaning instruction trace
-* trace_payload - [32 04 00 00 02]
+* trace_payload - [0x32 0x04 0x00 0x00 0x02]
 
 Since the Siemens transport is byte stream based the data seen will be:
 
@@ -114,7 +114,7 @@ Since the Siemens transport is byte stream based the data seen will be:
 
 The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
-* Header - 1 byte
+* Header - 1 byte carried via ATDATA bus.
 * SrcID - 0 bits as the SrcID is carried via the ATID bus.
 * This example has no timestamp
 * No type field (encoder has no data trace support)
@@ -226,7 +226,7 @@ The packet is encapsulated according to the https://github.com/riscv-non-isa/e-t
 
 The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
-* Header - 1 byte
+* Header - 1 byte carried via the ATDATA bus.
 * SrcID - 0 bits as the SrcID is carried via the ATID bus.
 * This example has no timestamp
 * No type field (encoder has no data trace support)
@@ -320,7 +320,7 @@ The packet is encapsulated according to the https://github.com/riscv-non-isa/e-t
 
 The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
-* Header - 1 byte
+* Header - 1 byte carried via the ATDATA bus.
 * SrcID - 0 bits as the SrcID is carried via the ATID bus.
 * This example has no timestamp
 * No type field (encoder has no data trace support)
