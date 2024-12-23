@@ -307,7 +307,7 @@ block.
 (6) is used to indicate all uninferable jumps. This is simpler to
 implement, but precludes use of the implicit return mode (see
 <<sec:implicit-return>>), which requires jump types to be fully classified.  
-Note that when _itype_width_p_ is 3 *itype* is 0 used for inferrable calls.  
+Note that when _itype_width_p_ is 3, *itype* is 0 used for inferrable calls.  
 However, inferrable calls must still be the final instruction retired in a 
 block, otherwise the block would not be comprised of contiguous instructions.
 
