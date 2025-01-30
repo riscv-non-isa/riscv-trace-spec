@@ -306,7 +306,7 @@ block.
 *itype* can be 3 or 4 bits wide. If _itype_width_p_ is 3, a single code
 (6) is used to indicate all uninferable jumps. This is simpler to
 implement, but precludes use of the implicit return mode (see
-<<sec:implicit-return>>), which requires jump types to be fully classified.  Note also that when _itype_width_p_ is 3, inferable calls are retired using *itype* = 0.  Nevertheless, they must still be the final instruction in a retirement block (not in the middle) because a retirement block is defined as a number of contiguous instructions.
+<<sec:implicit-return>>), which requires jump types to be fully classified.    
 
 Whilst *iaddr* is typically a virtual address, it does not affect the
 encoder's behavior if it is a physical address.
