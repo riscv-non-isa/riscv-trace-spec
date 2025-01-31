@@ -86,7 +86,7 @@ result of a specific instruction or event. Exceptions can be thought of
 in the same way, even though they can be typically linked back to a
 specific instruction address.
 
-The decoder generally does not know where an interrupt occured in the
+The decoder generally does not know where an interrupt occurred in the
 instruction sequence, so the trace must report the address where normal
 program flow ceased, as well as give an indication of the asynchronous
 destination which may be as simple as reporting the exception type. When

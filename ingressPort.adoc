@@ -151,7 +151,7 @@ can be connected to a separate encoder instance, allowing all harts to
 be traced concurrently. Alternatively, external muxing may be used in
 conjunction with a single encoder in order to trace one particular hart
 at a time;
-* Implement a singe interface for the core, with muxing inside the core
+* Implement a single interface for the core, with muxing inside the core
 to select which hart to connect to the interface.
 
 (Whilst it is technically feasible to use a single encoder with multiple
