@@ -88,6 +88,8 @@ information from a RISC-V hart and transforms it into trace packets
 * *exception*: an unusual condition occurring at run time associated
 with an instruction in a RISC-V hart
 * *hart*: a RISC-V hardware thread
+* *final instruction*: the instruction retired immediately before tracing stops.
+* *last instruction*: in a block of sequentially retired instructions, the instruction at the end of the sequence
 * *interrupt*: an external asynchronous event that may cause a RISC-V
 hart to experience an unexpected transfer of control
 * *ISA*: instruction set architecture
