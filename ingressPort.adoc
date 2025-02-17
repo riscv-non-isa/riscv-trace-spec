@@ -43,14 +43,14 @@ The following information is optional:
 * The _instruction_type_ of instructions for:
 ** Calls with a target that _cannot_ be inferred from the source code;
 ** Calls with a target that _can_ be inferred from the source code;
-** Jumps with a target that _cannot_ be inferred from the source code;
-** Jumps with a target that _can_ be inferred from the source code;
+** Other jumps without linkage with a target that _cannot_ be inferred from the source code;
+** Other jumps without linkage with a target that _can_ be inferred from the source code;
 ** Returns with a target that _cannot_ be inferred from the source code;
 ** Returns with a target that _can_ be inferred from the source code;
 ** Co-routine swap;
-** Other jumps which don't fit any of the above classifications with a
+** Other jumps with linkage which don't fit any of the above classifications with a
 target that _cannot_ be inferred from the source code;
-** Other jumps which don't fit any of the above classifications with a
+** Other jumps with linkage which don't fit any of the above classifications with a
 target that _can_ be inferred from the source code.
 * If context or time is supported then the _instruction_address_ for:
 ** The last instruction retired before a context or a time change;
@@ -119,7 +119,7 @@ calling convention:
 ** *_jalr_* x5, rs where rs != x1;
 ** *_c.jalr_* rs1 where rs1 != x5;
 ** *_c.jal_*.
-* _Jumps_:
+* _Other jumps without linkage_:
 ** *_jal_* x0;
 ** *_c.j_*;
 ** *_jalr_* x0, rs where rs != x1 and rs != x5;
@@ -132,7 +132,7 @@ x5;
 ** *_jalr_* x1, x5;
 ** *_jalr_* x5, x1;
 ** *_c.jalr_* x5.
-* _Other_:
+* _Other jumps with linkage_:
 ** *_jal_* rd where rd != x0 and rd != x1 and rd != x5;
 ** *_jalr_* rd, rs where rs != x1 and rs != x5 and rd != x0 and rd != x1
 and rd != x5.
