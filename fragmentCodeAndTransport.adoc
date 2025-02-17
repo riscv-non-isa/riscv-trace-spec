@@ -1,3 +1,4 @@
+[[fragments]]
 == Code fragment and transport
 
 This section shows fragments of code, and associated data from one of
