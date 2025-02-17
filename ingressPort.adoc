@@ -244,8 +244,8 @@ instruction is 2^*ilastsize*^ half-words.
 | *Signal* | *Group* | *Function*
 |*iretire*[0:0] | SR | Number of instructions retired in this block (0 or
 1).
-|*ilastsize*[_ilastsize_width_p-1_:0] | SR | The size of the retired
-instruction is 2^*ilastsize*^ half-words.
+|*ilastsize*[_ilastsize_width_p-1_:0] | SR | The size of the last retired
+instruction in this block is 2^*ilastsize*^ half-words.
 |===
 
 [[tab:itype]]
@@ -253,11 +253,11 @@ instruction is 2^*ilastsize*^ half-words.
 [%autowidth,align="center",float="center",cols="<,<",options="header"]
 |===
 | *Value* | *Description*
-| 0 |Final instruction in the block is none of the other named *itype*
+| 0 |Last instruction in the block is none of the other named *itype*
 codes
-|1 | Exception. An exception that traps occurred following the final
+|1 | Exception. An exception that traps occurred following the last
 retired instruction in the block
-|2 | Interrupt. An interrupt that traps occurred following the final
+|2 | Interrupt. An interrupt that traps occurred following the last
 retired instruction in the block
 |3 | Exception or interrupt return
 |4 | Nontaken branch
@@ -289,7 +289,7 @@ retired instruction in the block
 |7 | reserved
 |===
 
-The information presented in a block represents a contiguous block of
+The information presented in a block represents a contiguous sequence of
 instructions starting at *iaddr*, all of which retired in the same
 cycle. Note if *itype* is 1 or 2 (indicating an exception or an
 interrupt), the number of instructions retired may be zero. *cause* and
@@ -306,7 +306,7 @@ block.
 *itype* can be 3 or 4 bits wide. If _itype_width_p_ is 3, a single code
 (6) is used to indicate all uninferable jumps. This is simpler to
 implement, but precludes use of the implicit return mode (see
-<<sec:implicit-return>>), which requires jump types to be fully classified.
+<<sec:implicit-return>>), which requires jump types to be fully classified.    
 
 Whilst *iaddr* is typically a virtual address, it does not affect the
 encoder's behavior if it is a physical address.
@@ -579,7 +579,7 @@ comprises 4 elements, and shows the instruction information reported for
 each load and store. As detailed in section
 #sec:InstructionTraceInterface[1.2], this takes the form of the address
 of an instruction, the length of the block (1 for a single instruction)
-and the type of the final instruction in the block. In each element,
+and the type of the last instruction in the block. In each element,
 ’Block’ indicates a block of 1 or more instructions (i.e. could also be
 a single instruction), whereas ’Single’ indicates a single instruction
 (i.e. a block with a length of 1).
@@ -724,7 +724,7 @@ encoder at the block level, and the block boundaries are invisible to
 the decoder. For instruction trace, all instructions in a block are
 traced if any of the instructions in that block match the filtering
 criteria. That is fine for instruction trace - the address of the 1st
-and last traced instruction are output explicitly. There will be some
+and final traced instruction are output explicitly. There will be some
 fuzziness about precisely what those addresses will be depending on
 where the block boundaries fall, but this is not a concern as everything
 is always self-consistent.

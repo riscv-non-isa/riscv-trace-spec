@@ -47,14 +47,18 @@ endif::[]
 |===
 |2.0|Baseline
 |15-Dec-2023 |Clarifications only - no changes to normative behaviour. +
-- Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/tg-nexus-trace/blob/master/docs/RISC-V-Trace-Control-Interface.adoc[RISC-V Trace Control Interface Specification] +
+- Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification] +
 - Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>. +
 - Removed references to tail-calls in jump classifications in <<sec:InstructionInterfaceRequirements>>. +
 - Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>. +
 - Corrected reference decoder in <<Decoder>> to cover a corner-case related to trap returns.
 |05-Mar-2024 |First version in AsciiDoc format.
 |19-Apr-2024 |Formatting and typo fixes.
-|TBD |Details to follow.
+|TBD |
+- Formatting and typo fixes.  +
+- Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced. +
+- Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>) 
+
 |===
 
 [preface]
