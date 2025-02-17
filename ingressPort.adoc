@@ -492,6 +492,11 @@ from the oldest instruction retired in the cycle that Trace-on is
 asserted, and stops following the newest instruction retired in the
 cycle that Trace-off is asserted (subject to any optional filtering).
 
+It follows from this that:
+
+*  if tracing is enabled and trace-off occurs on the cycle before trace-on, then tracing will continue unimpeded (i.e. it stays on);
+* if tracing is disabled and trace-on and trace-off triggers occur simultaneously then only the instructions retired in that cycle will be traced. 
+
 Trace-notify provides means to ensure that a specified instruction is
 explicitly reported (subject to any optional filtering). This capability
 is sometimes known as a watchpoint.
