@@ -120,8 +120,8 @@ instruction
 |*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
 instruction context.
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Full instruction
-address. Address alignment is determined by _iaddress_lsb_p_ Address
-must be left shifted in order to recreate original byte address.
+address. Address alignment is determined by _iaddress_lsb_p_: *address*
+must be left shifted by _iaddress_lsb_p_ in order to recreate original byte address.
 |===
 
 ==== Format 3 *branch* field
@@ -178,14 +178,14 @@ address. When set to 0, *address* points to the EPC for an exception at
 the target of an updiscon, and is undefined for other exceptions and
 interrupts.
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Full instruction
-address. Address alignment is determined by _iaddress_lsb_p_ Address
-must be left shifted in order to recreate original byte address.
+address. Address alignment is determined by _iaddress_lsb_p_: *address*
+must be left shifted by_iaddress-lsb_p_ in order to recreate original byte address.
 |*tval*| _iaddress_width_p_| Value from appropriate
 *utval/stval/vstval/mtval* CSR. Field omitted for interrupts
 |===
 
 [[sec:thaddr]]
-==== Format 3 *thaddr* and *address* fields
+==== Format 3 *thaddr*, *address* and *privilege* fields
 
 If an exception occurs at the target of an uninferable PC discontinuity,
 the value of the EPC cannot be infered from the program binary, and so
@@ -205,6 +205,8 @@ the EPC as outlined in the previous paragraph).
 is 0 is that it may be at either the address of the next instruction or
 current instruction depending on the exception cause, which can be
 inferred by the decoder without adding complexity to the encoder.)
+
+Where an interrupt or exception causes a privilege change, this change comes into force from the start of the trap handler.  As such, the privilege value reported when *thaddr* is 0 will be the privilege level prior to any change.
 
 ==== Format 3 *tval* field
 
@@ -258,11 +260,11 @@ optional modes supported by the encoder.
 bits implementation dependent. Currently Branch trace is the only mode
 defined, indicated by the value 0.
 |*qual_status*| 2| 00 (no_change): No change to filter qualification +
-01 (ended_rep): Qualification ended, preceding *te_inst* sent explicitly to indicate last qualification
+01 (ended_rep): Qualification ended, preceding *te_inst* sent explicitly to indicate final qualification
 instruction +
 10 (trace_lost): One or more instruction trace packets lost. +
 11 (ended_ntr): Qualification ended, preceding *te_inst* would have been
-sent anyway due to an updiscon, even if it wasn't the last qualified
+sent anyway due to an updiscon, even if it wasn't the final qualified
 instruction
 |*ioptions*| _N_| Values of all instruction trace run-time configuration
 bits +
@@ -289,13 +291,13 @@ be +
 [[sec:qual-status]]
 ==== Format 3 subformat 3 *qual_status* field
 
-When tracing ends, the encoder reports the address of the last traced
+When tracing ends, the encoder reports the address of the final traced
 instruction, and follows this with a format 3, subformat 3 (supporting
 information) packet. Two codes are provided for indicating that tracing
 has ended: *ended_rep* and *ended_ntr*. This relates to exactly the same
 ambiguous case described in detail in <<sec:updiscon>>, and
 in principle, the mechanism described in that section can be used to
-disambiguate when the last traced instruction is at looplabel. However,
+disambiguate when the final traced instruction is at looplabel. However,
 that mechanism relies on knowing when creating the format 1/2 packet,
 that a format 3 packet will be generated from the next instruction. This
 is possible because the encoding algorithm uses a 3-stage pipe with
@@ -427,11 +429,11 @@ anyway as a result of the *_JALR_*).
 
 Looking at this from the perspective of the decoder, the decoder
 receives a format 1/2 reporting the address of the 1st instruction in
-the loop (looplabel). It follows the execution path from the last
+the loop (looplabel). It follows the execution path from the previous
 reported address, until it reaches looplabel. Because looplabel is not
 preceded by an uninferable discontinuity, it must take the value of
 *notify* and *updiscon* into consideration, and may need to wait for the
-next packet in order to determine whether it has reached the final
+next packet in order to determine whether it has reached the most recently 
 retired instruction:
 
 * If *updiscon* == !*notify*, this indicates case 2. The decoder must
@@ -448,7 +450,7 @@ The decoder has reached the correct instruction.
 This example uses an exception at looplabel + 4, but anything that could
 cause a format 3 for looplabel + 4 would result in the same behavior: a
 privilege change, or the expiry of the resync timer. It could also occur
-if looplabel was the last traced instruction (because tracing was
+if looplabel was the final traced instruction (because tracing was
 disabled for some reason). See <<sec:qual-status>> for
 further discussion of this point.
 
@@ -481,7 +483,7 @@ addresses, and a _te_inst_ packet will be generated with *irreport* set
 to the opposite value to *updiscon* if a misprediction occurs.
 
 In some cases it is also necessary to report the current stack depth or
-call count if the packet is reporting the last instruction before an
+call count if the packet is reporting the instruction immediately before an
 exception, interrupt, privilege change or resync. There are two cases of
 concern:
 
@@ -492,9 +494,9 @@ follow the execution path until it encountered the reported address from
 the outermost nested call;
 * If the reported address is not the instruction following a return, the
 encoder must report the current stack depth or call count unless:
-** There have been no returns since the last call (in which case the
+** There have been no returns since the previous call (in which case the
 decoder will correctly stop in the innermost call), or
-** There has been at least one branch since the last return (in which
+** There has been at least one branch since the previous return (in which
 case the decoder will correctly stop in the call where there are no
 unprocessed branches).
 +
@@ -521,8 +523,15 @@ is enabled (see <<sec:full-address>>).
 |*format*| 2| 01 (diff-delta): includes branch information and may
 include differential address
 |*branches*| 5| Number of valid bits *branch_map*. The number of bits
-of *branch_map* is determined as follows: : (cannot occur for this
-format) : 1 bit -3: 3 bits -7: 7 bits -15: 15 bits -31: 31 bits For
+of *branch_map* is determined as follows: +
+0: (cannot occur for this
+format) +
+1: 1 bit +
+2-3: 3 bits +
+4-7: 7 bits +
+8-15: 15 bits +
+16-31: 31 bits +
+For
 example if branches = 12, *branch_map* is 15 bits long, and the 12 LSBs
 are valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
@@ -562,8 +571,9 @@ bits in this field will also be the same value as *updiscon*.
 |*format*| 2| 01 (diff-delta): includes branch information and may
 include differential address
 |*branches*| 5| Number of valid bits in *branch_map*. The length of
-*branch_map* is determined as follows: : 31 bits, no *address* in packet
--31: (cannot occur for this format)
+*branch_map* is determined as follows: +
+0: 31 bits, no *address* in packet +
+1-31: (cannot occur for this format)
 |*branch_map*| 31| An array of bits indicating whether branches are
 taken or not. Bit 0 represents the oldest branch instruction executed.
 For each bit: : branch taken : branch not taken
@@ -641,8 +651,8 @@ branches)
 |*branch_count*| 32| Count of the number of correctly predicted
 branches, minus 31.
 |*branch_fmt*| 2| 00 (no-addr): Packet does not contain an *address*,
-and the branch following the last correct prediction failed. -11:
-(cannot occur for this format)
+and the branch following the previous correct prediction failed. +
+01 - 11: (cannot occur for this format)
 |===
 
 .Packet format 0, subformat 0 - address, branch count
@@ -656,9 +666,10 @@ branches)
 |*branch_count*| 32| Count of the number of correctly predicted
 branches, minus 31.
 |*branch_fmt*| 2| 10 (addr): Packet contains an *address*. If this
-points to a branch instruction, then the branch was predicted correctly.
-(addr-fail): Packet contains an *address* that points to a branch which
-failed the prediction. ,01: (cannot occur for this format)
+points to a branch instruction, then the branch was predicted correctly. +
+11 (addr-fail): Packet contains an *address* that points to a branch which
+failed the prediction. +
+00, 01: (cannot occur for this format)
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
 instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
@@ -696,8 +707,14 @@ extensions
 |*index*| __cache_size_p__| Jump target cache index of entry containing
 target address.
 |*branches*| 5| Number of valid bits in *branch_map*. The length of
-*branch_map* is determined as follows: : (cannot occur for this format)
-: 1 bit -3: 3 bits -7: 7 bits -15: 15 bits -31: 31 bits For example if
+*branch_map* is determined as follows:+
+0: (cannot occur for this format) +
+1: 1 bit +
+2-3: 3 bits +
+4-7: 7 bits +
+8-15: 15 bits +
+16-31: 31 bits +
+For example if
 branches = 12, *branch_map* is 15 bits long, and the 12 LSBs are
 valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
