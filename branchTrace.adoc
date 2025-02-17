@@ -199,9 +199,9 @@ decoder developers.
 Related parameters: None
 
 The RISC-V Privileged ISA specification stores exception handler base
-addresses in the *_utvec/stvec/vstvec/mtvec_* CSR registers. In some
+addresses in the *_stvec/vstvec/mtvec_* CSR registers. In some
 RISC-V implementations, the lower address bits are stored in the
-*_ucause/scause/vscause/mcause_* CSR registers.
+*_scause/vscause/mcause_* CSR registers.
 
 By default, both the *_*tvec_* and *_*cause_* values are reported when
 an exception or interrupt occurs.
