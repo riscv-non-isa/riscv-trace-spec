@@ -256,8 +256,8 @@ optional modes supported by the encoder.
 |*format*| 2| 11 (sync): synchronisation
 |*subformat*| 2| 11 (support): Supporting information for the decoder
 |*ienable*| 1| Indicates if the instruction trace encoder is enabled
-|*encoder_mode*| N| Identifies trace algorithm Details and number of
-bits implementation dependent. Currently, Branch Trace is the only mode
+|*encoder_mode*| _E_| Identifies trace algorithm Details and number of
+bits implementation dependent. Currently Branch trace is the only mode
 defined, indicated by the value 0.
 |*qual_status*| 2| 00 (no_change): No change to filter qualification +
 01 (ended_rep): Qualification ended, preceding *te_inst* sent explicitly to indicate final qualification
@@ -266,7 +266,7 @@ instruction +
 11 (ended_ntr): Qualification ended, preceding *te_inst* would have been
 sent anyway due to an updiscon, even if it wasn't the final qualified
 instruction
-|*ioptions*| N| Values of all instruction trace run-time configuration
+|*ioptions*| _N_| Values of all instruction trace run-time configuration
 bits +
 Number of bits and definitions implementation dependent. Examples
 might be +
