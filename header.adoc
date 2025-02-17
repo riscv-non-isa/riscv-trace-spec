@@ -56,6 +56,7 @@ endif::[]
 |19-Apr-2024 |Formatting and typo fixes.
 |TBD |
 - Minor clarifications, formatting and typo fixes.  +
+- Updated <<packets>> and <<fragments>> to reference the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] +
 - Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced. +
 - Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>) +
 - Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>) +
