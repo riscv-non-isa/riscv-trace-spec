@@ -57,7 +57,8 @@ endif::[]
 |TBD |
 - Formatting and typo fixes.  +
 - Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced. +
-- Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>) 
+- Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>) +
+- Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>)
 
 |===
 

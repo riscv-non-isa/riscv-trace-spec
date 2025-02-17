@@ -119,6 +119,7 @@ The instruction trace encoder needs to synchronise fully:
 was not traced;
 * If the instruction is the first of an interrupt service routine or
 exception handler;
+* If the privilege level changes; 
 * After a prolonged period of time.
 
 [[sec:endoftrace]]
