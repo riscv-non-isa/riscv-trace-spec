@@ -61,7 +61,8 @@ endif::[]
 - Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>) +
 - Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>) +
 - Reworded jump classifications in jump classifications in <<sec:InstructionInterfaceRequirements>> to align with terminology used in other specifications +
-- Clarified when to issue sync-support packet when trace is enabled (see <<sec:format33>>)
+- Clarified when to issue sync-support packet when trace is enabled (see <<sec:format33>>) +
+- Updated reference encoding algorithm to generalize resync behaviour (see <<Algorithm>>)
 
 |===
 
