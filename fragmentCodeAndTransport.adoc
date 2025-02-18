@@ -1,3 +1,4 @@
+[[fragments]]
 == Code fragment and transport
 
 This section shows fragments of code, and associated data from one of
@@ -98,24 +99,29 @@ line 56. The least significant byte is output first, this means 32 is
 byte 0, 04 is byte 1 and and the final value 02 is byte 4.
 
 ==== Siemens transport
-
-The packet format is given in
-<<fig:packet-format>>. So this means the packet
-will be packed as follows:
+The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes: 
 
 * Header - 1 byte
-* Index - N bits. As an example use 6 bits and the value of 1.
-* Optional Siemens timestamp - 2 bytes. This example has no timestamp
-* A type field for the packet of 2 bits ’01’ meaning instruction trace
-* Payload - [32 04 00 00 02]
+* SrcID - N bits. As an example use 6 bits and the value of 1.
+* This example has no timestamp
+* A 2-bit type field with ’10’ meaning instruction trace
+* trace_payload - [0x32 0x04 0x00 0x00 0x02]
 
 Since the Siemens transport is byte stream based the data seen will be:
 
-`[0x05][0x41][0x32 0x04 0x00 0x00 0x02]`
+`[0x06][0x81][0x32 0x04 0x00 0x00 0x02]`
 
 ==== ATB transport
 
-Assuming at 32 bit ATB transport results in the following ATB transfers
+The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+
+* Header - 1 byte carried via ATDATA bus.
+* SrcID - 0 bits as the SrcID is carried via the ATID bus.
+* This example has no timestamp
+* No type field (encoder has no data trace support)
+* trace_payload - [0x32 0x04 0x00 0x00 0x02] carried via ATDATA bus.
+
+Assuming a 32 bit ATB transport results in the following ATB transfers
 
 `[ATID=1] [ATBYTES = 3] [ATDATA = 0x00043205]` +
 `[ATID=1] [ATBYTES = 1] [ATDATA = 0x00000200]`
@@ -207,19 +213,25 @@ byte 0, 00 is byte 1 and and the final value 20 is byte 9.
 
 ==== Siemens transport
 
-The packet format is given in
-<<fig:packet-format>>. So this means the packet
-will be packed as follows:
+The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes: 
 
 * Header - 1 byte
-* Index - N bits. As an example use 6 bits and the value of 0xA
-* Optional Siemens timestamp - 2 bytes. This example has no timestamp
-* A type field for the packet of 2 bits '01' meaning instruction trace
-* Payload - [0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20]
+* SrcID - N bits. As an example use 6 bits and the value of A.
+* This example has no timestamp
+* A 2-bit type field with ’10’ meaning instruction trace
+* trace_payload - [0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20]
 
-`[0x7][0x29][0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20]`
+`[0x8][0x8A][0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20]`
 
 ==== ATB transport
+
+The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+
+* Header - 1 byte carried via the ATDATA bus.
+* SrcID - 0 bits as the SrcID is carried via the ATID bus.
+* This example has no timestamp
+* No type field (encoder has no data trace support)
+* trace_payload - [0xBD 0xAA 0xAA 0x68 0x00 0x00 0x20] carried via the ATDATA bus
 
 Assuming at 32 bit ATB transport results in the following ATB transfers
 
@@ -295,18 +307,25 @@ byte 0, 00 is byte 1 and and the final value 10 is byte 8.
 
 ==== Siemens transport
 
-The packet format is given in <<fig:packet-format>>. So this means the packet
-will be packed as follows:
+The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes: 
 
 * Header - 1 byte
-* Index - N bits. As an example use 6 bits and the value of 0x5
-* Optional timestamp - 2 bytes. This example has no timestamp
-* A type field for the packet of 2 bits '01' meaning instruction trace
-* Payload - [0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10]
+* SrcID - N bits. As an example use 6 bits and the value of 5.
+* This example has no timestamp
+* A 2-bit type field with ’10’ meaning instruction trace
+* trace_payload - [0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10]
 
-`[0x9][0x15][0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10]`
+`[0xA][0x85][0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10]`
 
 ==== ATB transport
+
+The packet is encapsulated according to the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+
+* Header - 1 byte carried via the ATDATA bus.
+* SrcID - 0 bits as the SrcID is carried via the ATID bus.
+* This example has no timestamp
+* No type field (encoder has no data trace support)
+* trace_payload - [0x73 0x00 0x00 0x00 0x00 0x91 0x82 0x00 0x10] carried via the ATDATA bus.
 
 Assuming at 32 bit ATB transport results in the following ATB transfers
 
