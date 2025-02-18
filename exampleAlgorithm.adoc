@@ -35,11 +35,10 @@ predictor disabled or not present);
 * _trep_ Previous trap already reported with *thaddr* = 0 because it was preceded by an updiscon or immediately followed by another exception;
 * _resync count._ A counter used to keep track of when it is necessary
 to send a synchronization packet (see <<sec:resync>>);
-* _max_resync._ The resync counter value that schedules a
-synchronization packet (see <<sec:resync>>);
-* _resync_br._ The resync counter has reached the maximum value and
+* _resync2_br._ The resync FSM is in state 2 and
 there are entries in the branch map that have not yet been output (see
 <<sec:resync>>).
+* _resync3._ The resync FSM is in state 3  (see <<sec:resync>>);
 
 <<fig:algo>> shows instruction by instruction behavior, as
 would be seen in a single-retirement system only. Whilst the core to
@@ -131,9 +130,15 @@ When the resync is required, the primary objective is to output a format
 needing any of the history. However, if the decoder is already synced,
 then it is also required that it can continue to follow the execution
 path up to and through the format 3 packet seamlessly. As such, before
-outputting a format 3 packet, it is necessary to output a format 1
+outputting a format 3 packet, it is necessary to output a format 0/1
 packet for the preceding instruction if there are any unreported
-branches (because format 3 does not contain a branch map). The format 3
+branches (because format 3 does not contain a branch map). There are several supported options for incrementing the resync timer (packets, cycle or instruction half-words), and as such updates to the timer do not necessarily coincide with instrucitn retirements.  A small, independent FSM can be used to ensure the required packets are output in the required order, as follows: 
+
+ * *State 1*: resync_count < max_resync.  Transition to *State 2* when resync_count >= max_resync
+ * *State 2*: output packet of unreported branches if required, transition to *state 3*
+ * *State 3*: output sync packet, reset resync_count and transition to *State 1*.
+
+The format 3
 will be sent if the resync timer has been exceeded. On the cycle before
 this (when the resync timer value has been exactly reached), a format 1
 will be generated if the branch map is not empty.
