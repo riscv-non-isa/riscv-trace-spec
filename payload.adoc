@@ -163,7 +163,7 @@ If an exception occurs at the target of an uninferable PC discontinuity,
 the value of the EPC cannot be infered from the program binary, and so
 *address* contains the EPC and *thaddr* is set to 0. In this case, the
 trap handler address will be reported via a subsequent format 3,
-subformat 0 packet.
+subformat 0 packet.  An exception occuring on the 1st traced instruction is treated in the same way.
 
 Usually when an exception or interrupt occurs, the cause is reported
 along with the 1st address of the trap handler, when that instruction
