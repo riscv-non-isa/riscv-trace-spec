@@ -13,8 +13,8 @@ The following information is mandatory:
 
 * The number of instructions that are being retired;
 * Whether there has been an exception or interrupt, and if so the cause
-(from the *_ucause/scause/vscause/mcause_* CSR) and trap value (from the
-*_utval/stval/vstval/mtval_* CSR).
+(from the *_scause/vscause/mcause_* CSR) and trap value (from the
+*_stval/vstval/mtval_* CSR).
 +
 The register set to output should be the set that is updated as a result
 of the exception (i.e. the set associated with the privilege level
@@ -43,14 +43,14 @@ The following information is optional:
 * The _instruction_type_ of instructions for:
 ** Calls with a target that _cannot_ be inferred from the source code;
 ** Calls with a target that _can_ be inferred from the source code;
-** Jumps with a target that _cannot_ be inferred from the source code;
-** Jumps with a target that _can_ be inferred from the source code;
+** Other jumps without linkage with a target that _cannot_ be inferred from the source code;
+** Other jumps without linkage with a target that _can_ be inferred from the source code;
 ** Returns with a target that _cannot_ be inferred from the source code;
 ** Returns with a target that _can_ be inferred from the source code;
 ** Co-routine swap;
-** Other jumps which don't fit any of the above classifications with a
+** Other jumps with linkage which don't fit any of the above classifications with a
 target that _cannot_ be inferred from the source code;
-** Other jumps which don't fit any of the above classifications with a
+** Other jumps with linkage which don't fit any of the above classifications with a
 target that _can_ be inferred from the source code.
 * If context or time is supported then the _instruction_address_ for:
 ** The last instruction retired before a context or a time change;
@@ -119,7 +119,7 @@ calling convention:
 ** *_jalr_* x5, rs where rs != x1;
 ** *_c.jalr_* rs1 where rs1 != x5;
 ** *_c.jal_*.
-* _Jumps_:
+* _Other jumps without linkage_:
 ** *_jal_* x0;
 ** *_c.j_*;
 ** *_jalr_* x0, rs where rs != x1 and rs != x5;
@@ -132,7 +132,7 @@ x5;
 ** *_jalr_* x1, x5;
 ** *_jalr_* x5, x1;
 ** *_c.jalr_* x5.
-* _Other_:
+* _Other jumps with linkage_:
 ** *_jal_* rd where rd != x0 and rd != x1 and rd != x5;
 ** *_jalr_* rd, rs where rs != x1 and rs != x5 and rd != x0 and rd != x1
 and rd != x5.
@@ -194,10 +194,10 @@ BR group signals instead.
 |*itype*[_itype_width_p_-1:0] | MR | Termination type of the instruction
 block. Encoding given in <<tab:itype>> (see <<JumpClasses>> for definitions of codes 6 - 15).
 |*cause*[_ecause_width_p_-1:0] | M | Exception or interrupt cause
-(*_ucause/scause/ vscause/mcause_*). Ignored unless **itype**=1 or 2.
+(*_scause/ vscause/mcause_*). Ignored unless **itype**=1 or 2.
 |*tval*[_iaddress_width_p_-1:0] | M | The associated trap value, e.g. the
 faulting virtual address for address exceptions, as would be written to
-the *utval/stval/vstval/mtval* CSR. Future optional extensions may
+the *stval/vstval/mtval* CSR. Future optional extensions may
 define *tval* to provide ancillary information in cases where it
 currently supplies zero. Ignored unless **itype**=1.
 |*priv*[_privilege_width_p_-1:0] | M | Privilege level for all
@@ -244,8 +244,8 @@ instruction is 2^*ilastsize*^ half-words.
 | *Signal* | *Group* | *Function*
 |*iretire*[0:0] | SR | Number of instructions retired in this block (0 or
 1).
-|*ilastsize*[_ilastsize_width_p-1_:0] | SR | The size of the retired
-instruction is 2^*ilastsize*^ half-words.
+|*ilastsize*[_ilastsize_width_p-1_:0] | SR | The size of the last retired
+instruction in this block is 2^*ilastsize*^ half-words.
 |===
 
 [[tab:itype]]
@@ -253,11 +253,11 @@ instruction is 2^*ilastsize*^ half-words.
 [%autowidth,align="center",float="center",cols="<,<",options="header"]
 |===
 | *Value* | *Description*
-| 0 |Final instruction in the block is none of the other named *itype*
+| 0 |Last instruction in the block is none of the other named *itype*
 codes
-|1 | Exception. An exception that traps occurred following the final
+|1 | Exception. An exception that traps occurred following the last
 retired instruction in the block
-|2 | Interrupt. An interrupt that traps occurred following the final
+|2 | Interrupt. An interrupt that traps occurred following the last
 retired instruction in the block
 |3 | Exception or interrupt return
 |4 | Nontaken branch
@@ -289,7 +289,7 @@ retired instruction in the block
 |7 | reserved
 |===
 
-The information presented in a block represents a contiguous block of
+The information presented in a block represents a contiguous sequence of
 instructions starting at *iaddr*, all of which retired in the same
 cycle. Note if *itype* is 1 or 2 (indicating an exception or an
 interrupt), the number of instructions retired may be zero. *cause* and
@@ -306,7 +306,10 @@ block.
 *itype* can be 3 or 4 bits wide. If _itype_width_p_ is 3, a single code
 (6) is used to indicate all uninferable jumps. This is simpler to
 implement, but precludes use of the implicit return mode (see
-<<sec:implicit-return>>), which requires jump types to be fully classified.    
+<<sec:implicit-return>>), which requires jump types to be fully classified.  
+Note that when _itype_width_p_ is 3, *itype* = 0 is used for inferrable calls.  
+However, inferrable calls must still be the final instruction retired in a 
+block, otherwise the block would not be comprised of contiguous instructions.
 
 Whilst *iaddr* is typically a virtual address, it does not affect the
 encoder's behavior if it is a physical address.
@@ -492,6 +495,11 @@ from the oldest instruction retired in the cycle that Trace-on is
 asserted, and stops following the newest instruction retired in the
 cycle that Trace-off is asserted (subject to any optional filtering).
 
+It follows from this that:
+
+*  if tracing is enabled and trace-off occurs on the cycle before trace-on, then tracing will continue unimpeded (i.e. it stays on);
+* if tracing is disabled and trace-on and trace-off triggers occur simultaneously then only the instructions retired in that cycle will be traced. 
+
 Trace-notify provides means to ensure that a specified instruction is
 explicitly reported (subject to any optional filtering). This capability
 is sometimes known as a watchpoint.
@@ -574,7 +582,7 @@ comprises 4 elements, and shows the instruction information reported for
 each load and store. As detailed in section
 #sec:InstructionTraceInterface[1.2], this takes the form of the address
 of an instruction, the length of the block (1 for a single instruction)
-and the type of the final instruction in the block. In each element,
+and the type of the last instruction in the block. In each element,
 ’Block’ indicates a block of 1 or more instructions (i.e. could also be
 a single instruction), whereas ’Single’ indicates a single instruction
 (i.e. a block with a length of 1).
@@ -654,12 +662,15 @@ access instruction is retired. Required if there are replicated
 instruction block signals
 |*lrid*[_lrid_width_p_-1:0] | S | Load request ID. Valid when *dretire*
 is high
-|*lresp*[_lresp_width_p_-1:0] | S | Load response:: None: reserved: Okay.
-Load successful; *ldata* valid: Error. Load failed; *ldata* not valid
+|*lresp*[_lresp_width_p_-1:0] | S | Load response: +
+0: None +
+1: reserved +
+2: Okay. Load successful; *ldata* valid +
+3: Error. Load failed; *ldata* not valid
 |*lid*[_lrid_width_p_-1:0] | S | Split Load ID. Valid when *lresp* is
 non-zero
 |*sdata*[_sdata_width_p_-1:0] | S | Store data. Valid when *dretire* is
-high
+high and access is a store (*dtype* is 1) or atomic (*dtype* is 8 - 14).
 |*ldata*[_ldata_width_p_-1:0] | S | Load data. Valid when *lresp* is
 non-zero
 |===
@@ -719,7 +730,7 @@ encoder at the block level, and the block boundaries are invisible to
 the decoder. For instruction trace, all instructions in a block are
 traced if any of the instructions in that block match the filtering
 criteria. That is fine for instruction trace - the address of the 1st
-and last traced instruction are output explicitly. There will be some
+and final traced instruction are output explicitly. There will be some
 fuzziness about precisely what those addresses will be depending on
 where the block boundaries fall, but this is not a concern as everything
 is always self-consistent.
