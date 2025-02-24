@@ -223,8 +223,7 @@ function is_inferable_jump (instr)
 
   if ((instr.opcode == JAL)   or
       (instr.opcode == C.JAL) or
-      (instr.opcode == C.J)   or
-      (instr.opcode == JALR and instr.rs1 == 0))
+      (instr.opcode == C.J))
     return TRUE
 
   return FALSE

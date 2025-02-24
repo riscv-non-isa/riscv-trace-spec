@@ -8,7 +8,7 @@ In many systems it is desirable to periodically insert a timestamp
 packet into the trace stream, effectively marking that point in the
 stream with a time value.
 
-This can be used to judge "time" between various point in the trace
+This can be used to judge "time" between various points in the trace
 stream and, more notably, to be able to correlate trace streams from
 different harts (i.e. this point in hart A's stream occurred at roughly
 the same time as that point in hart B's trace stream). The former helps
