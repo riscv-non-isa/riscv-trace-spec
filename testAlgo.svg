@@ -289,7 +289,7 @@
 						<text x="4.83" y="472.97" class="st8" v:langID="2057"><v:paragraph v:indentLeft="2.83"/><v:tabList/>Send <tspan
 									class="st12">te_inst</tspan>:<v:newlineChar/><tspan x="4.83" dy="1.2em" class="st13">  </tspan><tspan
 									class="st13">format </tspan>3, <tspan class="st13">subformat</tspan> 1<v:newlineChar/><tspan
-									x="4.83" dy="1.2em" class="st10">  </tspan>th<tspan class="st13">addr</tspan> = 1<v:newlineChar/><tspan
+									x="4.83" dy="1.2em" class="st10">  </tspan><tspan class="st13">thaddr</tspan> = 1<v:newlineChar/><tspan
 									x="4.83" dy="1.2em" class="st10">resync count = 0</tspan></text>					</g>
 					<g id="shape153-127" v:mID="153" v:groupContext="shape" v:layerMember="1"
 							transform="translate(76.3417,-331.066)">
@@ -774,7 +774,7 @@
 						<text x="4.83" y="472.97" class="st8" v:langID="2057"><v:paragraph v:indentLeft="2.83"/><v:tabList/>Send <tspan
 									class="st12">te_inst</tspan>:<v:newlineChar/><tspan x="4.83" dy="1.2em" class="st13">  </tspan><tspan
 									class="st13">format </tspan>3, <tspan class="st13">subformat</tspan> 1<v:newlineChar/><tspan
-									x="4.83" dy="1.2em" class="st10">  </tspan>th<tspan class="st13">addr</tspan> = 0<v:newlineChar/><tspan
+									x="4.83" dy="1.2em" class="st10">  </tspan><tspan class="st13">thaddr</tspan> = 0<v:newlineChar/><tspan
 									x="4.83" dy="1.2em" class="st10">resync count = 0</tspan></text>					</g>
 					<g id="shape215-384" v:mID="215" v:groupContext="shape"
 							transform="translate(249.883,-210.892) rotate(-0.275583)">
@@ -931,11 +931,11 @@
 						</v:userDefs>
 						<v:textBlock v:margins="rect(2,2,2,2)" v:tabSpace="42.5197"/>
 						<v:textRect cx="43.937" cy="481.972" width="87.88" height="34.0157"/>
-						<rect x="0" y="464.965" width="87.874" height="34.0157" class="st11"/>
+						<rect x="0" y="464.965" width="87.874" height="34.0157" class="st7"/>
 						<text x="4.83" y="472.97" class="st8" v:langID="2057"><v:paragraph v:indentLeft="2.83"/><v:tabList/>Send <tspan
-									class="st12">te_inst</tspan>:<tspan x="4.83" dy="1.2em" class="st13">  </tspan><tspan
-									class="st13">format </tspan>3, <tspan class="st13">subformat</tspan> 1<v:newlineChar/><tspan
-									x="4.83" dy="1.2em" class="st10">  </tspan>th<tspan class="st13">addr</tspan> = 0<v:newlineChar/><tspan
+									class="st12">te_inst</tspan>:<tspan x="4.83" dy="1.2em" class="st10">  </tspan><tspan
+									class="st13">format</tspan> 3, <tspan class="st13">subformat</tspan> 1<v:newlineChar/><tspan
+									x="4.83" dy="1.2em" class="st10">  </tspan><tspan class="st13">thaddr</tspan> = 0<v:newlineChar/><tspan
 									x="4.83" dy="1.2em" class="st10">resync count = 0</tspan></text>					</g>
 					<g id="shape231-444" v:mID="231" v:groupContext="shape"
 							transform="translate(244.663,-338.094) rotate(-0.875103)">
