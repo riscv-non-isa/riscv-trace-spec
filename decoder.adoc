@@ -223,8 +223,7 @@ function is_inferable_jump (instr)
 
   if ((instr.opcode == JAL)   or
       (instr.opcode == C.JAL) or
-      (instr.opcode == C.J)   or
-      (instr.opcode == JALR and instr.rs1 == 0))
+      (instr.opcode == C.J))
     return TRUE
 
   return FALSE
@@ -254,10 +253,7 @@ function is_return_from_trap (instr)
 function is_uninferrable_discon (instr)
 
   if (is_uninferrable_jump(instr) or
-      is_return_from_trap (instr) or
-      (instr.opcode == ECALL)     or
-      (instr.opcode == EBREAK)    or
-      (instr.opcode == C.EBREAK))
+      is_return_from_trap (instr))
     return TRUE
 
   return FALSE
