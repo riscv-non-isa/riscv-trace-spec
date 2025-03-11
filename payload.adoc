@@ -173,10 +173,8 @@ even though the 1st instruction of the handler hasn't retired. In this
 situation, *thaddr* is 0, and *address* is undefined (unless it contains
 the EPC as outlined in the previous paragraph).
 
-(The reason for not reporting the EPC for all exceptions when *thaddr*
-is 0 is that it may be at either the address of the next instruction or
-current instruction depending on the exception cause, which can be
-inferred by the decoder without adding complexity to the encoder.)
+Note: The reason for not reporting the EPC for all exceptions when *thaddr*
+is 0 is that it can be inferred by the decoder.
 
 Where an interrupt or exception causes a privilege change, this change comes into force from the start of the trap handler.  As such, the privilege value reported when *thaddr* is 0 will be the privilege level prior to any change.
 
