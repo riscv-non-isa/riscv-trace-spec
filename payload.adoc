@@ -174,7 +174,7 @@ situation, *thaddr* is 0, and *address* is undefined (unless it contains
 the EPC as outlined in the previous paragraph).
 
 Note: The reason for not reporting the EPC for all exceptions when *thaddr*
-is 0 is that it can be inferred by the decoder.
+is 0 is that it can be inferred by the decoder using the exception cause.
 
 Where an interrupt or exception causes a privilege change, this change comes into force from the start of the trap handler.  As such, the privilege value reported when *thaddr* is 0 will be the privilege level prior to any change.
 
