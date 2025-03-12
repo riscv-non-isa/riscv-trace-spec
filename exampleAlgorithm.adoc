@@ -76,7 +76,7 @@ loaded into the buffer when space next becomes available must be a
 _support_ packet. Following this, tracing will resume with a sync
 packet.
 
-Note: if the *halted* or *reset* sideband signals are asserted (see
+Note: if the *inhibit* vector indicates tracing inhibition or *reset* signal is asserted (see
 <<tab:ingress-side-band>>) the encoder will behave as if it has received an unqualified instruction (output _te_inst_ reporting the address of the previous instruction, followed by
 _te_support_);
 
