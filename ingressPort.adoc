@@ -436,14 +436,19 @@ signals. A typical use for these would be for filtering (see
 encoder to start tracing, and continue until further notice, subject to
 other filtering criteria also being met. A pulse on bit 1 will cause the
 encoder to stop tracing until further notice. See <<sec:trigger>>).
-|*halted* | O | Hart is halted. Upon assertion, the encoder will output a
-packet to report the address of the last instruction retired before
-halting, followed by a support packet to indicate that tracing has
-stopped. Upon deassertion, the encoder will start tracing again,
-commencing with a synchronization packet. *Note:* If this signal is not
-provided, it is strongly recommended that Debug mode can be signalled
-via a 3-bit *privilege* signal. This will allow tracing in Debug mode to
-be controlled via the optional filtering capabilities.
+|*inhibit*[1:0] | O | The 2-bit vector controls trace inhibition. When 
+inhibited, the encoder will output a packet to report the address of the 
+last instruction retired before inhibition, followed by a support packet 
+to indicate that tracing has stopped. Upon resumption, the encoder will 
+start tracing again, commencing with a synchronization packet. +
+00: Tracing allowed +
+01: Tracing inhibited due to hart being halted +
+10: Tracing inhibited due to security violation +
+11: Reserved +
+*Note:* If this vector is not provided, it is strongly recommended that 
+Debug mode can be signalled via a 3-bit *privilege* signal. This will 
+allow tracing in Debug mode to be controlled via the optional filtering 
+capabilities.
 |*reset* | O | Hart is in reset. Provided the encoder is in a different
 reset domain to the hart, this allows the encoder to indicate that
 tracing has ended on entry to reset, and restarted on exit. Behavior is
