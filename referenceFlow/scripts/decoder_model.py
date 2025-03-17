@@ -85,7 +85,7 @@ class TeInst:
                 if hasattr(self, fieldname) and getattr(self, fieldname) is not None
             )
         )
-        if hasattr(self, "address"):
+        if hasattr(self, "address") and self.address != None:
             fields += ", address=0x%lx" % self.address
         return "{}({})".format(self.__class__.__name__, fields)
 
