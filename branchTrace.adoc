@@ -341,5 +341,7 @@ traced rather than the target address. If it is not found in the cache,
 the entry at that index is replaced with the current instruction
 address.
 
+Note that if implicit return mode is enabled, most function return targets are  inferable and are not output in the trace.  Any such inferrable return target must not be stored in the cache.
+
 The cache entries are all invalidated when a synchronization packet is
 sent.
