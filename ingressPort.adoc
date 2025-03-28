@@ -94,7 +94,7 @@ _inferable_ are by definition _uninferable_.
 However, there are some jump targets which can still be deduced from the
 binary executable by considering pairs of instructions even though by
 the above definition they are classified as uninferable. Specifically,
-jump targets that are supplied via
+when the source register for the jump instruction is supplied via
 
 * an *_lui_* or *_c.lui_* (a register which contains a constant), or
 * an *_auipc_* (a register which contains a constant offset from the
