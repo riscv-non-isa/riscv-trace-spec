@@ -64,7 +64,8 @@ endif::[]
 - Clarified when to issue sync-support packet when trace is enabled (see <<sec:format33>>); +
 - Updated reference encoding algorithm to generalize resync behaviour and add missing trap conditions (see <<Algorithm>>); +
 - Clarified that implicit returns are not stored in the jump target cache (see <<sec:jump-cache>>); +
-- Updated decoder to remove ECALL, EBREAK and C.EBREAK from is_uninferrable_jump function.  Including them is harmless but unnecessary, as these instrucitons don't retire (see <<Decoder>>).
+- Updated decoder to remove ECALL, EBREAK and C.EBREAK from is_uninferrable_jump function.  Including them is harmless but unnecessary, as these instrucitons don't retire (see <<Decoder>>); +
+- Corrected description of why the EPC is not always reported (see <<sec:thaddr>>).
 
 |===
 
