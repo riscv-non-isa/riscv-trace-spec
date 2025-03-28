@@ -253,10 +253,7 @@ function is_return_from_trap (instr)
 function is_uninferrable_discon (instr)
 
   if (is_uninferrable_jump(instr) or
-      is_return_from_trap (instr) or
-      (instr.opcode == ECALL)     or
-      (instr.opcode == EBREAK)    or
-      (instr.opcode == C.EBREAK))
+      is_return_from_trap (instr))
     return TRUE
 
   return FALSE
