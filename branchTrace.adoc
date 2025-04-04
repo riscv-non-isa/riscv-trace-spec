@@ -310,11 +310,6 @@ change.
 The lookup table entries are initialized to 01 when a synchronization
 packet is sent.
 
-Other predictors, such as the gShare predictor (see Hennessy &
-Patterson), should be considered. Some further experimentation is needed
-to determine the benefits of different lookup table sizes and predictor
-algorithms.
-
 [[sec:jump-cache]]
 ==== Jump target cache mode
 
