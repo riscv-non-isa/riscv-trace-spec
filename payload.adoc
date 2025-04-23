@@ -597,10 +597,10 @@ provided - it is implicitly that of the branch which failed prediction;
 * An updiscon, interrupt or exception requires the encoder to output an
 address. In this case the encoder will output the branch count (number
 of correctly predicted branches, minus 31);
-* The branch count reaches its maximum value. Strictly speaking an
+* The branch count reaches its maximum value (0xffff ffff). Strictly speaking an
 address isn't required for this case, but is included to avoid having to
 distinguish the packet format from the case above. It will occur so
-rarely that the bandwidth impact can be ignored.
+rarely that the bandwidth impact can be ignored.  Note: the decoder is reliant on the maximum value in order to identify this special case, so the 32-bit counter must be implemented in full.
 
 If a jump target cache is supported and enabled, and the address to
 report following an updiscon is in the cache then the encoder can output
