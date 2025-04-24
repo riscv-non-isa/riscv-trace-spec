@@ -556,9 +556,7 @@ See <<sec:updiscon>>.
 
 When the branch map becomes full it must be reported, but in most cases
 there is no need to report an address. This is indicated by setting
-*branches* to 0. The exception to this is when the instruction
-immediately prior to the final branch causes an uninferable
-discontinuity, in which case *branches* is set to 31.
+*branches* to 0. If the address does need to be reported for any reason (for example because the instruction immediately prior to the final branch causes an uninferable discontinuity) *branches* is set to 31.
 
 The choice of sizes (1, 3, 7, 15, 31) is designed to minimize efficiency
 loss. On average there will be some 'wasted' bits because the number of
