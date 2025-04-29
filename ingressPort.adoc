@@ -580,7 +580,7 @@ stack. They assume a RISC-V to encoder interface that can report a block
 of 1 or more retired instructions and one load or store per cycle. Each
 comprises 4 elements, and shows the instruction information reported for
 each load and store. As detailed in section
-#sec:InstructionTraceInterface[1.2], this takes the form of the address
+<<sec:InstructionTraceInterface>>, this takes the form of the address
 of an instruction, the length of the block (1 for a single instruction)
 and the type of the last instruction in the block. In each element,
 ’Block’ indicates a block of 1 or more instructions (i.e. could also be
