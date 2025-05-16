@@ -336,7 +336,7 @@ traced rather than the target address. If it is not found in the cache,
 the entry at that index is replaced with the current instruction
 address.
 
-Note that if implicit return mode is enabled, most function return targets are  inferable and are not output in the trace.  Any such inferrable return target must not be stored in the cache.
+Note that if implicit return mode is enabled, most function return targets are  inferable and are not output in the trace.  Any such inferrable return target must not be stored in the cache.  This effectively puts the implicit return evaluation in series before the jump target cache, and this may present timing challenges.  This can be mitigated by invalidating the cache entry that corresponds to a mis-predicted return rather than updating the entry with the actual return address.  Mis-predicted returns are rare so the performance impact will be negligible. 
 
 The cache entries are all invalidated when a synchronization packet is
 sent.
