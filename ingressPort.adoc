@@ -13,8 +13,8 @@ The following information is mandatory:
 
 * The number of instructions that are being retired;
 * Whether there has been an exception or interrupt, and if so the cause
-(from the *_scause/vscause/mcause_* CSR) and trap value (from the
-*_stval/vstval/mtval_* CSR).
+(from the *_scause/vscause/mcause_* etc. CSR) and trap value (from the
+*_stval/vstval/mtval_* etc. CSR).
 +
 The register set to output should be the set that is updated as a result
 of the exception (i.e. the set associated with the privilege level
