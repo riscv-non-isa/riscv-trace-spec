@@ -132,7 +132,7 @@ then it is also required that it can continue to follow the execution
 path up to and through the format 3 packet seamlessly. As such, before
 outputting a format 3 packet, it is necessary to output a format 0/1
 packet for the preceding instruction if there are any unreported
-branches (because format 3 does not contain a branch map). There are several supported options for incrementing the resync timer (packets, cycle or instruction half-words), and as such updates to the timer do not necessarily coincide with instrucitn retirements.  A small, independent FSM can be used to ensure the required packets are output in the required order, as follows: 
+branches (because format 3 does not contain a branch map). There are several supported options for incrementing the resync timer (packets, cycle or instruction half-words), and as such updates to the timer do not necessarily coincide with instruction retirements.  A small, independent FSM can be used to ensure the required packets are output in the required order, as follows: 
 
  * *State 1*: resync_count < max_resync.  Transition to *State 2* when resync_count >= max_resync
  * *State 2*: output packet of unreported branches if required, transition to *state 3*
