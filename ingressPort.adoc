@@ -174,7 +174,7 @@ of the following groups:
 of N "special" instructions per clock cycle, the interface must include
 N instances of this signal.
 * OR: Optional, may be replicated. For harts that can retire a maximum
-of N "special" per clock cycle, the interface must include zero or N
+of N "special" instructions per clock cycle, the interface must include zero or N
 instances of this signal.
 * BR: Block, may be replicated. Mandatory for harts that can retire
 multiple instructions in a block. Replication as per OR. If omitted, the
