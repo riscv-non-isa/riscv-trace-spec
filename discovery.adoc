@@ -42,7 +42,7 @@ supported when non_zero. Number of nested exceptions supported is
 1
 |_filter_tval_p_ | 0 or 1 | Filtering on trap value supported when 1
 (provided _filter_excint_p_ is non-zero)
-|_iaddress_lsb_p_ |  |  LSB of instruction *address* bus to trace. 1 is
+|_iaddress_lsb_p_ |  |  LSB of instruction *address* bus to trace. 1 if
 compressed instructions are supported, 2 otherwise
 |_iaddress_width_p_ |  |  Width of instruction *address* bus. This is the
 same as _DXLEN_
