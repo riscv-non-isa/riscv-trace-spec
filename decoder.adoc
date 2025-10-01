@@ -406,8 +406,9 @@ function is_call (instr)
 # Determine if instruction is a return ####################################################################
 function is_return (instr)
 
-  if ((instr.opcode == JALR and instr.rs1 == 1 and instr.rd == 0) or
-      (instr.opcode == C.JR and instr.rs1 == 1))
+  if ((instr.opcode == JALR and (instr.rs1 == 1 or instr.rs1 == 5) and instr.rd != 1 and instr.rd != 5) or
+      (instr.opcode == C.JR and (instr.rs1 == 1 or instr.rs1 == 5)) or
+      (instr.opcode == CM.POPRET))
     return TRUE
 
   return FALSE
