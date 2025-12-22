@@ -51,6 +51,10 @@ https://creativecommons.org/licenses/by/4.0/.
 Copyright 2025 by RISC-V International.
 
 [colophon]
+*_Preface to Version TBD_*
+
+Adds Chapter 14, which describes extensions to Version 2.0.
+
 *_Preface to Version 20250616_*
 
 Clarifications only - no changes to normative behaviour.
@@ -78,7 +82,7 @@ First version in AsciiDoc format.
 
 *_Preface to Version 20231215_*
 
-Clarifications only - no changes to normative behaviour. 
+Clarifications only - no changes to normative behaviour.
 
 * Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
 * Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
@@ -104,6 +108,7 @@ include::discovery.adoc[]
 include::decoder.adoc[]
 include::exampleCodeSnippets.adoc[]
 include::fragmentCodeAndTransport.adoc[]
+include::extensions.adoc[]
 include::future.adoc[]
 //include::index.adoc[]
 //include::bibliography.adoc[]

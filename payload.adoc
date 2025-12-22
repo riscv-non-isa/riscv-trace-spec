@@ -332,6 +332,8 @@ nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
+*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+
 [[sec:notify]]
 ==== Format 2 *notify* field
 
@@ -352,8 +354,8 @@ MSB of the *address* field, and *updiscon* is normally the same value as
 otherwise the decoding software would not be able to reconstruct the
 program execution unambiguously. Consider the following code fragment:
 
- looplabel -4: *_opcode A_* 
- looplabel   : *_opcode B_* 
+ looplabel -4: *_opcode A_*
+ looplabel   : *_opcode B_*
  looplabel +4: *_opcode C_*
  :
  looplabel +N *_JALR_* # Jump to looplabel
@@ -402,7 +404,7 @@ the loop (looplabel). It follows the execution path from the previous
 reported address, until it reaches looplabel. Because looplabel is not
 preceded by an uninferable discontinuity, it must take the value of
 *notify* and *updiscon* into consideration, and may need to wait for the
-next packet in order to determine whether it has reached the most recently 
+next packet in order to determine whether it has reached the most recently
 retired instruction:
 
 * If *updiscon* == !*notify*, this indicates case 2. The decoder must
@@ -438,6 +440,8 @@ is low). Using 2 separate bits results in superior compression.
 
 [[sec:irxx]]
 ==== Format 2 *irreport* and *irdepth*
+
+*Note:* *irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:impret>>).
 
 These bits are encoded so that most of the time they will take the same
 value as the *updiscon* field, and will therefore compress away, having
@@ -532,6 +536,8 @@ address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
+
+*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
 
 .Packet format 1 - no address, branch map
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -664,6 +670,8 @@ nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
+*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+
 .Packet format 0, subformat 1 - jump target index, branch map
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
@@ -704,6 +712,8 @@ or nested call count. If *irreport* is the same value as
 *branch_map[MSB]*.
 |===
 
+*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+
 .Packet format 0, subformat 1 - jump target index, no branch map
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
@@ -731,6 +741,8 @@ or nested call count. If *irreport* is the same value as
 *branches[MSB]*, all bits in this field will also be the same value as
 *branches[MSB]*.
 |===
+
+*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
 
 [[sec:f0s]]
 ==== Format 0 subformat field
