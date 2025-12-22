@@ -16,9 +16,9 @@ This chapter specifies the following standard extensions to the Efficient Trace 
 The implicit return mode information in the format 0/1/2 packets defined in the Efficient Trace for RISC-V 2.0 specification does not produce correct trace decoding in some cases.  This extension corrects this by replacing the *irdepth* field with *irets*.
 
 ==== Background
-As described in section <<sec:implicit-return>>, the target address of function returns is not reported unless the function returned to an unxpected address, or where the instruction at the return target address is the last before an interrupt or exception, or the final instruction traced.  When this occurs, in most cases the decoder can correctly determine which return target has been reported, but there are some circumstances where this cannot be determined precisely without additional information from the encoder.
+As described in section <<sec:implicit-return>>, when Implict Return mode is enabled, the target address of function returns is not usually reported.  When it is reported (for example because it's the last instruction retired before a trap), there are some circumstances where the decoder cannot determine precisely which return target it is without some additional information from the encoder.
 
-One such circumstance occurs when decoding recursive functions.  Each recursively called function will have the same return target address, and including the depth of the return address stack allows the decoder to determine at which has been reported.  However, it is now known that providing the stack depth results in incorrect decoding in other cases unrelated to recursive functions.  Consider the following illustration:
+One such circumstance occurs when decoding recursive functions.  Each recursively called function will have the same return target address, and including the depth of the return address stack allows the decoder to determine which one has been reported.  However, it is now known that providing the stack depth results in incorrect decoding in other cases unrelated to recursive functions.  Consider the following illustration:
 
 A function is executed, and returns normally to the predicted target, so nothing is reported.  Execution continues without any branches or uninferrable calls/jumps to a second function which also contains no branches or uninferrable calls/jumps. The return address of this 2nd function is reported for some reason (e.g. it is followed by a trap).
 Note that the stack depth is the same after the 1st function returns and after the 2nd function returns. This means that when the decoder reconstructs the execution path based on *irdepth*, it encounters the 1st return and because the stack depth in the _te_inst_ packet matches the current stack depth it stops decoding at this point, rather than carrying on to the second return.
@@ -61,9 +61,9 @@ bits in this field will also be the same value as *updiscon*.
 [[sec:irets]]
 ==== Format 2 *irreport* and *irets*
 
-These bits are encoded so that most of the time they will take the same value as the *updiscon* field, and will therefore compress away, having no impact on the encoding efficiency.  If implicit_return mode is enabled, the encoder keeps track of function calls and returns, and does not generate _te_inst_ packets for return target addresses that can be inferred by the decoder, as described in section <<sec:implicit-return>>.
+These bits are encoded so that most of the time they will take the same value as the *updiscon* field, and will therefore compress away, having no impact on the encoding efficiency.  If Implicit Return mode is enabled, the encoder keeps track of function calls and returns, and does not generate _te_inst_ packets for return target addresses that can be inferred by the decoder, as described in section <<sec:implicit-return>>.
 
-When reporting an address via _te_inst_ when implicit_return mode is enabled, the packet will include details of the number of implicit returns (i.e. return targets that have not been reported explicitly) since the last branch or _te_inst_ packet under the following conditions:
+When reporting an address via _te_inst_ when Implicit Return mode is enabled, the packet will include details of the number of implicit returns (i.e. return targets that have not been reported explicitly) since the last branch or _te_inst_ packet under the following conditions:
 
 * If the reported address is the instruction following a return, and:
 - it is mispredicted, or;  
