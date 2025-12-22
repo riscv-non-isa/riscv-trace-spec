@@ -53,7 +53,8 @@ Copyright 2025 by RISC-V International.
 [colophon]
 *_Preface to Version TBD_*
 
-Adds Chapter 14, which describes extensions to Version 2.0.
+* Adds Chapter 14, which describes extensions to Version 2.0.
+* Updated teh decoder pseudo-code in sectin <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
 
 *_Preface to Version 20250616_*
 
