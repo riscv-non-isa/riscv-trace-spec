@@ -332,7 +332,10 @@ nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
-*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+====
 
 [[sec:notify]]
 ==== Format 2 *notify* field
@@ -441,7 +444,10 @@ is low). Using 2 separate bits results in superior compression.
 [[sec:irxx]]
 ==== Format 2 *irreport* and *irdepth*
 
-*Note:* *irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:impret>>).
+[NOTE]
+====
+*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:impret>>).
+====
 
 These bits are encoded so that most of the time they will take the same
 value as the *updiscon* field, and will therefore compress away, having
@@ -537,7 +543,10 @@ nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
-*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+====
 
 .Packet format 1 - no address, branch map
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -670,7 +679,10 @@ nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
-*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+====
 
 .Packet format 0, subformat 1 - jump target index, branch map
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -712,7 +724,10 @@ or nested call count. If *irreport* is the same value as
 *branch_map[MSB]*.
 |===
 
-*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+====
 
 .Packet format 0, subformat 1 - jump target index, no branch map
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -742,7 +757,10 @@ or nested call count. If *irreport* is the same value as
 *branches[MSB]*.
 |===
 
-*Note:* the above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+====
 
 [[sec:f0s]]
 ==== Format 0 subformat field
@@ -776,6 +794,11 @@ met, then the reported address is that of the last correctly predicted
 branch.
 
 ==== Format 0 *irreport* and *irdepth* fields
+
+[NOTE]
+====
+*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:impret>>).
+====
 
 These bits are encoded so that most of the time they will take the same
 value as the immediately preceding bit (*updiscon*, *branch_map[MSB]* or
