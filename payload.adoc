@@ -320,15 +320,11 @@ immediately by a format 3 _te_inst_).
 |*irreport*| 1| If the value of this bit is different from *updiscon*,
 it indicates that this packet is reporting an instruction that is
 either: following a return because its address differs from the
-predicted return address at the top of the implicit_return return
+predicted return address at the top of the implicit return
 address stack, or the last retired before an exception, interrupt,
-privilege change or resync because it is necessary to report the current
-address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
-*updiscon*, this field indicates the number of entries on the return
-address stack (i.e. the entry number of the return that failed) or
-nested call count. If *irreport* is the same value as *updiscon*, all
+privilege change or resync because it is necessary to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*updiscon*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
@@ -352,8 +348,8 @@ MSB of the *address* field, and *updiscon* is normally the same value as
 otherwise the decoding software would not be able to reconstruct the
 program execution unambiguously. Consider the following code fragment:
 
- looplabel -4: *_opcode A_* 
- looplabel   : *_opcode B_* 
+ looplabel -4: *_opcode A_*
+ looplabel   : *_opcode B_*
  looplabel +4: *_opcode C_*
  :
  looplabel +N *_JALR_* # Jump to looplabel
@@ -402,7 +398,7 @@ the loop (looplabel). It follows the execution path from the previous
 reported address, until it reaches looplabel. Because looplabel is not
 preceded by an uninferable discontinuity, it must take the value of
 *notify* and *updiscon* into consideration, and may need to wait for the
-next packet in order to determine whether it has reached the most recently 
+next packet in order to determine whether it has reached the most recently
 retired instruction:
 
 * If *updiscon* == !*notify*, this indicates case 2. The decoder must
@@ -437,43 +433,20 @@ is low). Using 2 separate bits results in superior compression.
 ====
 
 [[sec:irxx]]
-==== Format 2 *irreport* and *irdepth*
+==== Format 2 *irreport* and *irets*
 
-These bits are encoded so that most of the time they will take the same
-value as the *updiscon* field, and will therefore compress away, having
-no impact on the encoding efficiency. If implicit_return mode is
-enabled, the encoder keeps track of the number of traced nested calls,
-either as a simple count (_call_counter_size_p_ non-zero) or a stack of
-predicted return addresses (_return_stack_size_p_ non-zero).
+These bits are encoded so that most of the time they will take the same value as the *updiscon* field, and will therefore compress away, having no impact on the encoding efficiency.  If implicit_return mode is enabled, the encoder keeps track of function calls and returns, and does not generate _te_inst_ packets for return target addresses that can be inferred by the decoder, as described in section <<sec:implicit-return>>.
 
-Where a stack of predicted return addresses is implemented, the
-predicted return addresses are compared with the actual return
-addresses, and a _te_inst_ packet will be generated with *irreport* set
-to the opposite value to *updiscon* if a misprediction occurs.
+When reporting an address via _te_inst_ when implicit_return mode is enabled, the packet will include details of the number of implicit returns (i.e. return targets that have not been reported explicitly) since the last branch or _te_inst_ packet under the following conditions:
 
-In some cases it is also necessary to report the current stack depth or
-call count if the packet is reporting the instruction immediately before an
-exception, interrupt, privilege change or resync. There are two cases of
-concern:
+* If the reported address is the instruction following a return, and:
+- it is mispredicted, or;  
+- there have been 255 unreported returns, or;
+- it is correctly predicted but is being reported for some other reason (e.g. it is the instruction before a trap, privilege change, resync or is the final qualified instruction), or;
+- the return stack is empty, but the number of implicit returns is non-zero.
+* If the address is not the instruction following an updiscon but is being reported for some other reason (as listed above), and the number of implicit returns is non-zero.
 
-* If the reported address is the instruction following a return, and it
-is not mis-predicted, the encoder must report the current stack depth or
-call count if it is non-zero. Without this, the decoder would attempt to
-follow the execution path until it encountered the reported address from
-the outermost nested call;
-* If the reported address is not the instruction following a return, the
-encoder must report the current stack depth or call count unless:
-** There have been no returns since the previous call (in which case the
-decoder will correctly stop in the innermost call), or
-** There has been at least one branch since the previous return (in which
-case the decoder will correctly stop in the call where there are no
-unprocessed branches).
-+
-Without this, the decoder would follow the execution path until it
-encountered the reported address, and in most cases this would be the
-correct point. However, this cannot be guaranteed for recursive
-functions, as the reported address will occur multiple times in the
-execution path.
+Under the above conditions, *irreport* is set to the oppositive value to *updiscon*.
 
 [[sec:format1]]
 === Format 1 packets
@@ -523,13 +496,9 @@ it indicates that this packet is reporting an instruction that is
 either: following a return because its address differs from the
 predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
-privilege change or resync because it is necessary to report the current
-address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
-*updiscon*, this field indicates the number of entries on the return
-address stack (i.e. the entry number of the return that failed) or
-nested call count. If *irreport* is the same value as *updiscon*, all
+privilege change or resync because it is necessary to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*updiscon*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
@@ -570,7 +539,7 @@ Furthermore, the rate at which packets are generated can be higher for
 lower branch counts, and so reducing waste for this case will improve
 overall bandwidth at times where it is most important.
 
-==== Format 1 *irreport* and *irdepth* fields
+==== Format 1 *irreport* and *irets* fields
 
 See <<sec:irxx>>.
 
@@ -654,13 +623,9 @@ it indicates that this packet is reporting an instruction that is
 either: following a return because its address differs from the
 predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
-privilege change or resync because it is necessary to report the current
-address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
-*updiscon*, this field indicates the number of entries on the return
-address stack (i.e. the entry number of the return that failed) or
-nested call count. If *irreport* is the same value as *updiscon*, all
+privilege change or resync because it is necessary to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*updiscon*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
@@ -694,12 +659,9 @@ instruction that is either: following a return because its address
 differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
-to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
-*branch_map[MSB]*, this field indicates the number of entries on the
-return address stack (i.e. the entry number of the return that failed)
-or nested call count. If *irreport* is the same value as
+to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*branch_map[MSB]*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as
 *branch_map[MSB]*, all bits in this field will also be the same value as
 *branch_map[MSB]*.
 |===
@@ -722,12 +684,9 @@ instruction that is either: following a return because its address
 differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
-to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
-*branches[MSB]*, this field indicates the number of entries on the
-return address stack (i.e. the entry number of the return that failed)
-or nested call count. If *irreport* is the same value as
+to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*branches[MSB]*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as
 *branches[MSB]*, all bits in this field will also be the same value as
 *branches[MSB]*.
 |===
@@ -763,7 +722,7 @@ explicit about whether or not the prediction was met or not. If it is
 met, then the reported address is that of the last correctly predicted
 branch.
 
-==== Format 0 *irreport* and *irdepth* fields
+==== Format 0 *irreport* and *irets* fields
 
 These bits are encoded so that most of the time they will take the same
 value as the immediately preceding bit (*updiscon*, *branch_map[MSB]* or
