@@ -1,21 +1,9 @@
-[[sec:extensions]]
-== Efficient Trace for RISC-V extensions
-
-This chapter specifies the following standard extensions to the Efficient Trace for RISC-V v2.0 specification.
-
-[%autowidth,float="center",align="center",cols="^,^,^",options="header",]
-|===
-|       Specification                                        |Version |Status
-| <<sec:impret, *Implicit Return*>>|*0.5* |*Fast-track*
-
-
-|===
-[[sec:impret]]
-=== Implicit Return
+[[sec:ext-impret]]
+== Implicit Return v0.5 extension to Efficient Trace for RISC-V v2.0
 
 The Implicit Return mode information in the format 0, 1 and 2 packets defined in the Efficient Trace for RISC-V 2.0 specification does not produce correct trace decoding in some cases.  This extension corrects this by replacing the *irdepth* field with *irets*.
 
-==== Background
+=== Background
 As described in <<sec:implicit-return>>, when Implict Return mode is enabled, the target address of function returns is not usually reported.  When it _is_ reported (for example because it's the last instruction retired before a trap), there are some circumstances where the decoder cannot determine precisely which return target it is without some additional information from the encoder.
 
 One such circumstance occurs when decoding recursive functions.  Each recursively called function will have the same return target address, and including the depth of the return address stack allowed the decoder to determine which one has been reported.  However, it is now known that providing the stack depth results in incorrect decoding in other cases unrelated to recursive functions.  Consider the following illustration:

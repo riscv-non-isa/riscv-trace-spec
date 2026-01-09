@@ -446,7 +446,7 @@ is low). Using 2 separate bits results in superior compression.
 
 [NOTE]
 ====
-*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:impret>>).
+*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:ext-impret>>).
 ====
 
 These bits are encoded so that most of the time they will take the same
@@ -545,7 +545,7 @@ bits in this field will also be the same value as *updiscon*.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
 ====
 
 .Packet format 1 - no address, branch map
@@ -681,7 +681,7 @@ bits in this field will also be the same value as *updiscon*.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
 ====
 
 .Packet format 0, subformat 1 - jump target index, branch map
@@ -726,7 +726,7 @@ or nested call count. If *irreport* is the same value as
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
 ====
 
 .Packet format 0, subformat 1 - jump target index, no branch map
@@ -759,7 +759,7 @@ or nested call count. If *irreport* is the same value as
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
 ====
 
 [[sec:f0s]]
@@ -797,7 +797,7 @@ branch.
 
 [NOTE]
 ====
-*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:impret>>).
+*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:ext-impret>>).
 ====
 
 These bits are encoded so that most of the time they will take the same

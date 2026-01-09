@@ -2,7 +2,7 @@
 Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
-:revdate: TBD, 2025
+:revdate: TBD, 2026
 :revnumber: 2.0
 :url-riscv: http://riscv.org
 :doctype: book
@@ -53,7 +53,7 @@ Copyright 2025 by RISC-V International.
 [colophon]
 *_Preface to Version TBD_*
 
-* Adds <<sec:extensions>>, which describes extensions to Version 2.0.
+* Add <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
 * Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
 
 *_Preface to Version 20250616_*
