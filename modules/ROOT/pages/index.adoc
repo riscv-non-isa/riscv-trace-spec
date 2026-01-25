@@ -1,0 +1,7 @@
+image::risc-v_logo.svg[]
+
+== Efficient Trace for RISC-V
+
+Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
+
+Version 2.0, 6/2024: Ratified state
