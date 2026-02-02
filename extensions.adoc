@@ -44,4 +44,5 @@ instruction
 |*nodata*| 1 |When 1, *te_data* packets exclude data (just report addresses).
 |*full_daddress*| 1 | When 1, addresses in *te_data* packets are always full (i.e non-differential).
 |*full_data*| 1 | When 1, data values in *te_data* packets are always full (i.e non-differential).
+| other | >=0 | Any other implementation specific information
 |===
