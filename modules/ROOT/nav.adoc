@@ -1,5 +1,6 @@
-.Efficient Trace for RISC-V
+.Efficient Trace
 * xref:index.adoc[Efficient Trace for RISC-V]
+* xref:preamble.adoc[Copyright and license information]
 * xref:preface.adoc[Preface]
 * xref:introduction.adoc[Introduction]
 * xref:control.adoc[Control Interface]

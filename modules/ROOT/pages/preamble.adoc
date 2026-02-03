@@ -1,0 +1,48 @@
+[preface]
+== Copyright and license information
+This specification is licensed under the Creative Commons
+Attribution 4.0 International License (CC-BY 4.0). The full
+license text is available at
+https://creativecommons.org/licenses/by/4.0/.
+
+Copyright 2025 by RISC-V International.
+
+[colophon]
+*_Preface to Version 20250616_*
+
+Clarifications only - no changes to normative behaviour.
+
+* Updated <<packets>> and <<fragments>> to reference the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
+* Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced;
+* Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>);
+* Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>);
+* Reworded jump classifications in jump classifications in <<sec:InstructionInterfaceRequirements>> to align with terminology used in other specifications;
+* Clarified when to issue sync-support packet when trace is enabled (see <<sec:format33>>);
+* Clarified that branch_map can be set to 31 any time an address needs to be reported and the branch map is full (see <<sec:format1>>);
+* Updated reference encoding algorithm to generalize resync behaviour and add missing trap conditions (see <<Algorithm>>);
+* Clarified that implicit returns are not stored in the jump target cache (see <<sec:jump-cache>>);
+* Updated decoder to remove ECALL, EBREAK and C.EBREAK from is_uninferrable_jump function.  Including them is harmless but unnecessary, as these instrucitons don't retire (see <<Decoder>>);
+* Corrected description of why the EPC is not always reported (see <<sec:thaddr>>).
+* Minor clarifications, formatting and typo fixes.
+
+*_Preface to Version 20240419_*
+
+Formatting and typo fixes.
+
+*_Preface to Version 20240305_*
+
+First version in AsciiDoc format.
+
+*_Preface to Version 20231215_*
+
+Clarifications only - no changes to normative behaviour. 
+
+* Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
+* Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
+* Removed references to tail-calls in jump classifications in <<sec:InstructionInterfaceRequirements>>.
+* Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>.
+* Corrected reference decoder in <<Decoder>> to cover a corner-case related to trap returns.
+
+*_Preface to Version 2.0_*
+
+Ratified version of the Efficient Trace for RISC-V specification.
