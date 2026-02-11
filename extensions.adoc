@@ -1,0 +1,239 @@
+[[sec:ext-impret]]
+== Implicit Return v0.5 extension to Efficient Trace for RISC-V v2.0
+
+The Implicit Return mode information in the format 0, 1 and 2 packets defined in the Efficient Trace for RISC-V 2.0 specification does not produce correct trace decoding in some cases.  This extension corrects this by replacing the *irdepth* field with *irets*.
+
+=== Background
+As described in <<sec:implicit-return>>, when Implict Return mode is enabled, the target address of function returns is not usually reported.  When it _is_ reported (for example because it's the last instruction retired before a trap), there are some circumstances where the decoder cannot determine precisely which return target it is without some additional information from the encoder.
+
+One such circumstance occurs when decoding recursive functions.  Each recursively called function will have the same return target address, and including the depth of the return address stack allowed the decoder to determine which one has been reported.  However, it is now known that providing the stack depth results in incorrect decoding in other cases unrelated to recursive functions.  Consider the following illustration:
+
+A function is executed, and returns normally to the predicted target, so nothing is reported.  Execution continues without any branches or uninferrable calls/jumps to a second function which also contains no branches or uninferrable calls/jumps. The return address of this 2nd function is reported for some reason (e.g. it is followed by a trap).
+Note that the stack depth is the same after the 1st function returns and after the 2nd function returns. This means that when the decoder reconstructed the execution path based on *irdepth*, it encountered the 1st return and because the stack depth in the _te_inst_ packet matched the current stack depth it stopped decoding at this point, rather than carrying on to the second return.
+
+Had there been any branches between the two functions or inside the 2nd function, decoding would have continued until all branches were processed (the 1st return would have been correctly treated as inferred), and stopped at the right place: the return target of the 2nd function. Similarly if there were uninferrable calls/jumps.
+
+So in summary, the decoder needs additional information to correctly determine which return target has been reported when there have been multiple returns without any branches or uninferrable calls/jumps between them.  This is true for all cases, including recursive functions.
+
+=== Revised packet formats
+The following packet definitions replace those detailed in <<packets>>.  All formats and fields are the same, except *irdepth* is replaced by *irets* throughout.
+
+.Packet format 2
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 10 (addr-only): differential address and no branch
+information
+|*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
+instruction address.
+|*notify*| 1| If the value of this bit is different from the MSB of
+*address*, it indicates that this packet is reporting an instruction
+that is not the target of an uninferable discontinuity because a
+notification was requested via *trigger[2]* (see <<sec:trigger>>).
+|*updiscon*| 1| If the value of this bit is different from *notify*, it
+indicates that this packet is reporting the instruction following an
+uninferable discontinuity and is also the instruction before an
+exception, privilege change or resync (i.e. it will be followed
+immediately by a format 3 _te_inst_).
+|*irreport*| 1| If the value of this bit is different from *updiscon*,
+it indicates that this packet is reporting an instruction that is
+either: following a return because its address differs from the
+predicted return address at the top of the implicit return
+address stack, or the last retired before an exception, interrupt,
+privilege change or resync because it is necessary to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*updiscon*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as *updiscon*, all
+bits in this field will also be the same value as *updiscon*.
+|===
+
+[[sec:irets]]
+==== Format 2 *irreport* and *irets*
+
+These bits are encoded so that most of the time they will take the same value as the *updiscon* field, and will therefore compress away, having no impact on the encoding efficiency.  If Implicit Return mode is enabled, the encoder keeps track of function calls and returns, and does not generate _te_inst_ packets for return target addresses that can be inferred by the decoder, as described in  <<sec:implicit-return>>.
+
+When reporting an address via _te_inst_ when Implicit Return mode is enabled, the packet will include details of the number of implicit returns (i.e. return targets that have not been reported explicitly) since the last branch or _te_inst_ packet under the following conditions:
+
+* If the reported address is the instruction following a return, and:
+- it is mispredicted, or;  
+- there have been 255 unreported returns, or;
+- it is correctly predicted but is being reported for some other reason (e.g. it is the instruction before a trap, privilege change, resync or is the final qualified instruction), or;
+- the return stack is empty, but the number of implicit returns is non-zero.
+* If the address is not the instruction following an updiscon but is being reported for some other reason (as listed above), and the number of implicit returns is non-zero.
+
+Under the above conditions, *irreport* is set to the oppositive value to *updiscon*.
+
+.Packet format 1 - address, branch map
+[align="center",float="center",cols="<1,<1,<3",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 01 (diff-delta): includes branch information and may
+include differential address
+|*branches*| 5| Number of valid bits *branch_map*. The number of bits
+of *branch_map* is determined as follows: +
+0: (cannot occur for this
+format) +
+1: 1 bit +
+2-3: 3 bits +
+4-7: 7 bits +
+8-15: 15 bits +
+16-31: 31 bits +
+For
+example if branches = 12, *branch_map* is 15 bits long, and the 12 LSBs
+are valid.
+|*branch_map*| Determined by *branches* field.| An array of bits
+indicating whether branches are taken or not. Bit 0 represents the
+oldest branch instruction executed. For each bit: : branch taken :
+branch not taken
+|*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
+instruction address.
+|*notify*| 1| If the value of this bit is different from the MSB of
+*address*, it indicates that this packet is reporting an instruction
+that is not the target of an uninferable discontinuity because a
+notification was requested via *trigger[2]* (see <<sec:trigger>>).
+|*updiscon*| 1| If the value of this bit is different from the MSB of
+*notify*, it indicates that this packet is reporting the instruction
+following an uninferable discontinuity and is also the instruction
+before an exception, privilege change or resync (i.e. it will be
+followed immediately by a format 3 _te_inst_).
+|*irreport*| 1| If the value of this bit is different from *updiscon*,
+it indicates that this packet is reporting an instruction that is
+either: following a return because its address differs from the
+predicted return address at the top of the implicit_return return
+address stack, or the last retired before an exception, interrupt,
+privilege change or resync because it is necessary to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*updiscon*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as *updiscon*, all
+bits in this field will also be the same value as *updiscon*.
+|===
+
+.Packet format 1 - no address, branch map
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 01 (diff-delta): includes branch information and may
+include differential address
+|*branches*| 5| Number of valid bits in *branch_map*. The length of
+*branch_map* is determined as follows: +
+0: 31 bits, no *address* in packet +
+1-31: (cannot occur for this format)
+|*branch_map*| 31| An array of bits indicating whether branches are
+taken or not. Bit 0 represents the oldest branch instruction executed.
+For each bit: : branch taken : branch not taken
+|===
+
+==== Format 1 *irreport* and *irets* fields
+
+See <<sec:irets>>.
+
+.Packet format 0, subformat 0 - address, branch count
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 00 (opt-ext): formats for optional efficiency
+extensions
+|*subformat*| See <<sec:f0s>>| 0 (correctly predicted
+branches)
+|*branch_count*| 32| Count of the number of correctly predicted
+branches, minus 31.
+|*branch_fmt*| 2| 10 (addr): Packet contains an *address*. If this
+points to a branch instruction, then the branch was predicted correctly. +
+11 (addr-fail): Packet contains an *address* that points to a branch which
+failed the prediction. +
+00, 01: (cannot occur for this format)
+|*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
+instruction address.
+|*notify*| 1| If the value of this bit is different from the MSB of
+*address*, it indicates that this packet is reporting an instruction
+that is not the target of an uninferable discontinuity because a
+notification was requested via *trigger[2]* (see
+<<sec:trigger>>).
+|*updiscon*| 1| If the value of this bit is different from *notify*, it
+indicates that this packet is reporting the instruction following an
+uninferable discontinuity and is also the instruction before an
+exception, privilege change or resync (i.e. it will be followed
+immediately by a format 3 _te_inst_).
+|*irreport*| 1| If the value of this bit is different from *updiscon*,
+it indicates that this packet is reporting an instruction that is
+either: following a return because its address differs from the
+predicted return address at the top of the implicit_return return
+address stack, or the last retired before an exception, interrupt,
+privilege change or resync because it is necessary to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*updiscon*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as *updiscon*, all
+bits in this field will also be the same value as *updiscon*.
+|===
+
+.Packet format 0, subformat 1 - jump target index, branch map
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 00 (opt-ext): formats for optional efficiency
+extensions
+|*subformat*| See <<sec:f0s>>| 1 (jump target cache)
+|*index*| __cache_size_p__| Jump target cache index of entry containing
+target address.
+|*branches*| 5| Number of valid bits in *branch_map*. The length of
+*branch_map* is determined as follows:+
+0: (cannot occur for this format) +
+1: 1 bit +
+2-3: 3 bits +
+4-7: 7 bits +
+8-15: 15 bits +
+16-31: 31 bits +
+For example if
+branches = 12, *branch_map* is 15 bits long, and the 12 LSBs are
+valid.
+|*branch_map*| Determined by *branches* field.| An array of bits
+indicating whether branches are taken or not. Bit 0 represents the
+oldest branch instruction executed. For each bit: : branch taken :
+branch not taken
+|*irreport*| 1| If the value of this bit is different from
+*branch_map[MSB]*, it indicates that this packet is reporting an
+instruction that is either: following a return because its address
+differs from the predicted return address at the top of the
+implicit_return return address stack, or the last retired before an
+exception, interrupt, privilege change or resync because it is necessary
+to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*branch_map[MSB]*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as
+*branch_map[MSB]*, all bits in this field will also be the same value as
+*branch_map[MSB]*.
+|===
+
+.Packet format 0, subformat 1 - jump target index, no branch map
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 00 (opt-ext): formats for optional efficiency
+extensions
+|*subformat*| See <<sec:f0s>>| 1 (jump target cache)
+|*index*| __cache_size_p__| Jump target cache index of entry containing
+target address.
+|*branches*| 5| Number of valid bits in *branch_map*. The length of
+*branch_map* is determined as follows: : no *branch_map* in packet -31:
+(cannot occur for this format)
+|*irreport*| 1| If the value of this bit is different from
+*branches[MSB]*, it indicates that this packet is reporting an
+instruction that is either: following a return because its address
+differs from the predicted return address at the top of the
+implicit_return return address stack, or the last retired before an
+exception, interrupt, privilege change or resync because it is necessary
+to report the implicit return count.
+|*irets*| 8 | If the value of *irreport* is different from
+*branches[MSB]*, this field indicates the number of implicit returns that have occurred since the last branch, or _te_inst_ packet if there have been no branches since then. If *irreport* is the same value as
+*branches[MSB]*, all bits in this field will also be the same value as
+*branches[MSB]*.
+|===
+
+==== Format 0 *irreport* and *irets* fields
+
+These bits are encoded so that most of the time they will take the same
+value as the immediately preceding bit (*updiscon*, *branch_map[MSB]* or
+*branches[MSB]* depending on the specific packet format). Purpose and
+behavior is as described in <<sec:irets>>.
+
+For the jump target cache (subformat 1), they are included to allow
+return addresses that fail the implicit return prediction but which
+reside in the jump target cache to be reported using this format. An
+implementation could omit these if all implicit return failures are
+reported using format 1.
