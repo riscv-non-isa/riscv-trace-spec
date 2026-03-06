@@ -182,7 +182,9 @@ function next_pc (address, te_inst)
     else
       pc = address
       if (!exception)
-        cache_update(pc)
+        if (!flag_irreport(te_inst) or address != popped_return_target)
+          # Update cache unless address is correctly predicted but reported for some other reason
+          cache_update(pc)
       stop_here = TRUE
   else if (is_branch(instr))
     if (!exception)
