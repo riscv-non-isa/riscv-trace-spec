@@ -16,7 +16,7 @@
 #VERSION ?= v0.0.0
 #REVMARK ?= Draft
 DOCKER_RUN := docker run --rm -v ${PWD}:/build -w /build \
-riscvintl/riscv-docs-base-container-image:latest
+ghcr.io/riscv/riscv-docs-base-container-image:latest
 
 HEADER_SOURCE := header.adoc
 PDF_RESULT := riscv-trace-spec-asciidoc.pdf
