@@ -6,6 +6,6 @@ nav:
 
 asciidoc:
   attributes:
-    page-pdf_url: _attachments/riscv-trace-spec.pdf
+    page-pdf_url: _attachments/riscv-trace-spec-asciidoc.pdf
     more_details_url: https://riscv.atlassian.net/wiki/external/NjI1Y2M5ODdiYmUxNGE5MzkzYzdkNzNjNGE3NWFjNDA
     page-group: debug-trace-ras
