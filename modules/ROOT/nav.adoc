@@ -1,5 +1,5 @@
 .Efficient Trace
-* xref:index.adoc[Efficient Trace for RISC-V]
+* xref:index.adoc[Title Page]
 * xref:preamble.adoc[Copyright and license information]
 * xref:preface.adoc[Preface]
 * xref:introduction.adoc[Introduction]
