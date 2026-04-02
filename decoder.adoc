@@ -36,12 +36,12 @@ function process_te_inst (te_inst)
   use_bpred = FALSE
   irets = 0
   if (te_inst.format == 3)
-    if (te_inst.subformat = 3) # Support packet
+    if (te_inst.subformat == 3) # Support packet
       process_support(te_inst)
       return
-    if (te_inst.subformat = 2) # Context packet
+    if (te_inst.subformat == 2) # Context packet
       return
-    if (te_inst.subformat = 1) # Trap packet
+    if (te_inst.subformat == 1) # Trap packet
       report_trap(te_inst)
       if (!te_inst.interrupt) # Exception
         report_epc(exception_address(te_inst))
