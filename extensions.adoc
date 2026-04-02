@@ -1,0 +1,58 @@
+[[sec:ext-support]]
+== Standard Support Packet extension to Efficient Trace for RISC-V v2.0
+The Efficient Trace for RISC-V v2.0 specification defines a support packet (see <<sec:format33>>) and when it must be sent.  The general requirements for the content of this packet are described, but the exact details of the payload is left to the implementor.  The original thinking was that this left flexibility for different encoder implementations to provide support information best suited to their specific capabilities, as well as allowing implementation-specific customizations.
+
+However, this flexibility presents difficulties for applications such as Self-hosted Trace, where the operating system and decoding software need a single, consistent, standardized format.  Furthermore, correct trace decoding is dependent on several discoverable attributes of the trace encoder.  But in a Self-hosted context, the decoder will not be aware of which physical encoder instance is producing the trace it is decoding, and so will be unable to discover these attributes.  This issue can be addressed by including these attributes directly in the support packet.
+
+Additionally, the fully orthogonal Implicit Return and Multi-Memory Access and Compare and Swap extensions introduce revised *te_inst* and *te_data* packet formats, but the monotonically increasing protocol version does not provide a mechansim to indicate independent presence or absence of these extentions (see trTeImpl.trTeProtocolMajor and trTeImpl.trTeProtocolMinor in https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]).  This can resolved by indicating the presence of thes extensions directly in the support packet.
+
+If this extension is implemented, the protocol version must be 2.1 or higher, if the protocol version is 2.1 or higher, this extension must be implemented.
+
+This extension is required by the following extensions:
+
+* Smstrce* and Ssstrce* (Self-Hosted Trace)
+* Implicit Return extension to Efficient Trace for RISC-V v2.0
+* Data Trace of Multiple-Memory Access and Compare and Swap extension to Efficient Trace for RISC-V v2.0
+
+[*Add links when extensions merged*]
+
+=== Standard Support Packet format
+
+.Packet format 3, subformat 3 suitable for self-hosted applications
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name*| *Bits*| *Description*
+|*format*| 2| 11 (sync): synchronisation
+|*subformat*| 2| 11 (support): Supporting information for the decoder
+|*ienable*| 1| Indicates if the instruction trace encoder is enabled
+|*encoder_mode*| 2 | Identifies trace algorithm.  Currently Branch trace is the only mode defined, indicated by the value 0.
+|*qual_status*| 2| 00 (no_change): No change to filter qualification +
+01 (ended_rep): Qualification ended, preceding *te_inst* sent explicitly to indicate final qualification
+instruction +
+10 (trace_lost): One or more instruction trace packets lost. +
+11 (ended_ntr): Qualification ended, preceding *te_inst* would have been
+sent anyway due to an updiscon, even if it wasn't the final qualified
+instruction
+|*sijump*| 1 | When 1, targets of sequentially inferrable jumps not reported (see <<sec:si-jump>>).
+|*implicit_return*| 1 | When 1, implicit return mode enabled (see <<sec:implicit-return>>).
+|*branch_predictor*| 1 | When 1, branch predictor enabled (see <<sec:branch-prediction>>).
+|*jump_target_cache*| 1 | When 1, jump target cache enabled (see <<sec:jump-cache>>).
+|*implicit_except*| 1 | When 1, implicit exception mode enabled (see <<sec:implicit-exception>>).
+|*full_iaddress*| 1 | When 1, *te_inst* packets always contain full (i.e. non-differential) addresses (see <<sec:full-address>>).
+|*resync_disabled*| 1 | When 1 indicates that resynchronization is disabled (trTeControl.trTeInstSyncMode == 0).
+|*iret_ext*| 1 | When 1, Implicit Return extension to E-trace v2.0 implemented. [*Add link when extensions merged*]
+|*time_width*| 2 | The width of the time field in sync-start and sync-trap packets (_time_width_p_) is 16 * (*time_width* + 1) bits.
+|*f0s_width*| 2 | The value of _f0s_width_p_
+|*return_stack_size*| 3 | The number of entries in the return address stack is 2^*return_stack_size*^ (no stack if 0).
+|*call_counter_size*| 4 | The number of bits in the call counter is 2^*call_counter_size*^ (no counter if 0).
+|*bpred_size*| 3 | The number of entries in the branch predictor is 2^*bpred_size*^ (no predictor if 0).
+|*cache_size*| 3 | The number of entries in the jump target cache is 2^*cache_size*^ (no cache if 0).
+|*denable*| 1 | Indicates if data trace is enabled (if supported).
+|*dloss*| 1 | One of more data trace packets lost (if supported).
+|*mmacas_ext*| 1 | When 1, Multi-Memory Access and Compare & Swap  extension to E-trace v2.0 implemented. [*Add link when extensions merged*]
+|*noaddr*| 1 | When 1, *te_data* packets exclude addresses (just report data).
+|*nodata*| 1 |When 1, *te_data* packets exclude data (just report addresses).
+|*full_daddress*| 1 | When 1, addresses in *te_data* packets are always full (i.e non-differential).
+|*full_data*| 1 | When 1, data values in *te_data* packets are always full (i.e non-differential).
+| other | >=0 | Any other implementation specific information
+|===
