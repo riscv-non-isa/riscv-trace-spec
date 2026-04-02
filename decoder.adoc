@@ -13,10 +13,10 @@ global        branches = 0                # Number of branches to process
 global        branch_map = 0              # Bit vector of not taken/taken (1/0) status for branches
 global bool   stop_at_last_branch = FALSE # Flag to indicate reconstruction is to end at the final branch
 global bool   inferred_address = FALSE    # Flag to indicate that reported address from format 0/1/2 was
-                                          # not following an uninferrable jump (and is therefore inferred)
-global bool   start_of_trace = TRUE       # Flag indicating 1st trace message still to be processed
-global        address                     # Reconstructed address from te_inst messages
-global        privilege                   # Privilege from te_inst messages
+                                          # not following an uninferable jump (and is therefore inferred)
+global bool   start_of_trace = TRUE       # Flag indicating 1st trace packet still to be processed
+global        address                     # Reconstructed address from te_inst packets
+global        privilege                   # Privilege from te_inst packets
 global        poss_next_epc               # Possible next exception address
 global bool   pne_valid = FALSE           # Possible next exception address is valid
 global        options                     # Operating mode flags (sijump onwards from support packet)
@@ -29,21 +29,21 @@ global array  bpred                       # Structure holding branch predictor. 
 global bool   use_bpred = FALSE           # Use branch predictor to determine branch outcome
 global array  cache                       # Array holding cache of jump target addresses
 global struct discovery                   # Structure containing fields from discovery
-global struct previous_te_inst            # Copy of previous te_inst message
+global struct previous_te_inst            # Copy of previous te_inst packet
 
-# Process te_inst message.  Call each time a te_inst message is received ##################################
+# Process te_inst packet.  Call each time a te_inst packet is received ##################################
 function process_te_inst (te_inst)
   use_bpred = FALSE
   irets = 0
   if (te_inst.format == 3)
-    if (te_inst.subformat = 3) # Support message
+    if (te_inst.subformat = 3) # Support packet
       process_support(te_inst)
       return
-    if (te_inst.subformat = 2) # Context message
+    if (te_inst.subformat = 2) # Context packet
       return
-    if (te_inst.subformat = 1) # Trap
+    if (te_inst.subformat = 1) # Trap packet
       report_trap(te_inst)
-      if (!te_inst.interrupt)
+      if (!te_inst.interrupt) # Exception
         report_epc(exception_address(te_inst))
       if (!te_inst.thaddr) # Trap only - nothing retired
         return
@@ -132,7 +132,7 @@ function follow_execution_path(address, te_inst)
         stop_at_last_branch = FALSE
         return
       if (stop_here)
-        # Reached reported address following an uninferrable discontinuity - stop here
+        # Reached reported address following an uninferable discontinuity - stop here
         if (unprocessed_branches(pc))
           ERROR: unprocessed branches
           abort
@@ -140,12 +140,12 @@ function follow_execution_path(address, te_inst)
       if (!stop_at_last_branch and pc == address and flag_notify(te_inst) and
       !unprocessed_branches(pc) and !unproc_ir)
         # All branches and implicit returns processed, and reached reported address due to a notification,
-        # not as an uninferrable jump target.
+        # not as an uninferable jump target.
         return
-      if (!stop_at_last_branch and pc == address and !is_uninferrable_discon(get_instr(last_pc) and
+      if (!stop_at_last_branch and pc == address and !is_uninferable_discon(get_instr(last_pc) and
           !unprocessed_branches(pc) and !unproc_ir and !flag_updiscon(te_inst) and te_inst.format != 3))
         # All branches and implicit returns processed, and reached reported address, but not as an
-        # uninferrable jump target.  Stop here for now, though flag indicates this may not be final retired
+        # uninferable jump target.  Stop here for now, though flag indicates this may not be final retired
         # instruction
         previous_te_inst = te_inst
         inferred_address = TRUE
@@ -175,9 +175,9 @@ function next_pc (address, te_inst)
         address = pc
         stop_at_last_branch = is_branch(get_instr(address))
 
-  else if (is_uninferrable_discon(instr))
+  else if (is_uninferable_discon(instr))
     if (stop_at_last_branch and !is_branch(address))
-      ERROR: unexpected uninferrable discontinuity
+      ERROR: unexpected uninferable discontinuity
       abort
     else
       pc = address
@@ -330,8 +330,8 @@ function is_inferrable_jump (instr)
 
   return FALSE
 
-# Determine if instruction is an uninferrable jump ########################################################
-function is_uninferrable_jump (instr)
+# Determine if instruction is an uninferable jump ########################################################
+function is_uninferable_jump (instr)
 
   if ((instr.opcode == JALR and instr.rs1 != 0) or
       (instr.opcode == C.JALR)                  or
@@ -349,10 +349,10 @@ function is_return_from_trap (instr)
 
   return FALSE
 
-# Determine if instruction is an uninferrable discontinuity ###############################################
-function is_uninferrable_discon (instr)
+# Determine if instruction is an uninferable discontinuity ###############################################
+function is_uninferable_discon (instr)
 
-  if (is_uninferrable_jump(instr) or
+  if (is_uninferable_jump(instr) or
       is_return_from_trap (instr) or
       (instr.opcode == ECALL)     or
       (instr.opcode == EBREAK)    or
@@ -364,7 +364,7 @@ function is_uninferrable_discon (instr)
 # Determine if instruction is a sequentially inferrable jump ##############################################
 function is_sequential_jump (instr, prev_addr)
 
-  if (not (is_uninferrable_jump(instr) and options.sijump))
+  if (not (is_uninferable_jump(instr) and options.sijump))
     return FALSE
 
   local prev_instr = get_instr(prev_addr)
@@ -520,7 +520,7 @@ function exception_address (te_inst)
   local instr = get_instr(pc)
   local epc = poss_next_epc
 
-  if (start_of_trace or is_uninferrable_discon(instr))
+  if (start_of_trace or is_uninferable_discon(instr))
     if (te_inst.thaddr) # This should not be possible!
       ERROR: Expecting EPC address in te_inst
       abort
