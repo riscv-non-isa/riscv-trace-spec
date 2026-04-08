@@ -1,4 +1,4 @@
-name: tech-trace
+name: e-trace
 title: Efficient Trace for RISC-V
 version: v2.0
 nav:
@@ -9,5 +9,5 @@ asciidoc:
     page-group: debug-trace-ras
     page-card-description: 'Trace architecture for efficient execution visibility.'
     page-release-date: 'June 2025'
-    page-pdf_url: _attachments/riscv-trace-spec-asciidoc.pdf
+    page-pdf_url: _attachments/riscv-trace-spec.pdf
     more_details_url: https://riscv.atlassian.net/wiki/external/NjI1Y2M5ODdiYmUxNGE5MzkzYzdkNzNjNGE3NWFjNDA
