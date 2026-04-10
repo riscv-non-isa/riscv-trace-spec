@@ -53,7 +53,8 @@ Copyright 2025 by RISC-V International.
 [colophon]
 *_Preface to Version TBD_*
 
-* Add <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
+* Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
+* Added <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
 * Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
 
 *_Preface to Version 20250616_*
