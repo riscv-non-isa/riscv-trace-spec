@@ -57,6 +57,7 @@ Copyright 2025 by RISC-V International.
 * Added <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
 * Added <<sec:ext-mmacas>>, which describes the Data Trace of Multiple-Memory Access and Compare and Swap extension to Version 2.0.
 * Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
+* Added informative recommendation regarding the use of partial timestamps in packet encapsulation to <<ch:timestamping>>
 
 
 *_Preface to Version 20250616_*
