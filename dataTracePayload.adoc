@@ -22,7 +22,7 @@ it does not change dynamically, and to do so would reduce encoding
 efficiency. The run-time configuration should be reported in the Format
 3, subformat 3 support packet (see <<sec:format33>>). The following sections include examples for all three cases.
 
-As outlined in <<sec:DataInterfaceRequirements>>, two different signaling protocols between the RISC-V hart and the encoder are supported: _unified_ and _split_. Accordingly, both unified and split trace packets are defined.
+As outlined in <<sec:DataInterfaceRequirements>>, two different signaling protocols between the RISC-V hart and the encoder are supported: _unified_ and _split_. Accordingly, both unified and split trace packets are defined.  Where the _split_ signalling is supported, data accesses with a load data component normally result in two packets, one each for the request and data phases.  However, if address or data are omitted as described above, such that all the required information is from a single phase, then the appropriate unified packet format will be used.  For example, if the data value is omitted then the _Unified load or store with address only_ packet format will be used even if _split_ signalling is used.  Similarly, if the address is omitted then _Unified load or store with data only_ is used.
 
 [NOTE]
 ====
@@ -81,7 +81,7 @@ otherwise shift left by *size* to recover byte address
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1).
+The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1), even with _split_ siganalling.
 
 .Packet format for Unified load or store, with address only
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -106,7 +106,7 @@ otherwise shift left by *size* to recover byte address
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
+The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1), even with _split_ siganalling.
 
 [[tab:te_datadx0y2]]
 .Packet format for Unified load or store, with data only
@@ -133,9 +133,9 @@ The following packet format is used when the encoder is configured to omit addre
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet is used for the address/request phase of a split load.
+The following packet is used for the request phase of a split load.
 
-.Packet format for Split load - Address phase
+.Packet format for Split load - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -157,9 +157,9 @@ otherwise shift left by *size* to recover byte address
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet is used for the data phase of a split load and split atomics.
+The following packet is used for the data phase of a split load and split atomic.
 
-.Packet format for Split load - Data phase
+.Packet format for Split load - data phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -229,7 +229,7 @@ atomics.
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -259,7 +259,7 @@ size
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1).
+The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1), even with _split_ siganalling.
 
 .Packet format for Unified atomic with address only
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -267,7 +267,7 @@ The following packet format is used when the encoder is configured to omit data 
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -290,7 +290,7 @@ size
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
+The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1), and supports _unified_ signalling.
 
 .Packet format for Unified atomic with data and operand only
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -298,7 +298,7 @@ The following packet format is used when the encoder is configured to omit addre
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -343,15 +343,15 @@ from the most significant received bit; see <<sec:atomic-datalen>>.
 
 Width of *data and *operand* fields respectively. See  *<<sec:loadstore-datalen>>.*
 
-This packet is used for the address/request phase of a split atomic:
+This packet is used for the request phase of a split atomic:
 
-.Packet format for Split atomic with operand and address
+.Packet format for Split atomic - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -382,13 +382,13 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 
 The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
 
-.Packet format for Split atomic with operand only
+.Packet format for Split atomic without address - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -413,7 +413,28 @@ applied
 ====
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
+.Packet format for Split atomic load - data phase
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name* | *Bits* | *Description*
+|*format* | 3 | Transaction type +
+111: Split atomic data +
+(other codes select other packet formats)
+|*lrid* | _lrid_width_p_ | Load request ID
+|*resp* | 2 | 00: Error (no data) +
+01: XOR-compressed data +
+10: full data +
+11: differential data
+|*data_len* | *size* | Number of bytes of operand is _data_len + 1_. Not
+included if resp indicates an error (sign-extend *resp* MSB)
+|*data* | 8 * (*data_len* + 1) | Data. Not included if resp indicates an
+error (sign-extend *resp* MSB)
+|===
 
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+====
 
 [[sec:data-csr]]
 === CSR
@@ -424,7 +445,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 2 | CSR sub-type +
 00: RW +
 01: RS +
@@ -476,7 +497,7 @@ these are more likely to compress away.
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
- other codes other packet formats
+ (other codes select other packet formats)
 |*subtype* | 2 | CSR sub-type +
 00: RW +
 01: RS +
@@ -505,7 +526,7 @@ The following packet format is used when the encoder is configured to omit data 
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
-other codes other packet formats
+(other codes select other packet formats)
 |*subtype* | 3 | CSR sub-type +
 00: RW +
 01: RS +
