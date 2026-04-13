@@ -82,8 +82,9 @@ example if branches = 12, *branch_map* is 15 bits long, and the 12 LSBs
 are valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
 indicating whether branches are taken or not. Bit 0 represents the
-oldest branch instruction executed. For each bit: : branch taken :
-branch not taken
+oldest branch instruction executed. For each bit:  +
+0 : branch taken +
+1 : branch not taken
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
 instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
@@ -185,8 +186,9 @@ branches = 12, *branch_map* is 15 bits long, and the 12 LSBs are
 valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
 indicating whether branches are taken or not. Bit 0 represents the
-oldest branch instruction executed. For each bit: : branch taken :
-branch not taken
+oldest branch instruction executed. For each bit:  +
+0 : branch taken +
+1 : branch not taken
 |*irreport*| 1| If the value of this bit is different from
 *branch_map[MSB]*, it indicates that this packet is reporting an
 instruction that is either: following a return because its address
