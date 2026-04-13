@@ -343,7 +343,7 @@ from the most significant received bit; see <<sec:atomic-datalen>>.
 
 Width of *data and *operand* fields respectively. See  *<<sec:loadstore-datalen>>.*
 
-This packet is used for the request phase of a split atomic:
+The following packet is used for the request phase of a split atomic:
 
 .Packet format for Split atomic - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
