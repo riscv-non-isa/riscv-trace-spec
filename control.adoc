@@ -6,7 +6,7 @@ https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Con
 
 How fields are organized and accessed (e.g packet based or memory
 mapped) is outside the scope of this document. If a memory mapped
-approach is adopted, the 'Trace Component Register Map' from the 
+approach is adopted, the 'Trace Component Register Map' from the
 https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification] should be used.
 
 Note: Upto and including the E-Trace v2.0.0 specification, which
@@ -83,9 +83,9 @@ See <<optional>> for details of the modes covered in this section.
 |*trTeDataNoValue* | OD |
 |*trTeDataNoAddr* | OD |
 |*trTeDataAddrCompress* | OD |
-|*trTeContext* | N | Hardcode to 0.
-|*trTeInstMode* | N | Hardcode to 7.
-|*trTeInstImplicitReturnMode* | N | Hardcode to 0.
+|*trTeContext* | O |
+|*trTeInstMode* | N | Hardcode to 6.
+|*trTeInstImplicitReturnMode* |  0|
 |*trTeInstEnRepeatedHistory* | N | Hardcode to 0.
 |*trTeInstEnAllJumps* | N | Hardcode to 0.
 |*trTeInstExtendAddrMSB* | N | Hardcode to 0.
