@@ -198,7 +198,7 @@ first data trace packet for a given access size must include the full
 depending on whichever results in the most efficient represenation.
 Implementors may chose to offer one of XOR or differential compression,
 or both. XOR compression will be simpler to implement, and avoids the
-need for performing subtraction of large values.
+need for performing subtraction of large values.  Encoded values are determined on a per access size basis.  For example, when using XOR compression, the  address of this data access, XOR the address of the previous data access of the same size.
 
 If only one data compression type is offered, the *diff* field can be 1
 bit wide rather than 2 for <<tab:te_datadx0y2>>.
@@ -516,7 +516,6 @@ other codes other packet formats
 |*addr_msbs* | 6 | Address[11:6]
 |*addr_lsbs* | 6 | Address[5:0]
 |===
-
 [NOTE]
 ====
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
