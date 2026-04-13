@@ -59,6 +59,7 @@ Copyright 2025 by RISC-V International.
 * Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
 * Corrections to <<encoderControl>>: *trTeInstMode* hardcoded to 6 (not 7 as previously stated), *trTeContext* and *trTeInstImplicitReturnMode* changed to optional rather than not-applicable.
 * Fixed error in *branch_map* descriptions in tables in <<sec:format1>> introduced during earlier translation from LaTeX to asciidoc: values for branch taken or not taken were missing.
+* Removed inappropriate and confusing references to "time changes" from <<sec:InstructionInterfaceRequirements>>.
 * Added informative recommendation regarding the use of partial timestamps in packet encapsulation to <<ch:timestamping>>.
 
 
