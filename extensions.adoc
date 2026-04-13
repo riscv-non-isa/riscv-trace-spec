@@ -37,6 +37,8 @@ This field is a maximum of 2 bits wide, but may be omitted completely if only un
 otherwise shift left by *size* to recover byte address
 |===
 
+The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1).
+
 .Packet format for Unified load or store, with address only
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
@@ -57,6 +59,8 @@ otherwise shift left by *size* to recover byte address
 |*address* | _daddress_width_p_ | Byte address if format is unaligned,
 otherwise shift left by *size* to recover byte address
 |===
+
+The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
 
 [[tab:te_datadx0y2]]
 .Packet format for Unified load or store, with data only
@@ -81,7 +85,9 @@ otherwise shift left by *size* to recover byte address
 |*data* | _data_width_p_ | Data
 |===
 
-.Packet format for Split load - Address only
+The following packet is used for the request phase of a split load.
+
+.Packet format for Split load - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -101,7 +107,9 @@ otherwise shift left by *size* to recover byte address
 otherwise shift left by *size* to recover byte address
 |===
 
-.Packet format for Split load or atomic - Data only
+The following packet is used for the data phase of a split load and split atomics.
+
+.Packet format for Split load or atomic - data phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -171,6 +179,8 @@ size
 size
 |===
 
+The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1)
+
 .Packet format for Unified atomic with address only
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
@@ -197,7 +207,9 @@ size
 size
 |===
 
-.Packet format for Unified atomic with data only
+The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
+
+.Packet format for Unified atomic with data and operand only
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -225,7 +237,9 @@ applied
 |*data* | _data_width_p_ | Data
 |===
 
-.Packet format for Split atomic with operand and address only
+The following packet is used for the request phase of a split atomic:
+
+.Packet format for Split atomic with operand and address
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -253,6 +267,36 @@ applied
 applied
 |*address* | _daddress_width_p_ |Address, aligned and encoded as per
 size
+|===
+
+The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
+
+.Packet format for Split atomic with operand only
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+|===
+| *Field name* | *Bits* | *Description*
+|*format* | 2 | Transaction class: +
+10: Atomic or CSR
+(other codes select other packet formats)
+|*subformat* | 3 | Atomic sub-type +
+1000: Swap +
+1001: ADD +
+1010: AND +
+1011: OR +
+1100: XOR +
+1101: MAX +
+1110: MIN +
+(other codes select other packet formats)
+|*size* | max(1, clog2(clog2( _data_width_p_/8 + 1))) | Transfer size is
+2^*size*^ bytes
+|*lrid* | _lrid_width_p_ | Load request ID
+|*diff* | 1 or 2 | 00: Full address and operand (sync) +
+01: Differential address, XOR-compressed operand +
+10: Differential address, full operand +
+11: Differential address, differential operand
+|*operand* | _data_width_p_ | Operand. Value from rs2 before operator
+applied
+
 |===
 
 .Packet format for Unified CSR, with address, data and operand

@@ -133,9 +133,9 @@ The following packet format is used when the encoder is configured to omit addre
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 
-The following packet is used for the address/request phase of a split load.
+The following packet is used for the request phase of a split load.
 
-.Packet format for Split load - Address phase
+.Packet format for Split load - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -159,7 +159,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 
 The following packet is used for the data phase of a split load and split atomics.
 
-.Packet format for Split load - Data phase
+.Packet format for Split load - data phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -343,7 +343,7 @@ from the most significant received bit; see <<sec:atomic-datalen>>.
 
 Width of *data and *operand* fields respectively. See  *<<sec:loadstore-datalen>>.*
 
-This packet is used for the address/request phase of a split atomic:
+The following packet is used for the request phase of a split atomic:
 
 .Packet format for Split atomic with operand and address
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
