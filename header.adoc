@@ -68,7 +68,7 @@ Copyright 2025 by RISC-V International.
 
 Clarifications only - no changes to normative behaviour.
 
-* Updated <<packets>> and <<fragments>> to reference the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
+* Updated <<packets>> and <<fragments>> to reference the https://docs.riscv.org/reference/debug-trace-ras/trace-encap/_attachments/e-trace-encap.pdf[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
 * Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced;
 * Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>);
 * Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>);
@@ -93,7 +93,7 @@ First version in AsciiDoc format.
 
 Clarifications only - no changes to normative behaviour.
 
-* Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
+* Control field definitions removed from section 2, which now references the xref:https://docs.riscv.org/reference/debug-trace-ras/trace-control-interface/_attachments/RISC-V-Trace-Control-Interface.pdf[RISC-V Trace Control Interface Specification]
 * Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
 * Removed references to tail-calls in jump classifications in <<sec:InstructionInterfaceRequirements>>.
 * Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>.

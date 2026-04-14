@@ -4,7 +4,7 @@ The Efficient Trace for RISC-V v2.0 specification defines a support packet (see 
 
 However, this flexibility presents difficulties for applications such as Self-hosted Trace, where the operating system and decoding software need a single, consistent, standardized format.  Furthermore, correct trace decoding is dependent on several discoverable attributes of the trace encoder.  But in a Self-hosted context, the decoder will not be aware of which physical encoder instance is producing the trace it is decoding, and so will be unable to discover these attributes.  This issue can be addressed by including these attributes directly in the support packet.
 
-Additionally, the fully orthogonal Implicit Return and Multi-Memory Access and Compare and Swap extensions introduce revised *te_inst* and *te_data* packet formats, but the monotonically increasing protocol version does not provide a mechansim to indicate independent presence or absence of these extentions (see trTeImpl.trTeProtocolMajor and trTeImpl.trTeProtocolMinor in https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]).  This can resolved by indicating the presence of thes extensions directly in the support packet.
+Additionally, the fully orthogonal Implicit Return and Multi-Memory Access and Compare and Swap extensions introduce revised *te_inst* and *te_data* packet formats, but the monotonically increasing protocol version does not provide a mechansim to indicate independent presence or absence of these extentions (see trTeImpl.trTeProtocolMajor and trTeImpl.trTeProtocolMinor in https://docs.riscv.org/reference/debug-trace-ras/trace-control-interface/_attachments/RISC-V-Trace-Control-Interface.pdf[RISC-V Trace Control Interface Specification]).  This can resolved by indicating the presence of thes extensions directly in the support packet.
 
 If this extension is implemented, the protocol version must be 2.1 or higher, if the protocol version is 2.1 or higher, this extension must be implemented.
 
@@ -413,7 +413,7 @@ The following packet is used for the request phase of a split load.
 otherwise shift left by *size* to recover byte address
 |===
 
-The following packet is used for the data phase of a split load and split atomics.
+The following packet is used for the data phase of a split load and split atomic.
 
 .Packet format for Split load or atomic - data phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
