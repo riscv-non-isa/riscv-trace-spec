@@ -439,7 +439,7 @@ The following packet is used for the data phase of a split load and split atomic
 |*format* | 2 | Transaction class: +
 10: Atomic or CSR
 (other codes select other packet formats)
-|*subformat* | 3 | Atomic sub-type +
+|*subformat* | 4 | Atomic sub-type +
 1000: Swap +
 1001: ADD +
 1010: AND +
@@ -470,7 +470,7 @@ size
 |*format* | 2 | Transaction class: +
 10: Atomic or CSR
 (other codes select other packet formats)
-|*subformat* | 3 | Atomic sub-type +
+|*subformat* | 4 | Atomic sub-type +
 0111: Compare and Swap failure+
 (other codes select other packet formats)
 |*size* | max(1, clog2(clog2( _data_width_p_/8 + 1))) | Transfer size is
@@ -494,7 +494,7 @@ The following packet format is used when the encoder is configured to omit data 
 |*format* | 2 | Transaction class: +
 10: Atomic or CSR
 (other codes select other packet formats)
-|*subformat* | 3 | Atomic sub-type +
+|*subformat* | 4 | Atomic sub-type +
 0111: compare and swap failure +
 1000: Swap +
 1001: ADD +
@@ -522,7 +522,7 @@ The following packet format is used when the encoder is configured to omit addre
 |*format* | 2 | Transaction class: +
 10: Atomic or CSR
 (other codes select other packet formats)
-|*subformat* | 3 | Atomic sub-type +
+|*subformat* | 4 | Atomic sub-type +
 1000: Swap +
 1001: ADD +
 1010: AND +
@@ -552,7 +552,7 @@ The following packet is used for the request phase of a split atomic:
 |*format* | 2 | Transaction class: +
 10: Atomic or CSR
 (other codes select other packet formats)
-|*subformat* | 3 | Atomic sub-type +
+|*subformat* | 4 | Atomic sub-type +
 1000: Swap +
 1001: ADD +
 1010: AND +
@@ -584,7 +584,7 @@ The following packet format is used when the encoder is configured to omit addre
 |*format* | 2 | Transaction class: +
 10: Atomic or CSR
 (other codes select other packet formats)
-|*subformat* | 3 | Atomic sub-type +
+|*subformat* | 4 | Atomic sub-type +
 1000: Swap +
 1001: ADD +
 1010: AND +
@@ -665,7 +665,7 @@ applied
 0110: RC +
 (other codes select other packet formats)
 11: reserved
-|*diff* | 0 or 1 | 0: Full address +
+|*diff* | 1 | 0: Full address +
 1: Differential address
 |*addr_msbs* | 6 | Address[11:6]
 |*addr_lsbs* | 6 | Address[5:0]

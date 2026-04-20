@@ -526,13 +526,13 @@ The following packet format is used when the encoder is configured to omit data 
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
-(other codes select other packet formats)
-|*subtype* | 3 | CSR sub-type +
+other codes other packet formats
+|*subtype* | 2 | CSR sub-type +
 00: RW +
 01: RS +
 10: RC +
 11: reserved
-|*diff* | 0 or 1 | 0: Full address +
+|*diff* | 1 | 0: Full address +
 1: Differential address
 |*addr_msbs* | 6 | Address[11:6]
 |*addr_lsbs* | 6 | Address[5:0]
