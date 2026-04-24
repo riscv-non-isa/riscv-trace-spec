@@ -225,7 +225,7 @@ implementation specific set of individual bits - one for each of the
 optional modes supported by the encoder.
 
 .Packet format 3, subformat 3
-[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -563,7 +563,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 1 - no address, branch map
-[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -639,7 +639,7 @@ the resulting packet is shorter. This may occur if the differential
 address is zero, or very small.
 
 .Packet format 0, subformat 0 - no address, branch count
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -654,7 +654,7 @@ and the branch following the previous correct prediction failed. +
 |===
 
 .Packet format 0, subformat 0 - address, branch count
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -702,7 +702,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 0, subformat 1 - jump target index, branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -747,7 +747,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 0, subformat 1 - jump target index, no branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<30%,<30%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency

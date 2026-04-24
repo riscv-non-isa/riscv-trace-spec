@@ -188,7 +188,7 @@ BR group signals instead.
 
 [[tab:common-ingress]]
 .Instruction interface signals
-[%autowidth,align="center",float="center",cols="<30%,<10%,<~"options="header"]
+[align="center",float="center",cols="<30%,<10%,<~"options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*itype*[_itype_width_p_-1:0] | MR | Termination type of the instruction
@@ -364,7 +364,7 @@ imprecisely.
 
 [[tab:context-type]]
 .Context type *ctype* values and corresponding actions
-[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Type* | *Value* | *Actions*
 | Unreported | 0 | No action (don't report context).
@@ -428,7 +428,7 @@ encoder will need to be applied via the *context* input.
 
 [[tab:ingress-side-band]]
 .Optional sideband encoder input signals
-[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*impdef*[_impdef_width_p_-1:0] | O | Implementation defined sideband
@@ -645,7 +645,7 @@ first. For example, if there is one data access, use only group 0.
 
 [[tab:data-ingress]]
 .Data interface signals
-[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*dretire* | M | Data access retired (when high)
