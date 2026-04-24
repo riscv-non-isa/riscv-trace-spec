@@ -414,7 +414,7 @@ applied
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 .Packet format for Split atomic load - data phase
-[align="center",float="center",cols="<10%,<15%,<~",options="header"]
+[align="center",float="center",cols="<10%,<17%,<~",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
