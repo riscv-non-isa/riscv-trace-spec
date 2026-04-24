@@ -14,12 +14,11 @@ This extension is required by the following extensions:
 * Implicit Return extension to Efficient Trace for RISC-V v2.0 (see <<sec:ext-impret>>)
 * Data Trace of Multiple-Memory Access and Compare and Swap extension to Efficient Trace for RISC-V v2.0 (see <<sec:ext-mmacas>>)
 
-[*Add links when extensions merged*]
 
 === Standard Support Packet format
 
 .Packet format 3, subformat 3 suitable for self-hosted applications
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
