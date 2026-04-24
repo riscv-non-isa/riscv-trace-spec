@@ -88,8 +88,10 @@ and the branch was taken. Set to 1 if the instruction is not a branch or
 if the branch is not taken.
 |*privilege*| _privilege_width_p_| The privilege level of the reported
 instruction
-|*time*| _time_width_p_ or 0 if _notime_p_ is 1| The time value.
-|*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
+|*time*| _time_width_p_, or +
+         0 if _notime_p_ is 1| The time value.
+|*context*| _context_width_p_, or +
+            0 if _nocontext_p_ is 1| The
 instruction context.
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Full instruction
 address. Address alignment is determined by _iaddress_lsb_p_: *address*
@@ -140,8 +142,10 @@ and the branch was taken. Set to 1 if the instruction is not a branch or
 if the branch is not taken.
 |*privilege*| _privilege_width_p_| The privilege level of the reported
 instruction.
-|*time*| _time_width_p_ or 0 if _notime_p_ is 1| The time value.
-|*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
+|*time*| _time_width_p_, or +
+         0 if _notime_p_ is 1| The time value.
+|*context*| _context_width_p_, or +
+            0 if _nocontext_p_ is 1| The
 instruction context
 |*ecause*| _ecause_width_p_| Exception or interrupt cause.
 |*interrupt*| 1| Interrupt.
@@ -199,8 +203,10 @@ output when the context value changes and can be reported imprecisely
 |*subformat*| 2| 10 (context): Context change
 |*privilege*| _privilege_width_p_| The privilege level of the new
 context.
-|*time*| _time_width_p_ or 0 if _notime_p_ is 1| The time value
-|*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
+|*time*| _time_width_p_, or +
+        0 if _notime_p_ is 1| The time value
+|*context*| _context_width_p_, or +
+            0 if _nocontext_p_ is 1| The
 instruction context.
 |===
 
@@ -219,7 +225,7 @@ implementation specific set of individual bits - one for each of the
 optional modes supported by the encoder.
 
 .Packet format 3, subformat 3
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -324,8 +330,9 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + +
+            (return_stack_size_p > 0 ? 1 : 0) + +
+            call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
@@ -334,7 +341,7 @@ bits in this field will also be the same value as *updiscon*.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
 ====
 
 [[sec:notify]]
@@ -536,8 +543,9 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + +
+           (return_stack_size_p > 0 ? 1 : 0) + +
+           call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
@@ -550,7 +558,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 1 - no address, branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[%autowidth,align="center",float="center",cols="<30%,<10%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -674,8 +682,9 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + +
+           (return_stack_size_p > 0 ? 1 : 0) + +
+           call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
@@ -751,8 +760,9 @@ differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
 to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p + +
+            (return_stack_size_p > 0 ? 1 : 0) + +
+            call_counter_size_p_| If the value of *irreport* is different from
 *branches[MSB]*, this field indicates the number of entries on the
 return address stack (i.e. the entry number of the return that failed)
 or nested call count. If *irreport* is the same value as
