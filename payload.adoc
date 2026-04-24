@@ -78,7 +78,7 @@ handler), and when resynchronization has been scheduled by expiry of the
 resynchronisation timer.
 
 .Packet format 3, subformat 0
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<15%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -131,7 +131,7 @@ If the implicit exception mode is enabled (see
 handler address is omitted if *thaddr* is 1.
 
 .Packet format 3, subformat 1
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<15%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -225,7 +225,7 @@ implementation specific set of individual bits - one for each of the
 optional modes supported by the encoder.
 
 .Packet format 3, subformat 3
-[align="center",float="center",cols="<18%,<6%,<~",options="header"]
+[align="center",float="center",cols="<15%,<6%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -312,7 +312,7 @@ branch information. The address is in differential format unless full
 address mode is enabled (see <<sec:full-address>>).
 
 .Packet format 2
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<12%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 10 (addr-only): differential address and no branch
@@ -508,7 +508,7 @@ included, the address is in differential format unless full address mode
 is enabled (see <<sec:full-address>>).
 
 .Packet format 1 - address, branch map
-[align="center",float="center",cols="<15%,<25%,<~",options="header"]
+[align="center",float="center",cols="<13%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -562,7 +562,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 1 - no address, branch map
-[align="center",float="center",cols="<15%,<5%,<~",options="header"]
+[align="center",float="center",cols="<12%,<5%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -638,7 +638,7 @@ the resulting packet is shorter. This may occur if the differential
 address is zero, or very small.
 
 .Packet format 0, subformat 0 - no address, branch count
-[align="center",float="center",cols="<15%,<25%,<~",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -653,7 +653,7 @@ and the branch following the previous correct prediction failed. +
 |===
 
 .Packet format 0, subformat 0 - address, branch count
-[align="center",float="center",cols="<15%,<25%,<~",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -700,7 +700,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 0, subformat 1 - jump target index, branch map
-[align="center",float="center",cols="<15%,<25%,<~",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -745,7 +745,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 0, subformat 1 - jump target index, no branch map
-[align="center",float="center",cols="<15%,<25%,<~",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency

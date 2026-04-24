@@ -428,7 +428,7 @@ encoder will need to be applied via the *context* input.
 
 [[tab:ingress-side-band]]
 .Optional sideband encoder input signals
-[align="center",float="center",cols="<28%,<8%,<~",options="header"]
+[align="center",float="center",cols="<26%,<8%,<~",options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*impdef*[_impdef_width_p_-1:0] | O | Implementation defined sideband
@@ -645,7 +645,7 @@ first. For example, if there is one data access, use only group 0.
 
 [[tab:data-ingress]]
 .Data interface signals
-[align="center",float="center",cols="<33%,<7%,<~",options="header"]
+[align="center",float="center",cols="<32%,<7%,<~",options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*dretire* | M | Data access retired (when high)

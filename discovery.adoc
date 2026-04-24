@@ -10,7 +10,7 @@ whilst others may be passed in to the design by some means.
 
 [[tab:iparameters]]
 .Parameters to the encoder - instruction trace
-[align="center",float="center",cols="<18%,<8%,<~",options="header"]
+[align="center",float="center",cols="<19%,<8%,<~",options="header"]
 |===
 | *Parameter name* | *Range* | *Description*
 |_arch_p_ |  |  The architecture specification version with which the
