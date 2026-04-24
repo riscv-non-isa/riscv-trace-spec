@@ -123,7 +123,7 @@ When reporting an address via _te_inst_ when Implicit Return mode is enabled, th
 Under the above conditions, *irreport* is set to the oppositive value to *updiscon*.
 
 .Packet format 1 - address, branch map
-[align="center",float="center",cols="<12%,<20%,<~",options="header"]
+[align="center",float="center",cols="<14%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -168,7 +168,7 @@ bits in this field will also be the same value as *updiscon*.
 |===
 
 .Packet format 1 - no address, branch map
-[align="center",float="center",cols="<12%,<5%,<~",options="header"]
+[align="center",float="center",cols="<14%,<5%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may

@@ -78,7 +78,7 @@ handler), and when resynchronization has been scheduled by expiry of the
 resynchronisation timer.
 
 .Packet format 3, subformat 0
-[align="center",float="center",cols="<15%,<15%,<~",options="header"]
+[align="center",float="center",cols="<12%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -131,7 +131,7 @@ If the implicit exception mode is enabled (see
 handler address is omitted if *thaddr* is 1.
 
 .Packet format 3, subformat 1
-[align="center",float="center",cols="<15%,<15%,<~",options="header"]
+[align="center",float="center",cols="<12%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -312,7 +312,7 @@ branch information. The address is in differential format unless full
 address mode is enabled (see <<sec:full-address>>).
 
 .Packet format 2
-[align="center",float="center",cols="<12%,<24%,<~",options="header"]
+[align="center",float="center",cols="<11%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 10 (addr-only): differential address and no branch
@@ -335,8 +335,7 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p_ +
-           + (_return_stack_size_p_ > 0 ? 1 : 0) +
+|*irdepth*| _return_stack_size_p_ + (_return_stack_size_p_ > 0 ? 1 : 0)
            + _call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
@@ -562,7 +561,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 ====
 
 .Packet format 1 - no address, branch map
-[align="center",float="center",cols="<12%,<5%,<~",options="header"]
+[align="center",float="center",cols="<13%,<5%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may

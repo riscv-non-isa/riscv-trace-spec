@@ -414,7 +414,7 @@ applied
 The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
 ====
 .Packet format for Split atomic load - data phase
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<10%,<15%,<~",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
@@ -456,7 +456,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 10: reserved +
 11 : Differential data/operand
 |*data_len* | 2 or 3 | Number of bytes of data is *data_len* + 1
-|*data* | 8 * (*data_len* 1) | Data
+|*data* | 8 * (*data_len* + 1) | Data
 |*addr_msbs* | 6 | Address[11:6]
 |*op_len* | 2 or 3 | Number of bytes of operand is *op_len* + 1
 |*operand* | 8 * (*op_len* + 1) | Operand. Value from rs1 before operator
