@@ -18,7 +18,7 @@ This extension is required by the following extensions:
 === Standard Support Packet format
 
 .Packet format 3, subformat 3 suitable for self-hosted applications
-[align="center",float="center",cols="<30%,<10%,<~",options="header"]
+[align="center",float="center",cols="<18%,<6%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -79,7 +79,7 @@ So in summary, the decoder needs additional information to correctly determine w
 The following packet definitions replace those detailed in <<packets>>.  All formats and fields are the same, except *irdepth* is replaced by *irets* throughout.
 
 .Packet format 2
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<25%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 10 (addr-only): differential address and no branch
@@ -123,7 +123,7 @@ When reporting an address via _te_inst_ when Implicit Return mode is enabled, th
 Under the above conditions, *irreport* is set to the oppositive value to *updiscon*.
 
 .Packet format 1 - address, branch map
-[align="center",float="center",cols="<1,<1,<3",options="header"]
+[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -189,7 +189,7 @@ For each bit:   +
 See <<sec:irets>>.
 
 .Packet format 0, subformat 0 - address, branch count
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -227,7 +227,7 @@ bits in this field will also be the same value as *updiscon*.
 |===
 
 .Packet format 0, subformat 1 - jump target index, branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -264,7 +264,7 @@ to report the implicit return count.
 |===
 
 .Packet format 0, subformat 1 - jump target index, no branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -467,7 +467,7 @@ size
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 2 | Transaction class: +
-10: Atomic or CSR
+10: Atomic or CSR +
 (other codes select other packet formats)
 |*subformat* | 4 | Atomic sub-type +
 0111: Compare and Swap failure+
