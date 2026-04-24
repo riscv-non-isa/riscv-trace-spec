@@ -263,6 +263,11 @@ be +
 - 'no addr' Exclude address (just report data)
 |===
 
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Standard Support Packet extension (see <<sec:ext-support>>).
+====
+
 [[sec:qual-status]]
 ==== Format 3 subformat 3 *qual_status* field
 
