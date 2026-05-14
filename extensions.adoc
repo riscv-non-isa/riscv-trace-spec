@@ -321,7 +321,7 @@ This field is a maximum of 2 bits wide, but may be omitted completely if only un
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
-|*format* | 0, 1 or 2 | Transaction class: +
+|*format* | clog2(_dtype_width_p_) | Transaction class: +
 00: Load or store +
 01: Multi-memory access load or store +
 (other codes select other packet formats)
@@ -348,7 +348,7 @@ The following packet format is used when the encoder is configured to omit data 
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
-|*format* | 0, 1 or 2 | Transaction class: +
+|*format* | clog2(_dtype_width_p_) | Transaction class: +
 00: Load or store +
 01: Multi-memory access load or store +
 (other codes select other packet formats)
@@ -372,7 +372,7 @@ The following packet format is used when the encoder is configured to omit addre
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
-|*format* | 0, 1 or 2 | Transaction class: +
+|*format* | clog2(_dtype_width_p_) | Transaction class: +
 00: Load or store
 01: Multi-memory access load or store
 (other codes select other packet formats)
@@ -475,9 +475,9 @@ size
 |*size* | max(1, clog2(clog2( _data_width_p_/8 + 1))) | Transfer size is
 2^*size*^ bytes
 |*diff* | 2 | 00: Full address and data (sync) +
-01: Differential address, XOR-compressed data/operand +
-10: Differential address, full data/operand +
-11: Differential address, differential data/operand
+01: Differential address, XOR-compressed operand +
+10: Differential address, full operand +
+11: Differential address, differential operand
 |*op_len* | *size* | Number of bytes of operand is *op_len* + 1
 |*operand* | 8 * (*op_len* + 1) | Operand. Value from rs2 before operator applied
 |*address* | _daddress_width_p_ | Address, aligned and encoded as per
@@ -563,7 +563,7 @@ The following packet is used for the request phase of a split atomic:
 |*size* | max(1, clog2(clog2( _data_width_p_/8 + 1))) | Transfer size is
 2^*size*^ bytes
 |*lrid* | _lrid_width_p_ | Load request ID
-|*diff* | 1 or 2 | 00: Full address and operand (sync) +
+|*diff* | 2 | 00: Full address and operand (sync) +
 01: Differential address, XOR-compressed operand +
 10: Differential address, full operand +
 11: Differential address, differential operand
@@ -595,10 +595,10 @@ The following packet format is used when the encoder is configured to omit addre
 |*size* | max(1, clog2(clog2( _data_width_p_/8 + 1))) | Transfer size is
 2^*size*^ bytes
 |*lrid* | _lrid_width_p_ | Load request ID
-|*diff* | 1 or 2 | 00: Full address and operand (sync) +
-01: Differential address, XOR-compressed operand +
-10: Differential address, full operand +
-11: Differential address, differential operand
+|*diff* | 2 | 00: Full operand (sync) +
+01: XOR-compressed operand (XOR if 2 bits)+
+10: reserved +
+11: Differential operand
 |*operand* | _data_width_p_ | Operand. Value from rs2 before operator
 applied
 
