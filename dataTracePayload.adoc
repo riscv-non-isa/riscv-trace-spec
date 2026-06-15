@@ -22,7 +22,7 @@ it does not change dynamically, and to do so would reduce encoding
 efficiency. The run-time configuration should be reported in the Format
 3, subformat 3 support packet (see <<sec:format33>>). The following sections include examples for all three cases.
 
-As outlined in <<sec:DataInterfaceRequirements>>, two different signaling protocols between the RISC-V hart and the encoder are supported: _unified_ and _split_. Accordingly, both unified and split trace packets are defined.
+As outlined in <<sec:DataInterfaceRequirements>>, two different signaling protocols between the RISC-V hart and the encoder are supported: _unified_ and _split_. Accordingly, both unified and split trace packets are defined.  Where the _split_ signalling is supported, data accesses with a load data component normally result in two packets, one each for the request and data phases.  However, if address or data are omitted as described above, such that all the required information is from a single phase, then the appropriate unified packet format will be used.  For example, if the data value is omitted then the _Unified load or store with address only_ packet format will be used even if _split_ signalling is used.  Similarly, if the address is omitted then _Unified load or store with data only_ is used.
 
 [NOTE]
 ====
@@ -109,7 +109,7 @@ otherwise shift left by *size* to recover byte address
 |*data* | _data_width_p_ | Data
 |===
 
-.Packet format for Split load - Address only
+.Packet format for Split load - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -126,7 +126,7 @@ otherwise shift left by *size* to recover byte address
 otherwise shift left by *size* to recover byte address
 |===
 
-.Packet format for Split load - Data only
+.Packet format for Split load - data phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
@@ -196,7 +196,7 @@ atomics.
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -227,7 +227,7 @@ size
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -251,7 +251,7 @@ size
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -291,13 +291,13 @@ from the most significant received bit; see <<sec:atomic-datalen>>.
 
 Width of *data and *operand* fields respectively. See  *<<sec:loadstore-datalen>>.*
 
-.Packet format for Split atomic with operand only
+.Packet format for Split atomic - request phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 110: Unified atomic or split atomic address +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 3 | Atomic sub-type +
 000: Swap +
 001: ADD +
@@ -321,12 +321,13 @@ applied
 size
 |===
 
-.Packet format for Split atomic load data only
+.Packet format for Split atomic load - data phase
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
 |===
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
-110: Split atomic data other codes other packet formats
+111: Split atomic data +
+(other codes select other packet formats)
 |*lrid* | _lrid_width_p_ | Load request ID
 |*resp* | 2 | 00: Error (no data) +
 01: XOR-compressed data +
@@ -348,7 +349,7 @@ error (sign-extend *resp* MSB)
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
-(other codes other packet formats)
+(other codes select other packet formats)
 |*subtype* | 2 | CSR sub-type +
 00: RW +
 01: RS +
@@ -395,7 +396,7 @@ these are more likely to compress away.
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
- other codes other packet formats
+ (other codes select other packet formats)
 |*subtype* | 2 | CSR sub-type +
 00: RW +
 01: RS +
@@ -417,7 +418,7 @@ these are more likely to compress away.
 | *Field name* | *Bits* | *Description*
 |*format* | 3 | Transaction type +
 101: CSR +
-other codes other packet formats
+(other codes select other packet formats)
 |*subtype* | 3 | CSR sub-type +
 00: RW +
 01: RS +
@@ -428,4 +429,3 @@ other codes other packet formats
 |*addr_msbs* | 6 | Address[11:6]
 |*addr_lsbs* | 6 | Address[5:0]
 |===
-
