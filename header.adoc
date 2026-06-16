@@ -78,7 +78,7 @@ First version in AsciiDoc format.
 
 *_Preface to Version 20231215_*
 
-Clarifications only - no changes to normative behaviour. 
+Clarifications only - no changes to normative behaviour.
 
 * Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
 * Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
@@ -104,6 +104,7 @@ include::discovery.adoc[]
 include::decoder.adoc[]
 include::exampleCodeSnippets.adoc[]
 include::fragmentCodeAndTransport.adoc[]
+include::extensions.adoc[]
 include::future.adoc[]
 //include::index.adoc[]
 //include::bibliography.adoc[]
