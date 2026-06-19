@@ -16,3 +16,5 @@ NOTE: If problems arise with the build, let us know by emailing help@riscv.org.
 You can easily build the documentation by leveraging a pre-built container image with all dependencies already installed. Follow the steps [here](https://github.com/riscv/riscv-docs-base-container-image).
 
 Note that the GitHub action utilizes the Docker container to build the PDF.
+
+SAMPLE CHANGE
