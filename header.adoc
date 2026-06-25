@@ -2,7 +2,7 @@
 Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
-:revdate: June 16, 2025
+:revdate: TBD, 2026
 :revnumber: 2.0
 :url-riscv: http://riscv.org
 :doctype: book
@@ -51,11 +51,25 @@ https://creativecommons.org/licenses/by/4.0/.
 Copyright 2025 by RISC-V International.
 
 [colophon]
+*_Preface to Version TBD_*
+
+* Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
+* Added <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
+* Added <<sec:ext-mmacas>>, which describes the Data Trace of Multiple-Memory Access and Compare and Swap extension to Version 2.0.
+* Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
+* Corrections to <<encoderControl>>: *trTeInstMode* hardcoded to 6 (not 7 as previously stated), *trTeContext* and *trTeInstImplicitReturnMode* changed to optional rather than not-applicable.
+* Fixed error in *branch_map* descriptions in tables in <<sec:format1>> introduced during earlier translation from LaTeX to asciidoc: values for branch taken or not taken were missing.
+* Removed inappropriate and confusing references to "time changes" from <<sec:InstructionInterfaceRequirements>>.
+* Added informative recommendation regarding the use of partial timestamps in packet encapsulation to <<ch:timestamping>>.
+* Remove historical "Future directions" chapter.
+* Minor clarifications, formatting and typo fixes.
+
+
 *_Preface to Version 20250616_*
 
 Clarifications only - no changes to normative behaviour.
 
-* Updated <<packets>> and <<fragments>> to reference the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
+* Updated <<packets>> and <<fragments>> to reference the https://docs.riscv.org/reference/debug-trace-ras/trace-encap/_attachments/e-trace-encap.pdf[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
 * Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced;
 * Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>);
 * Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>);
@@ -78,9 +92,9 @@ First version in AsciiDoc format.
 
 *_Preface to Version 20231215_*
 
-Clarifications only - no changes to normative behaviour. 
+Clarifications only - no changes to normative behaviour.
 
-* Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
+* Control field definitions removed from section 2, which now references the xref:https://docs.riscv.org/reference/debug-trace-ras/trace-control-interface/_attachments/RISC-V-Trace-Control-Interface.pdf[RISC-V Trace Control Interface Specification]
 * Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
 * Removed references to tail-calls in jump classifications in <<sec:InstructionInterfaceRequirements>>.
 * Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>.
@@ -104,6 +118,7 @@ include::discovery.adoc[]
 include::decoder.adoc[]
 include::exampleCodeSnippets.adoc[]
 include::fragmentCodeAndTransport.adoc[]
-include::future.adoc[]
+include::extensions.adoc[]
+
 //include::index.adoc[]
 //include::bibliography.adoc[]

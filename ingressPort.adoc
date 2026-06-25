@@ -39,7 +39,7 @@ The following information is optional:
 
 * Context or Time information:
 ** The context and/or hart ID and/or time;
-** The type of action to take when context or time data changes.
+** The type of action to take when context changes.
 * The _instruction_type_ of instructions for:
 ** Calls with a target that _cannot_ be inferred from the source code;
 ** Calls with a target that _can_ be inferred from the source code;
@@ -52,9 +52,9 @@ The following information is optional:
 target that _cannot_ be inferred from the source code;
 ** Other jumps with linkage which don't fit any of the above classifications with a
 target that _can_ be inferred from the source code.
-* If context or time is supported then the _instruction_address_ for:
-** The last instruction retired before a context or a time change;
-** The first instruction retired following a context or time change.
+* If context is supported then the _instruction_address_ for:
+** The last instruction retired before a context change;
+** The first instruction retired following a context change.
 * Whether jump targets are sequentially inferable or not.
 
 The mandatory information is the bare-minimum required to implement the
@@ -188,7 +188,7 @@ BR group signals instead.
 
 [[tab:common-ingress]]
 .Instruction interface signals
-[%autowidth,align="center",float="center",cols="<,<,<"options="header"]
+[align="center",float="center",cols="<27%,<7%,<~"options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*itype*[_itype_width_p_-1:0] | MR | Termination type of the instruction
@@ -306,9 +306,9 @@ block.
 *itype* can be 3 or 4 bits wide. If _itype_width_p_ is 3, a single code
 (6) is used to indicate all uninferable jumps. This is simpler to
 implement, but precludes use of the implicit return mode (see
-<<sec:implicit-return>>), which requires jump types to be fully classified.  
-Note that when _itype_width_p_ is 3, *itype* = 0 is used for inferrable calls.  
-However, inferrable calls must still be the final instruction retired in a 
+<<sec:implicit-return>>), which requires jump types to be fully classified.
+Note that when _itype_width_p_ is 3, *itype* = 0 is used for inferrable calls.
+However, inferrable calls must still be the final instruction retired in a
 block, otherwise the block would not be comprised of contiguous instructions.
 
 Whilst *iaddr* is typically a virtual address, it does not affect the
@@ -364,7 +364,7 @@ imprecisely.
 
 [[tab:context-type]]
 .Context type *ctype* values and corresponding actions
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<27%,<7%,<~",options="header"]
 |===
 | *Type* | *Value* | *Actions*
 | Unreported | 0 | No action (don't report context).
@@ -419,7 +419,7 @@ and OR.
 ==== Optional sideband signals
 
 Optional sideband signals may be included to provide additional
-functionality, as described in 
+functionality, as described in
 <<tab:ingress-side-band>> and
 <<tab:egress-side-band>>.
 
@@ -428,7 +428,7 @@ encoder will need to be applied via the *context* input.
 
 [[tab:ingress-side-band]]
 .Optional sideband encoder input signals
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<26%,<8%,<~",options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*impdef*[_impdef_width_p_-1:0] | O | Implementation defined sideband
@@ -498,7 +498,7 @@ cycle that Trace-off is asserted (subject to any optional filtering).
 It follows from this that:
 
 *  if tracing is enabled and trace-off occurs on the cycle before trace-on, then tracing will continue unimpeded (i.e. it stays on);
-* if tracing is disabled and trace-on and trace-off triggers occur simultaneously then only the instructions retired in that cycle will be traced. 
+* if tracing is disabled and trace-on and trace-off triggers occur simultaneously then only the instructions retired in that cycle will be traced.
 
 Trace-notify provides means to ensure that a specified instruction is
 explicitly reported (subject to any optional filtering). This capability
@@ -520,7 +520,7 @@ is sometimes known as a watchpoint.
 | **iretire**=3, **iaddr**=0x0940, **itype**=4
 |0946: *_c.bnez_* | **iretire**=1, **iaddr**=0x0946, **itype**=5
 |0988: *_lbu_* +
-098C: *_csrrw_* 
+098C: *_csrrw_*
 | **iretire**=4, **iaddr**=0x0988, **itype**=0
 |===
 
@@ -645,7 +645,7 @@ first. For example, if there is one data access, use only group 0.
 
 [[tab:data-ingress]]
 .Data interface signals
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<32%,<7%,<~",options="header"]
 |===
 | *Signal* | *Group* | *Function*
 |*dretire* | M | Data access retired (when high)
