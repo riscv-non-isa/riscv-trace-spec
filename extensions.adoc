@@ -40,7 +40,7 @@ instruction
 |*full_iaddress*| 1 | When 1, *te_inst* packets always contain full (i.e. non-differential) addresses (see <<sec:full-address>>).
 |*resync_disabled*| 1 | When 1 indicates that resynchronization is disabled (trTeControl.trTeInstSyncMode == 0).
 |*iret_ext*| 1 | When 1, Implicit Return extension to E-trace v2.0 implemented. [*Add link when extensions merged*]
-|*time_width*| 2 | The width of the time field in sync-start and sync-trap packets (_time_width_p_) is 16 * (*time_width* + 1) bits.
+|*time_width*| 3 | The width of the time field in sync-start and sync-trap packets (_time_width_p_) is 16 * *time_width* bits.
 |*f0s_width*| 2 | The value of _f0s_width_p_
 |*return_stack_size*| 3 | The number of entries in the return address stack is 2^*return_stack_size*^ (no stack if 0).
 |*call_counter_size*| 4 | The number of bits in the call counter is 2^*call_counter_size*^ (no counter if 0).
