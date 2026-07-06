@@ -57,7 +57,8 @@ function process_te_inst (te_inst)
     if (is_branch(get_instr(address))) # 1 unprocessed branch if this instruction is a branch
       branch_map = branch_map | (te_inst.branch << branches)
       branches++
-    if (te_inst.subformat == 0 and !start_of_trace)
+    if (te_inst.subformat == 0 and !start_of_trace and
+        !(previous_te_inst.format == 3 and previous_te_inst.subformat == 1 and !previous_te_inst.thaddr))
       follow_execution_path(address, te_inst)
     else
       pc           = address
@@ -535,6 +536,8 @@ function exception_address (te_inst)
 
   if ((instr.opcode == ECALL) or (instr.opcode == EBREAK) or (instr.opcode == C.EBREAK))
     return pc
+  if (!te_inst.thaddr) # pne_valid is false.  te_inst address is EPC of current trap, not next trap
+    return (te_inst.address << discovery_response.iaddress_lsb)
 
   next_pc(pc, te_inst)
   return pc
