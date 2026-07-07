@@ -1,9 +1,11 @@
 = Efficient Trace for RISC-V
-Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
+Authors: Gajinder Panesar and Iain Robertson
+include:../docs-resources/global-config.adoc[]
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
 :revdate: TBD, 2026
 :revnumber: 2.0
+:revremark: This document is in the Ratified state.
 :url-riscv: http://riscv.org
 :doctype: book
 :pdf-theme: docs-resources/themes/riscv-pdf.yml
@@ -51,6 +53,7 @@ https://creativecommons.org/licenses/by/4.0/.
 Copyright 2025-2026 by RISC-V International.
 
 [colophon]
+<<<<<<< HEAD
 *_Preface to Version TBD_*
 
 * Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
@@ -64,6 +67,8 @@ Copyright 2025-2026 by RISC-V International.
 * Remove historical "Future directions" chapter.
 * Minor clarifications, formatting and typo fixes.
 
+=======
+>>>>>>> main
 
 *_Preface to Version 20250616_*
 
