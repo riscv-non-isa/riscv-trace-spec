@@ -1,9 +1,11 @@
 = Efficient Trace for RISC-V
-Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@siemens.com>
+Authors: Gajinder Panesar and Iain Robertson
+include:../docs-resources/global-config.adoc[]
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
 :revdate: June 16, 2025
 :revnumber: 2.0
+:revremark: This document is in the Ratified state.
 :url-riscv: http://riscv.org
 :doctype: book
 :pdf-theme: docs-resources/themes/riscv-pdf.yml
@@ -14,7 +16,7 @@ Gajinder Panesar <gajinder.panesar@gmail.com>, Iain Robertson <iain.robertson@si
 :pdf-fontsdir: docs-resources/fonts/
 :appendix-caption: Appendix
 :imagesdir: images
-:title-logo-image: image:risc-v_logo.svg[pdfwidth=3.25in,align=center]
+:title-logo-image: image:risc-v_logo.png[pdfwidth=3.25in,align=center]
 // Settings:
 :experimental:
 :reproducible:
@@ -78,7 +80,7 @@ First version in AsciiDoc format.
 
 *_Preface to Version 20231215_*
 
-Clarifications only - no changes to normative behaviour. 
+Clarifications only - no changes to normative behaviour.
 
 * Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
 * Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
