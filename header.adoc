@@ -53,7 +53,6 @@ https://creativecommons.org/licenses/by/4.0/.
 Copyright 2025-2026 by RISC-V International.
 
 [colophon]
-<<<<<<< HEAD
 *_Preface to Version TBD_*
 
 * Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
@@ -66,9 +65,6 @@ Copyright 2025-2026 by RISC-V International.
 * Added informative recommendation regarding the use of partial timestamps in packet encapsulation to <<ch:timestamping>>.
 * Remove historical "Future directions" chapter.
 * Minor clarifications, formatting and typo fixes.
-
-=======
->>>>>>> main
 
 *_Preface to Version 20250616_*
 
