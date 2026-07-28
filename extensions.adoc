@@ -1,12 +1,10 @@
 [[sec:ext-support]]
-== Standard Support Packet v0.8 extension to Efficient Trace for RISC-V v2.0
+== Standard Support Packet v0.9 extension to Efficient Trace for RISC-V v2.0
 
 [WARNING]
-.This chapter is in the link:http://riscv.org/spec-state[Stabilization state]
+.This chapter is in the link:http://riscv.org/spec-state[Frozen state]
 ====
-Expect potential changes. This draft specification is likely to evolve before
-it is accepted as a standard. Implementations based on this draft
-may not conform to the future standard.
+Changes are unlikely at this point of the specification. Visit http://riscv.org/spec-state for further details.
 ====
 
 The Efficient Trace for RISC-V v2.0 specification defines a support packet (see <<sec:format33>>) and when it must be sent.  The general requirements for the content of this packet are described, but the exact details of the payload is left to the implementor.  The original thinking was that this left flexibility for different encoder implementations to provide support information best suited to their specific capabilities, as well as allowing implementation-specific customizations.
@@ -66,14 +64,12 @@ instruction
 |===
 
 [[sec:ext-impret]]
-== Implicit Return v0.8 extension to Efficient Trace for RISC-V v2.0
+== Implicit Return v0.9 extension to Efficient Trace for RISC-V v2.0
 
 [WARNING]
-.This chapter is in the link:http://riscv.org/spec-state[Stabilization state]
+.This chapter is in the link:http://riscv.org/spec-state[Frozen state]
 ====
-Expect potential changes. This draft specification is likely to evolve before
-it is accepted as a standard. Implementations based on this draft
-may not conform to the future standard.
+Changes are unlikely at this point of the specification. Visit http://riscv.org/spec-state for further details.
 ====
 
 The Implicit Return mode information in the format 0, 1 and 2 packets defined in the Efficient Trace for RISC-V 2.0 specification does not produce correct trace decoding in some cases.  This extension corrects this by replacing the *irdepth* field with *irets*.
@@ -319,14 +315,12 @@ implementation could omit these if all implicit return failures are
 reported using format 1.
 
 [[sec:ext-mmacas]]
-== Data Trace of Multiple-Memory Access and Compare and Swap v0.8 extension to Efficient Trace for RISC-V v2.0
+== Data Trace of Multiple-Memory Access and Compare and Swap v0.9 extension to Efficient Trace for RISC-V v2.0
 
 [WARNING]
-.This chapter is in the link:http://riscv.org/spec-state[Stabilization state]
+.This chapter is in the link:http://riscv.org/spec-state[Frozen state]
 ====
-Expect potential changes. This draft specification is likely to evolve before
-it is accepted as a standard. Implementations based on this draft
-may not conform to the future standard.
+Changes are unlikely at this point of the specification. Visit http://riscv.org/spec-state for further details.
 ====
 
 The RISC-V Hart to Trace Interface (RHTI) specification is based on chapter 4 of the Efficient Trace for RISC-V v2.0 specification.
