@@ -4,7 +4,7 @@
 The bulk of this section describes the payload of packets output from
 the Instruction Trace Encoder. The infrastructure used to transport
 these packets is outside the scope of this document, and as such the
-manner in which packets are encapsulated for transport is not mandated, but the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
+manner in which packets are encapsulated for transport is not mandated, but the https://docs.riscv.org/reference/debug-trace-ras/trace-encap/_attachments/e-trace-encap.pdf[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
 
 Any encapsulation must include the following information:
 
@@ -78,7 +78,7 @@ handler), and when resynchronization has been scheduled by expiry of the
 resynchronisation timer.
 
 .Packet format 3, subformat 0
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<12%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -88,8 +88,10 @@ and the branch was taken. Set to 1 if the instruction is not a branch or
 if the branch is not taken.
 |*privilege*| _privilege_width_p_| The privilege level of the reported
 instruction
-|*time*| _time_width_p_ or 0 if _notime_p_ is 1| The time value.
-|*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
+|*time*| _time_width_p_, or +
+         0 if _notime_p_ is 1| The time value.
+|*context*| _context_width_p_, or +
+            0 if _nocontext_p_ is 1| The
 instruction context.
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Full instruction
 address. Address alignment is determined by _iaddress_lsb_p_: *address*
@@ -129,7 +131,7 @@ If the implicit exception mode is enabled (see
 handler address is omitted if *thaddr* is 1.
 
 .Packet format 3, subformat 1
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<12%,<20%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -140,8 +142,10 @@ and the branch was taken. Set to 1 if the instruction is not a branch or
 if the branch is not taken.
 |*privilege*| _privilege_width_p_| The privilege level of the reported
 instruction.
-|*time*| _time_width_p_ or 0 if _notime_p_ is 1| The time value.
-|*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
+|*time*| _time_width_p_, or +
+         0 if _notime_p_ is 1| The time value.
+|*context*| _context_width_p_, or +
+            0 if _nocontext_p_ is 1| The
 instruction context
 |*ecause*| _ecause_width_p_| Exception or interrupt cause.
 |*interrupt*| 1| Interrupt.
@@ -199,8 +203,10 @@ output when the context value changes and can be reported imprecisely
 |*subformat*| 2| 10 (context): Context change
 |*privilege*| _privilege_width_p_| The privilege level of the new
 context.
-|*time*| _time_width_p_ or 0 if _notime_p_ is 1| The time value
-|*context*| _context_width_p_, or 0 if _nocontext_p_ is 1| The
+|*time*| _time_width_p_, or +
+        0 if _notime_p_ is 1| The time value
+|*context*| _context_width_p_, or +
+            0 if _nocontext_p_ is 1| The
 instruction context.
 |===
 
@@ -219,7 +225,7 @@ implementation specific set of individual bits - one for each of the
 optional modes supported by the encoder.
 
 .Packet format 3, subformat 3
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<15%,<6%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 11 (sync): synchronisation
@@ -256,6 +262,11 @@ be +
 - 'no data' Exclude data (just report addresses) +
 - 'no addr' Exclude address (just report data)
 |===
+
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Standard Support Packet extension (see <<sec:ext-support>>).
+====
 
 [[sec:qual-status]]
 ==== Format 3 subformat 3 *qual_status* field
@@ -301,7 +312,7 @@ branch information. The address is in differential format unless full
 address mode is enabled (see <<sec:full-address>>).
 
 .Packet format 2
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<11%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 10 (addr-only): differential address and no branch
@@ -324,13 +335,18 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p_ + (_return_stack_size_p_ > 0 ? 1 : 0)
+           + _call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
+
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+====
 
 [[sec:notify]]
 ==== Format 2 *notify* field
@@ -352,8 +368,8 @@ MSB of the *address* field, and *updiscon* is normally the same value as
 otherwise the decoding software would not be able to reconstruct the
 program execution unambiguously. Consider the following code fragment:
 
- looplabel -4: *_opcode A_* 
- looplabel   : *_opcode B_* 
+ looplabel -4: *_opcode A_*
+ looplabel   : *_opcode B_*
  looplabel +4: *_opcode C_*
  :
  looplabel +N *_JALR_* # Jump to looplabel
@@ -402,7 +418,7 @@ the loop (looplabel). It follows the execution path from the previous
 reported address, until it reaches looplabel. Because looplabel is not
 preceded by an uninferable discontinuity, it must take the value of
 *notify* and *updiscon* into consideration, and may need to wait for the
-next packet in order to determine whether it has reached the most recently 
+next packet in order to determine whether it has reached the most recently
 retired instruction:
 
 * If *updiscon* == !*notify*, this indicates case 2. The decoder must
@@ -438,6 +454,11 @@ is low). Using 2 separate bits results in superior compression.
 
 [[sec:irxx]]
 ==== Format 2 *irreport* and *irdepth*
+
+[NOTE]
+====
+*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:ext-impret>>).
+====
 
 These bits are encoded so that most of the time they will take the same
 value as the *updiscon* field, and will therefore compress away, having
@@ -486,7 +507,7 @@ included, the address is in differential format unless full address mode
 is enabled (see <<sec:full-address>>).
 
 .Packet format 1 - address, branch map
-[align="center",float="center",cols="<1,<1,<3",options="header"]
+[align="center",float="center",cols="<13%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -505,8 +526,9 @@ example if branches = 12, *branch_map* is 15 bits long, and the 12 LSBs
 are valid.
 |*branch_map*| Determined by *branches* field.| An array of bits
 indicating whether branches are taken or not. Bit 0 represents the
-oldest branch instruction executed. For each bit: : branch taken :
-branch not taken
+oldest branch instruction executed. For each bit: +
+0 : branch taken +
+1 : branch not taken
 |*address*| _iaddress_width_p - iaddress_lsb_p_| Differential
 instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
@@ -525,16 +547,21 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p_ + (_return_stack_size_p_ > 0 ? 1 : 0)
++ _call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+====
+
 .Packet format 1 - no address, branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<13%,<5%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 01 (diff-delta): includes branch information and may
@@ -545,7 +572,9 @@ include differential address
 1-31: (cannot occur for this format)
 |*branch_map*| 31| An array of bits indicating whether branches are
 taken or not. Bit 0 represents the oldest branch instruction executed.
-For each bit: : branch taken : branch not taken
+For each bit:  +
+0 : branch taken +
+1 : branch not taken
 |===
 
 ==== Format 1 *updiscon* field
@@ -608,7 +637,7 @@ the resulting packet is shorter. This may occur if the differential
 address is zero, or very small.
 
 .Packet format 0, subformat 0 - no address, branch count
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -623,7 +652,7 @@ and the branch following the previous correct prediction failed. +
 |===
 
 .Packet format 0, subformat 0 - address, branch count
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -656,16 +685,21 @@ predicted return address at the top of the implicit_return return
 address stack, or the last retired before an exception, interrupt,
 privilege change or resync because it is necessary to report the current
 address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p_ + (_return_stack_size_p_ > 0 ? 1 : 0)
++ _call_counter_size_p_| If the value of *irreport* is different from
 *updiscon*, this field indicates the number of entries on the return
 address stack (i.e. the entry number of the return that failed) or
 nested call count. If *irreport* is the same value as *updiscon*, all
 bits in this field will also be the same value as *updiscon*.
 |===
 
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+====
+
 .Packet format 0, subformat 1 - jump target index, branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -695,8 +729,8 @@ differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
 to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p_ + (_return_stack_size_p_ > 0 ? 1 : 0)
+ + _call_counter_size_p_| If the value of *irreport* is different from
 *branch_map[MSB]*, this field indicates the number of entries on the
 return address stack (i.e. the entry number of the return that failed)
 or nested call count. If *irreport* is the same value as
@@ -704,8 +738,13 @@ or nested call count. If *irreport* is the same value as
 *branch_map[MSB]*.
 |===
 
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+====
+
 .Packet format 0, subformat 1 - jump target index, no branch map
-[%autowidth,align="center",float="center",cols="<,<,<",options="header"]
+[align="center",float="center",cols="<14%,<24%,<~",options="header"]
 |===
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
@@ -723,14 +762,19 @@ differs from the predicted return address at the top of the
 implicit_return return address stack, or the last retired before an
 exception, interrupt, privilege change or resync because it is necessary
 to report the current address stack depth or nested call count.
-|*irdepth*| _return_stack_size_p + (return_stack_size_p > 0 ? 1 : 0)
- + call_counter_size_p_| If the value of *irreport* is different from
+|*irdepth*| _return_stack_size_p_ + (_return_stack_size_p_ > 0 ? 1 : 0)
++ _call_counter_size_p_| If the value of *irreport* is different from
 *branches[MSB]*, this field indicates the number of entries on the
 return address stack (i.e. the entry number of the return that failed)
 or nested call count. If *irreport* is the same value as
 *branches[MSB]*, all bits in this field will also be the same value as
 *branches[MSB]*.
 |===
+
+[NOTE]
+====
+The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+====
 
 [[sec:f0s]]
 ==== Format 0 subformat field
@@ -764,6 +808,11 @@ met, then the reported address is that of the last correctly predicted
 branch.
 
 ==== Format 0 *irreport* and *irdepth* fields
+
+[NOTE]
+====
+*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:ext-impret>>).
+====
 
 These bits are encoded so that most of the time they will take the same
 value as the immediately preceding bit (*updiscon*, *branch_map[MSB]* or

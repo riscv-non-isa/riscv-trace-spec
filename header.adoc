@@ -3,7 +3,7 @@ Authors: Gajinder Panesar and Iain Robertson
 include:../docs-resources/global-config.adoc[]
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
-:revdate: June 16, 2025
+:revdate: TBD, 2026
 :revnumber: 2.0
 :revremark: This document is in the Ratified state.
 :url-riscv: http://riscv.org
@@ -16,7 +16,7 @@ include:../docs-resources/global-config.adoc[]
 :pdf-fontsdir: docs-resources/fonts/
 :appendix-caption: Appendix
 :imagesdir: images
-:title-logo-image: image:risc-v_logo.png[pdfwidth=3.25in,align=center]
+:title-logo-image: image:risc-v_logo.png["RISC-V International Logo",pdfwidth=3.25in,align=center]
 // Settings:
 :experimental:
 :reproducible:
@@ -43,6 +43,11 @@ endif::[]
 :footnote:
 :xrefstyle: short
 
+[WARNING]
+.This document is in the link:http://riscv.org/spec-state[Ratified  state] except where explicitly stated in some  extension chapters.
+====
+No changes are allowed. Any desired or needed changes can be the subject of a follow-on new extension. Ratified extensions are never revised.
+====
 [preface]
 == Copyright and license information
 This specification is licensed under the Creative Commons
@@ -50,15 +55,27 @@ Attribution 4.0 International License (CC-BY 4.0). The full
 license text is available at
 https://creativecommons.org/licenses/by/4.0/.
 
-Copyright 2025 by RISC-V International.
+Copyright 2025-2026 by RISC-V International.
 
 [colophon]
+*_Preface to Version TBD_*
+
+* Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
+* Added <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
+* Added <<sec:ext-mmacas>>, which describes the Data Trace of Multiple-Memory Access and Compare and Swap extension to Version 2.0.
+* Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
+* Corrections to <<encoderControl>>: *trTeInstMode* hardcoded to 6 (not 7 as previously stated), *trTeContext* and *trTeInstImplicitReturnMode* changed to optional rather than not-applicable.
+* Fixed error in *branch_map* descriptions in tables in <<sec:format1>> introduced during earlier translation from LaTeX to asciidoc: values for branch taken or not taken were missing.
+* Removed inappropriate and confusing references to "time changes" from <<sec:InstructionInterfaceRequirements>>.
+* Added informative recommendation regarding the use of partial timestamps in packet encapsulation to <<ch:timestamping>>.
+* Remove historical "Future directions" chapter.
+* Minor clarifications, formatting and typo fixes.
 
 *_Preface to Version 20250616_*
 
 Clarifications only - no changes to normative behaviour.
 
-* Updated <<packets>> and <<fragments>> to reference the https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
+* Updated <<packets>> and <<fragments>> to reference the https://docs.riscv.org/reference/debug-trace-ras/trace-encap/_attachments/e-trace-encap.pdf[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
 * Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced;
 * Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (see <<sec:trigger>>);
 * Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>);
@@ -83,7 +100,7 @@ First version in AsciiDoc format.
 
 Clarifications only - no changes to normative behaviour.
 
-* Control field definitions removed from section 2, which now references the xref:https://github.com/riscv-non-isa/e-trace-encap/releases/latest/[RISC-V Trace Control Interface Specification]
+* Control field definitions removed from section 2, which now references the xref:https://docs.riscv.org/reference/debug-trace-ras/trace-control-interface/_attachments/RISC-V-Trace-Control-Interface.pdf[RISC-V Trace Control Interface Specification]
 * Added detail on handling of multi-load/store instructions for data trace to <<sec:DataInterfaceRequirements>>.
 * Removed references to tail-calls in jump classifications in <<sec:InstructionInterfaceRequirements>>.
 * Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>.
@@ -107,6 +124,7 @@ include::discovery.adoc[]
 include::decoder.adoc[]
 include::exampleCodeSnippets.adoc[]
 include::fragmentCodeAndTransport.adoc[]
-include::future.adoc[]
+include::extensions.adoc[]
+
 //include::index.adoc[]
 //include::bibliography.adoc[]
