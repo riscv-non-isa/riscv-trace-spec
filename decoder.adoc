@@ -42,6 +42,7 @@ function process_te_inst (te_inst)
     if (te_inst.subformat == 2) # Context packet
       return
     if (te_inst.subformat == 1) # Trap packet
+      previous_te_inst = te_inst
       report_trap(te_inst)
       if (!te_inst.interrupt) # Exception
         report_epc(exception_address(te_inst))
