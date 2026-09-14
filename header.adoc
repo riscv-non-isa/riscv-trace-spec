@@ -4,7 +4,7 @@ include:../docs-resources/global-config.adoc[]
 :description: Efficient Trace for RISC-V
 :company: RISC-V.org
 :revdate: TBD, 2026
-:revnumber: 2.0
+:revnumber: 2.1
 :revremark: This document is in the Ratified state.
 :url-riscv: http://riscv.org
 :doctype: book
@@ -58,8 +58,10 @@ https://creativecommons.org/licenses/by/4.0/.
 Copyright 2025-2026 by RISC-V International.
 
 [colophon]
-*_Preface to Version TBD_*
+*_Preface to Version 2.1 <date>_*
 
+* <<Interface>> contents replaced with a reference to the xref:https://github.com/riscv-non-isa/riscv-hart-trace-interface/releases/download/v0.91/hart-trace-interface.pdf[RISC-V Hart to Trace Interface Specification] *Editorial note: temp link to be replaced once RHTI is ratified*.
+- This introduces a small normative change related to multi-memory access instructions; see <<Interface>> for details.
 * Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
 * Added <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
 * Added <<sec:ext-mmacas>>, which describes the Data Trace of Multiple-Memory Access and Compare and Swap extension to Version 2.0.
