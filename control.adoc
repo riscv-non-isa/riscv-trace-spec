@@ -2,7 +2,7 @@
 == Encoder Control
 
 The fields required to control a Trace Encoder are defined in the
-https://docs.riscv.org/reference/debug-trace-ras/trace-control-interface/_attachments/RISC-V-Trace-Control-Interface.pdf[RISC-V Trace Control Interface Specification], which is intended to apply to any and all RISC-V trace encoders, regardless of encoding protocol. This chapter details which of those fields apply to E-Trace. To avoid replication, descriptions are not provided here; additional E-Trace specific context or clarification is provided only where required.
+https://docs.riscv.org/reference/debug-trace-ras/trace-control-interface/_attachments/RISC-V-Trace-Control-Interface.pdf[RISC-V Trace Control Interface Specification] V1.0, which is intended to apply to any and all RISC-V trace encoders, regardless of encoding protocol. This chapter details which of those fields apply to E-Trace. To avoid replication, descriptions are not provided here; additional E-Trace specific context or clarification is provided only where required.
 
 How fields are organized and accessed (e.g packet based or memory
 mapped) is outside the scope of this document. If a memory mapped
