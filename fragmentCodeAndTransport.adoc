@@ -99,7 +99,7 @@ line 56. The least significant byte is output first, this means 32 is
 byte 0, 04 is byte 1 and and the final value 02 is byte 4.
 
 ==== Siemens transport
-The packet is encapsulated according to the ++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+The packet is encapsulated according to the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte
 * SrcID - N bits. As an example use 6 bits and the value of 1.
@@ -113,7 +113,7 @@ Since the Siemens transport is byte stream based the data seen will be:
 
 ==== ATB transport
 
-The packet is encapsulated according to the ++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+The packet is encapsulated according to the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte carried via ATDATA bus.
 * SrcID - 0 bits as the SrcID is carried via the ATID bus.
@@ -213,7 +213,7 @@ byte 0, 00 is byte 1 and and the final value 20 is byte 9.
 
 ==== Siemens transport
 
-The packet is encapsulated according to the ++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+The packet is encapsulated according to the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte
 * SrcID - N bits. As an example use 6 bits and the value of A.
@@ -225,7 +225,7 @@ The packet is encapsulated according to the ++https://docs.riscv.org/reference/t
 
 ==== ATB transport
 
-The packet is encapsulated according to the ++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+The packet is encapsulated according to the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte carried via the ATDATA bus.
 * SrcID - 0 bits as the SrcID is carried via the ATID bus.
@@ -307,7 +307,7 @@ byte 0, 00 is byte 1 and and the final value 10 is byte 8.
 
 ==== Siemens transport
 
-The packet is encapsulated according to the ++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+The packet is encapsulated according to the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte
 * SrcID - N bits. As an example use 6 bits and the value of 5.
@@ -319,7 +319,7 @@ The packet is encapsulated according to the ++https://docs.riscv.org/reference/t
 
 ==== ATB transport
 
-The packet is encapsulated according to the ++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
+The packet is encapsulated according to the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification], with the following attributes:
 
 * Header - 1 byte carried via the ATDATA bus.
 * SrcID - 0 bits as the SrcID is carried via the ATID bus.
