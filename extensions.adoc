@@ -102,7 +102,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see <<sec:trigger>>).
+notification was requested via *trigger[2]*.
 |*updiscon*| 1| If the value of this bit is different from *notify*, it
 indicates that this packet is reporting the instruction following an
 uninferable discontinuity and is also the instruction before an
@@ -163,7 +163,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see <<sec:trigger>>).
+notification was requested via *trigger[2]*.
 |*updiscon*| 1| If the value of this bit is different from the MSB of
 *notify*, it indicates that this packet is reporting the instruction
 following an uninferable discontinuity and is also the instruction
@@ -221,8 +221,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see
-<<sec:trigger>>).
+notification was requested via *trigger[2]*.
 |*updiscon*| 1| If the value of this bit is different from *notify*, it
 indicates that this packet is reporting the instruction following an
 uninferable discontinuity and is also the instruction before an
