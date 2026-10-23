@@ -4,7 +4,7 @@
 The bulk of this section describes the payload of packets output from
 the Instruction Trace Encoder. The infrastructure used to transport
 these packets is outside the scope of this document, and as such the
-manner in which packets are encapsulated for transport is not mandated, but the https://docs.riscv.org/reference/debug-trace-ras/trace-encap/_attachments/e-trace-encap.pdf[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
+manner in which packets are encapsulated for transport is not mandated, but the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification] is recommended.  Chapter 3 of that document specifically addresses the encapsulation requirements for E-Trace.
 
 Any encapsulation must include the following information:
 
@@ -193,7 +193,7 @@ nature of the exception. It is omitted from the packet for interrupts.
 
 This packet contains only the context and/or the timestamp, and is
 output when the context value changes and can be reported imprecisely
-(see <<tab:context-type>>).
+(see *ctype* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]).
 
 .Packet format 3, subformat 2
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -322,7 +322,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see <<sec:trigger>>).
+notification was requested via *trigger[2]*.
 |*updiscon*| 1| If the value of this bit is different from *notify*, it
 indicates that this packet is reporting the instruction following an
 uninferable discontinuity and is also the instruction before an
@@ -534,7 +534,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see <<sec:trigger>>).
+notification was requested via *trigger[2]*.
 |*updiscon*| 1| If the value of this bit is different from the MSB of
 *notify*, it indicates that this packet is reporting the instruction
 following an uninferable discontinuity and is also the instruction
@@ -671,8 +671,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see
-<<sec:trigger>>).
+notification was requested via *trigger[2]*.
 |*updiscon*| 1| If the value of this bit is different from *notify*, it
 indicates that this packet is reporting the instruction following an
 uninferable discontinuity and is also the instruction before an

@@ -21,12 +21,10 @@ qualified, and will be traced;
 branch. A 0 indicates the branch was taken, a 1 indicates that it was
 not;
 * _ppccd._ Privilege has changed, or context has changed and needs to be
-reported precisely or treated as an uninferable PC discontinuity (see
-<<tab:context-type>>);
+reported precisely or treated as an uninferable PC discontinuity (see *ctype* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
 * _ppccd_br._ As above, but branch map not empty;
-* _ntf._ Trace notify trigger (see <<tab:debugModuleTriggerSupport>>);
-* _cci._ context change that can be reported imprecisely (see
-<<tab:context-type>>);
+* _ntf._ Trace notify trigger (see *trigger* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
+* _cci._ context change that can be reported imprecisely (see *ctype* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
 * _rpt_br._ Report branches due to full branch map or misprediction;
 * _branches._ The number of branches encountered but not yet reported to
 the decoder;
@@ -70,7 +68,7 @@ _support_ packet. Following this, tracing will resume with a sync
 packet.
 
 Note: if the *halted* or *reset* sideband signals are asserted (see
-<<tab:ingress-side-band>>) the encoder will behave as if it has received an unqualified instruction (output _te_inst_ reporting the address of the previous instruction, followed by
+"Optional sideband signals" section of link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]) the encoder will behave as if it has received an unqualified instruction (output _te_inst_ reporting the address of the previous instruction, followed by
 _te_support_);
 
 [[fig:algo]]
@@ -132,7 +130,7 @@ then it is also required that it can continue to follow the execution
 path up to and through the format 3 packet seamlessly. As such, before
 outputting a format 3 packet, it is necessary to output a format 0/1
 packet for the preceding instruction if there are any unreported
-branches (because format 3 does not contain a branch map). There are several supported options for incrementing the resync timer (packets, cycle or instruction half-words), and as such updates to the timer do not necessarily coincide with instruction retirements.  A small, independent FSM can be used to ensure the required packets are output in the required order, as follows: 
+branches (because format 3 does not contain a branch map). There are several supported options for incrementing the resync timer (packets, cycle or instruction half-words), and as such updates to the timer do not necessarily coincide with instruction retirements.  A small, independent FSM can be used to ensure the required packets are output in the required order, as follows:
 
  * *State 1*: resync_count < max_resync.  Transition to *State 2* when resync_count >= max_resync
  * *State 2*: output packet of unreported branches if required, transition to *state 3*
@@ -201,5 +199,3 @@ cycles between blocks 2 and 3, which will allow the encoder to 'catch
 up'. It is recommended that encoders implement sufficient elastic
 buffering to handle this case, and if for some reason the elastic buffer
 overflows, it should issue a support packet indicating trace lost.
-
-
