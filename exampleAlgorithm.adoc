@@ -23,7 +23,7 @@ not;
 * _ppccd._ Privilege has changed, or context has changed and needs to be
 reported precisely or treated as an uninferable PC discontinuity (see *ctype* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
 * _ppccd_br._ As above, but branch map not empty;
-* _ntf._ Trace notify trigger (see see *trigger* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
+* _ntf._ Trace notify trigger (see *trigger* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
 * _cci._ context change that can be reported imprecisely (see *ctype* definition in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
 * _rpt_br._ Report branches due to full branch map or misprediction;
 * _branches._ The number of branches encountered but not yet reported to
