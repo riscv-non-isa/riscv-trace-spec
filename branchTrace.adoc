@@ -119,7 +119,7 @@ The instruction trace encoder needs to synchronise fully:
 was not traced;
 * If the instruction is the first of an interrupt service routine or
 exception handler;
-* If the privilege level changes; 
+* If the privilege level changes;
 * After a prolonged period of time.
 
 [[sec:endoftrace]]
@@ -133,7 +133,7 @@ Some examples of why tracing may stop are:
 * The hart may be halted (entered debug mode);
 * The hart may be reset;
 * Encoding may be stopped (for example via a _Trace-off_ trigger - see
-<<sec:trigger>>);
+"Using trigger outputs from the Debug Module" section of link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
 * The matching criteria for any filtering capabilities implemented by
 the encoder may no longer be met;
 * The encoder may be disabled.
@@ -225,7 +225,7 @@ sequentially inferable targets and provide this information separately
 to the encoder. The final decision as to whether to treat the jump as
 inferable or not must be made by the encoder. Both the constant load and
 the jump must be traced in order for the decoder to be able to infer the
-jump target. See <<JumpClasses>> for details
+jump target. See "Jump classification and target inference" section of link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification] for details
 of what constitutes a sequentially inferable jump.
 
 [[sec:implicit-return]]
@@ -247,7 +247,7 @@ already been reported in an earlier packet. The encoder must ensure that
 this is the case. This can be accomplished by utilizing a counter to
 keep track of the number of nested calls being traced. The counter
 increments on calls (but not tail calls), and decrements on returns (see
-<<JumpClasses>> for definitions). The counter
+"Jump classification and target inference" section of link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification] for definitions). The counter
 will not over or underflow, and is reset to 0 whenever a synchronization
 packet is sent. Returns will be treated as inferable and will not
 generate a trace packet if the count is non-zero (i.e. the associated
@@ -326,7 +326,7 @@ cache with identical behavior will need to be implemented in the decoder
 software. Even a small cache can provide significant improvement.
 
 The cache shall comprise 2^_cache_size_p_^ entries, each of which can
-contain an instruction address.  The addresses stored in the cache are 
+contain an instruction address.  The addresses stored in the cache are
 the targets of uninferable jumps.  It will be direct mapped, with each
 entry indexed by bits _cache_size_p_:1 of the instruction address (or
 __cache_size_p__+1:2 if compressed instructions aren't supported).
@@ -336,7 +336,7 @@ traced rather than the target address. If it is not found in the cache,
 the entry at that index is replaced with the current instruction
 address.
 
-Note that if implicit return mode is enabled, most function return targets are  inferable and are not output in the trace.  Any such inferrable return target must not be stored in the cache.  This effectively puts the implicit return evaluation in series before the jump target cache, and this may present timing challenges.  This can be mitigated by invalidating the cache entry that corresponds to a mis-predicted return rather than updating the entry with the actual return address.  Mis-predicted returns are rare so the performance impact will be negligible. 
+Note that if implicit return mode is enabled, most function return targets are  inferable and are not output in the trace.  Any such inferrable return target must not be stored in the cache.  This effectively puts the implicit return evaluation in series before the jump target cache, and this may present timing challenges.  This can be mitigated by invalidating the cache entry that corresponds to a mis-predicted return rather than updating the entry with the actual return address.  Mis-predicted returns are rare so the performance impact will be negligible.
 
 The cache entries are all invalidated when a synchronization packet is
 sent.
