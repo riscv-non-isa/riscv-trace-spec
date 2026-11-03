@@ -1,0 +1,16 @@
+[.space-below]
+image::common::risc-v_logo.svg[id="riscvlogo"xs,alt="RISCV"]
+
+[.space-below]
+== Efficient Trace for RISC-V
+
+Authors: Gajinder Panesar and Iain Robertson
+
+Version v2.1, 2026-10-20: This document is in the Ratified state.
+
+[WARNING]
+.This document is in the link:http://riscv.org/spec-state[Ratified state]
+====
+No changes are allowed. Any desired or needed changes can be the subject of a
+follow-on new extension. Ratified extensions are never revised.
+====
