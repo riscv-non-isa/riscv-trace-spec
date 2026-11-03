@@ -1,4 +1,4 @@
-* xref:index.adoc[RISC-V Efficient Trace Specification]
+* xref:index.adoc[Efficient Trace for RISC-V]
 ** xref:copyright.adoc[Copyright]
 ** xref:preface.adoc[Preface]
 ** xref:introduction.adoc[Introduction]
