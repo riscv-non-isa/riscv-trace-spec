@@ -20,7 +20,7 @@ accessed but not care about the data value. Information about whether
 address or data are omitted is not encoded in the packets themselves as
 it does not change dynamically, and to do so would reduce encoding
 efficiency. The run-time configuration should be reported in the Format
-3, subformat 3 support packet (see <<sec:format33>>). The following sections include examples for all three cases.
+3, subformat 3 support packet (see xref:payload.adoc#sec:format33[Format 3 Subformat 3]). The following sections include examples for all three cases.
 
 As outlined in the "Data Trace Interface requirements" section of the link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification], two different signaling protocols between the RISC-V hart and the encoder are supported: _unified_ and _split_. Accordingly, both unified and split trace packets are defined.  Where the _split_ signalling is supported, data accesses with a load data component normally result in two packets, one each for the request and data phases.  However, if address or data are omitted as described above, such that all the required information is from a single phase, then the appropriate unified packet format will be used.  For example, if the data value is omitted then the _Unified load or store with address only_ packet format will be used even if _split_ signalling is used.  Similarly, if the address is omitted then _Unified load or store with data only_ is used.
 
@@ -32,7 +32,7 @@ of log2".
 
 [NOTE]
 ====
-The packets described in this section do not support data trace for harts that support the Zcmp, Vector or Zacas extensions, and are deprecated in favour of the packets defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The packets described in this section do not support data trace for harts that support the Zcmp, Vector or Zacas extensions, and are deprecated in favour of the packets defined in the xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension]
 ====
 
 [[sec:data-loadstore]]
@@ -78,7 +78,7 @@ otherwise shift left by *size* to recover byte address
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1), even with _split_ siganalling.
@@ -103,7 +103,7 @@ otherwise shift left by *size* to recover byte address
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1), even with _split_ siganalling.
@@ -130,7 +130,7 @@ The following packet format is used when the encoder is configured to omit addre
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet is used for the request phase of a split load.
@@ -154,7 +154,7 @@ otherwise shift left by *size* to recover byte address
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet is used for the data phase of a split load and split atomic.
@@ -256,7 +256,7 @@ size
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1), even with _split_ siganalling.
@@ -287,7 +287,7 @@ size
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1), and supports _unified_ signalling.
@@ -322,7 +322,7 @@ applied
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 [[sec:atomic-diff]]
@@ -377,7 +377,7 @@ size
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet format is used when the encoder is configured to omit address values from data trace packets (trTeDataControl.trTeDataNoAddr is 1).
@@ -411,7 +411,7 @@ applied
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 .Packet format for Split atomic load - data phase
 [align="center",float="center",cols="<10%,<17%,<~",options="header"]
@@ -433,7 +433,7 @@ error (sign-extend *resp* MSB)
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 [[sec:data-csr]]
@@ -466,7 +466,7 @@ applied
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 [[sec:csr-diff]]
@@ -515,7 +515,7 @@ these are more likely to compress away.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
 
 The following packet format is used when the encoder is configured to omit data values from data trace packets (trTeDataControl.trTeDataNoValue is 1).
@@ -539,5 +539,5 @@ other codes other packet formats
 |===
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see <<sec:ext-mmacas>>)
+The above packet is deprecated and has been superseded by the equivalent packet defined in the MMA/CAS extension (see xref:extensions.adoc#sec:ext-mmacas[MMA/CAS extension])
 ====
