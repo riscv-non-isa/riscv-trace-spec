@@ -116,7 +116,7 @@ There are two issues with this:
 * It would require the generation of 2 packets on the same cycle, which
 adds significant additional complexity to the encoder;
 * It would complicate the algorithm shown in
-<<fig:algo>>.
+xref:exampleAlgorithm.adoc#fig:algo[Algorithm].
 
 [[sec:format31]]
 === Format 3 subformat 1 - Trap
@@ -127,7 +127,7 @@ and includes the cause, the 'trap value' (for exceptions), and the
 address of the trap handler, or of the exception itself - <<sec:thaddr>>.
 
 If the implicit exception mode is enabled (see
-<<sec:implicit-exception>>), the trap
+xref:branchTrace.adoc#sec:implicit-exception[Implicit Exception]), the trap
 handler address is omitted if *thaddr* is 1.
 
 .Packet format 3, subformat 1
@@ -265,7 +265,7 @@ be +
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Standard Support Packet extension (see <<sec:ext-support>>).
+The above packet is deprecated and has been superseded by the equivalent packet defined in the xref:extensions.adoc#sec:ext-support[Standard Support Packet extension] (see xref:extensions.adoc#sec:ext-support[]).
 ====
 
 [[sec:qual-status]]
@@ -309,7 +309,7 @@ indicated using *ended_rep*.
 This packet contains only an instruction address, and is used when the
 address of an instruction must be reported, and there is no unreported
 branch information. The address is in differential format unless full
-address mode is enabled (see <<sec:full-address>>).
+address mode is enabled (see xref:branchTrace.adoc#sec:full-address[Full Address]).
 
 .Packet format 2
 [align="center",float="center",cols="<11%,<24%,<~",options="header"]
@@ -345,7 +345,7 @@ bits in this field will also be the same value as *updiscon*.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].  This replaces *irdepth* with *irets*.
 ====
 
 [[sec:notify]]
@@ -457,7 +457,7 @@ is low). Using 2 separate bits results in superior compression.
 
 [NOTE]
 ====
-*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:ext-impret>>).
+*irdepth* has been superseded by *irets* defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].
 ====
 
 These bits are encoded so that most of the time they will take the same
@@ -504,7 +504,7 @@ branch information must be reported (for example because the branch map
 is full), or when the address of an instruction must be reported, and
 there has been at least one branch since the previous packet. If
 included, the address is in differential format unless full address mode
-is enabled (see <<sec:full-address>>).
+is enabled (see xref:branchTrace.adoc#sec:full-address[Full Address]).
 
 .Packet format 1 - address, branch map
 [align="center",float="center",cols="<13%,<24%,<~",options="header"]
@@ -557,7 +557,7 @@ bits in this field will also be the same value as *updiscon*.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].  This replaces *irdepth* with *irets*.
 ====
 
 .Packet format 1 - no address, branch map
@@ -694,7 +694,7 @@ bits in this field will also be the same value as *updiscon*.
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].  This replaces *irdepth* with *irets*.
 ====
 
 .Packet format 0, subformat 1 - jump target index, branch map
@@ -739,7 +739,7 @@ or nested call count. If *irreport* is the same value as
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].  This replaces *irdepth* with *irets*.
 ====
 
 .Packet format 0, subformat 1 - jump target index, no branch map
@@ -772,7 +772,7 @@ or nested call count. If *irreport* is the same value as
 
 [NOTE]
 ====
-The above packet is deprecated and has been superseded by the equivalent packet defined in the Implicit Return extension (see <<sec:ext-impret>>).  This replaces *irdepth* with *irets*.
+The above packet is deprecated and has been superseded by the equivalent packet defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].  This replaces *irdepth* with *irets*.
 ====
 
 [[sec:f0s]]
@@ -781,7 +781,7 @@ The above packet is deprecated and has been superseded by the equivalent packet 
 The width of this field depends on the number of optional formats
 supported. Currently, two optional formats are defined (correctly
 predicted branches and jump target cache). The width is specified by the
-_f0s_width_ discovery field (see <<sec:disco>>). If
+_f0s_width_ discovery field (see xref:discovery.adoc#sec:disco[Discovery]). If
 multiple optional formats are supported, the field width must be
 non-zero. However, if only one optional format is supported, the field
 can be omitted, and the value of the field inferred from the *options*
@@ -810,7 +810,7 @@ branch.
 
 [NOTE]
 ====
-*irdepth* has been superseded by *irets* defined in the Implicit Return extension (see <<sec:ext-impret>>).
+*irdepth* has been superseded by *irets* defined in the xref:extensions.adoc#sec:ext-impret[Implicit Return extension].
 ====
 
 These bits are encoded so that most of the time they will take the same

@@ -1,15 +1,15 @@
 [colophon]
 *_Preface to Version 2.1 2026-10-20_*
 
-* <<Interface>> contents replaced with a reference to the link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RISC-V Hart to Trace Interface (RHTI) Specification], V1.0.
-- This introduces a small normative change related to multi-memory access instructions; see <<Interface>> for details.
-* Added <<sec:ext-support>>, which describes the Standard Support Packet extension to Version 2.0.
-* Added <<sec:ext-impret>>, which describes the Implicit Return extension to Version 2.0.
-* Added <<sec:ext-mmacas>>, which describes the Data Trace of Multiple-Memory Access and Compare and Swap extension to Version 2.0.
-* Updated the decoder pseudo-code in <<Decoder>> to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
-* Corrections to <<encoderControl>>: *trTeInstMode* hardcoded to 6 (not 7 as previously stated), *trTeContext* and *trTeInstImplicitReturnMode* changed to optional rather than not-applicable.
-* Fixed error in *branch_map* descriptions in tables in <<sec:format1>> introduced during earlier translation from LaTeX to asciidoc: values for branch taken or not taken were missing.
-* Added informative recommendation regarding the use of partial timestamps in packet encapsulation to <<ch:timestamping>>.
+* xref:ingressPort.adoc#Interface[Ingress Port Interface] contents replaced with a reference to the link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RISC-V Hart to Trace Interface (RHTI) Specification], V1.0.
+- This introduces a small normative change related to multi-memory access instructions; see xref:ingressPort.adoc#Interface[Ingress Port Interface] for details.
+* Added xref:extensions.adoc#sec:ext-support[Standard Support Packet extension], which describes the Standard Support Packet extension to Version 2.0.
+* Added xref:extensions.adoc#sec:ext-impret[Implicit Return extension], which describes the Implicit Return extension to Version 2.0.
+* Added xref:extensions.adoc#sec:ext-mmacas[Data Trace of Multiple-Memory Access and Compare and Swap], which describes the Data Trace of Multiple-Memory Access and Compare and Swap extension to Version 2.0.
+* Updated the decoder pseudo-code in xref:decoder.adoc#Decoder[Decoder] to include support for Implicit Return, Branch Predictor and Jump Target Cache optional modes.
+* Corrections to xref:control.adoc#encoderControl[Encoder Control]: *trTeInstMode* hardcoded to 6 (not 7 as previously stated), *trTeContext* and *trTeInstImplicitReturnMode* changed to optional rather than not-applicable.
+* Fixed error in *branch_map* descriptions in tables in xref:payload.adoc#sec:format1[Format 1] introduced during earlier translation from LaTeX to asciidoc: values for branch taken or not taken were missing.
+* Added informative recommendation regarding the use of partial timestamps in packet encapsulation to xref:timestamping.adoc#ch:timestamping[Timestamping].
 * Remove historical "Future directions" chapter.
 * Minor clarifications, formatting and typo fixes.
 
@@ -17,17 +17,17 @@
 
 Clarifications only - no changes to normative behaviour.
 
-* Updated <<packets>> and <<fragments>> to reference the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
+* Updated xref:payload.adoc#packets[Packets] and xref:fragmentCodeAndTransport.adoc#fragments[Fragments] to reference the link:++https://docs.riscv.org/reference/trace-encap/v1.0/_attachments/e-trace-encap.pdf++[Unformatted Trace & Diagnostic Data Packet Encapsulation for RISC-V Specification];
 * Removed ambiguity between 'last' and 'final'.  Last was previously used to mean both the instruction before the current one, and the final instruction traced;
 * Clarified behaviour when trace-on and trace-off triggers occur both occur in the same cycle (now in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
-* Clarified that full synchronization also takes place on a privilege change (see <<sec:synchronization>> and <<sec:thaddr>>);
+* Clarified that full synchronization also takes place on a privilege change (see xref:branchTrace.adoc#sec:synchronization[Synchronization] and xref:payload.adoc#sec:thaddr[Thread Address]);
 * Reworded jump classifications to align with terminology used in other specifications (now in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]);
-* Clarified when to issue sync-support packet when trace is enabled (see <<sec:format33>>);
-* Clarified that branch_map can be set to 31 any time an address needs to be reported and the branch map is full (see <<sec:format1>>);
-* Updated reference encoding algorithm to generalize resync behaviour and add missing trap conditions (see <<Algorithm>>);
-* Clarified that implicit returns are not stored in the jump target cache (see <<sec:jump-cache>>);
-* Updated decoder to remove ECALL, EBREAK and C.EBREAK from is_uninferrable_jump function.  Including them is harmless but unnecessary, as these instrucitons don't retire (see <<Decoder>>);
-* Corrected description of why the EPC is not always reported (see <<sec:thaddr>>).
+* Clarified when to issue sync-support packet when trace is enabled (see xref:payload.adoc#sec:format33[Format 33]);
+* Clarified that branch_map can be set to 31 any time an address needs to be reported and the branch map is full (see xref:payload.adoc#sec:format1[Format 1]);
+* Updated reference encoding algorithm to generalize resync behaviour and add missing trap conditions (see xref:exampleAlgorithm.adoc#Algorithm[Algorithm]);
+* Clarified that implicit returns are not stored in the jump target cache (see xref:branchTrace.adoc#sec:jump-cache[Jump Target Cache]);
+* Updated decoder to remove ECALL, EBREAK and C.EBREAK from is_uninferrable_jump function.  Including them is harmless but unnecessary, as these instrucitons don't retire (see xref:decoder.adoc#Decoder[Decoder]);
+* Corrected description of why the EPC is not always reported (see xref:payload.adoc#sec:thaddr[Thread Address]).
 * Minor clarifications, formatting and typo fixes.
 
 *_Preface to Version 20240419_*
@@ -45,8 +45,8 @@ Clarifications only - no changes to normative behaviour.
 * Control field definitions removed from section 2, which now references the link:++https://docs.riscv.org/reference/trace-control-interface/v1.0/_attachments/RISC-V-Trace-Control-Interface.pdf++[RISC-V Trace Control Interface Specification], V1.0
 * Added detail on handling of multi-load/store instructions for data trace (now in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]).
 * Removed references to tail-calls in jump classifications (now in link:++https://docs.riscv.org/reference/hti/v1.0/_attachments/riscv-hart-trace-interface.pdf++[RHTI Specification]).
-* Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in <<sec:data-loadstore>>.
-* Corrected reference decoder in <<Decoder>> to cover a corner-case related to trap returns.
+* Corrected typos where `lrid` was inadvertently refered to by an earlier name (`index`) in xref:dataTracePayload.adoc#sec:data-loadstore[Data Trace of Load/Store].
+* Corrected reference decoder in xref:decoder.adoc#Decoder[Decoder] to cover a corner-case related to trap returns.
 
 *_Preface to Version 2.0_*
 

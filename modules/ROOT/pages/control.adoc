@@ -67,7 +67,7 @@ the E-Trace protocol.
 [[sec:ctl-modes]]
 === Optional Modes
 
-See <<optional>> for details of the modes covered in this section.
+See xref:branchTrace.adoc#optional[Optional Modes] for details of the modes covered in this section.
 
 [[optional-modes]]
 .Optional and run-time configurable modes.
@@ -94,7 +94,7 @@ See <<optional>> for details of the modes covered in this section.
 [[sec:ctl-filter]]
 === Filtering
 
-See <<ch:filtering>> for details of the filtering capabilities covered in this section.
+See xref:filtering.adoc#ch:filtering[Filtering] for details of the filtering capabilities covered in this section.
 
 [[trace-filtering]]
 .Trace filtering selection

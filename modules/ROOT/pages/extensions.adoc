@@ -7,7 +7,7 @@
 No changes are allowed. Any desired or needed changes can be the subject of a follow-on new extension. Ratified extensions are never revised.
 ====
 
-The Efficient Trace for RISC-V v2.0 specification defines a support packet (see <<sec:format33>>) and when it must be sent.  The general requirements for the content of this packet are described, but the exact details of the payload is left to the implementor.  The original thinking was that this left flexibility for different encoder implementations to provide support information best suited to their specific capabilities, as well as allowing implementation-specific customizations.
+The Efficient Trace for RISC-V v2.0 specification defines a support packet (see xref:payload.adoc#sec:format33[Format 3 Subformat 3]) and when it must be sent.  The general requirements for the content of this packet are described, but the exact details of the payload is left to the implementor.  The original thinking was that this left flexibility for different encoder implementations to provide support information best suited to their specific capabilities, as well as allowing implementation-specific customizations.
 
 However, this flexibility presents difficulties for applications such as Self-hosted Trace, where the operating system and decoding software need a single, consistent, standardized format.  Furthermore, correct trace decoding is dependent on several discoverable attributes of the trace encoder.  But in a Self-hosted context, the decoder will not be aware of which physical encoder instance is producing the trace it is decoding, and so will be unable to discover these attributes.  This issue can be addressed by including these attributes directly in the support packet.
 
@@ -39,12 +39,12 @@ instruction +
 11 (ended_ntr): Qualification ended, preceding *te_inst* would have been
 sent anyway due to an updiscon, even if it wasn't the final qualified
 instruction
-|*sijump*| 1 | When 1, targets of sequentially inferrable jumps not reported (see <<sec:si-jump>>).
-|*implicit_return*| 1 | When 1, implicit return mode enabled (see <<sec:implicit-return>>).
-|*branch_predictor*| 1 | When 1, branch predictor enabled (see <<sec:branch-prediction>>).
-|*jump_target_cache*| 1 | When 1, jump target cache enabled (see <<sec:jump-cache>>).
-|*implicit_except*| 1 | When 1, implicit exception mode enabled (see <<sec:implicit-exception>>).
-|*full_iaddress*| 1 | When 1, *te_inst* packets always contain full (i.e. non-differential) addresses (see <<sec:full-address>>).
+|*sijump*| 1 | When 1, targets of sequentially inferrable jumps not reported (see xref:branchTrace.adoc#sec:si-jump[Sequentially Inferrable Jumps]).
+|*implicit_return*| 1 | When 1, implicit return mode enabled (see xref:branchTrace.adoc#sec:implicit-return[Implicit Return]).
+|*branch_predictor*| 1 | When 1, branch predictor enabled (see xref:branchTrace.adoc#sec:branch-prediction[Branch Prediction]).
+|*jump_target_cache*| 1 | When 1, jump target cache enabled (see xref:branchTrace.adoc#sec:jump-cache[Jump Target Cache]).
+|*implicit_except*| 1 | When 1, implicit exception mode enabled (see xref:branchTrace.adoc#sec:implicit-exception[Implicit Exception]).
+|*full_iaddress*| 1 | When 1, *te_inst* packets always contain full (i.e. non-differential) addresses (see xref:branchTrace.adoc#sec:full-address[Full Address]).
 |*resync_disabled*| 1 | When 1 indicates that resynchronization is disabled (trTeControl.trTeInstSyncMode == 0).
 |*iret_ext*| 1 | When 1, Implicit Return extension to E-trace v2.0 implemented. [*Add link when extensions merged*]
 |*time_width*| 3 | The width of the time field in sync-start and sync-trap packets (_time_width_p_) is 16 * *time_width* bits.
@@ -77,7 +77,7 @@ The Implicit Return mode information in the format 0, 1 and 2 packets defined in
 If this extension is implemented, the Standard Support Packet extention to Efficient Trace for RISC-V v2.0 (see <<sec:ext-support>>) must also be implemented.
 
 === Background
-As described in <<sec:implicit-return>>, when Implict Return mode is enabled, the target address of function returns is not usually reported.  When it _is_ reported (for example because it's the last instruction retired before a trap), there are some circumstances where the decoder cannot determine precisely which return target it is without some additional information from the encoder.
+As described in xref:branchTrace.adoc#sec:implicit-return[Implicit Return], when Implict Return mode is enabled, the target address of function returns is not usually reported.  When it _is_ reported (for example because it's the last instruction retired before a trap), there are some circumstances where the decoder cannot determine precisely which return target it is without some additional information from the encoder.
 
 One such circumstance occurs when decoding recursive functions.  Each recursively called function will have the same return target address, and including the depth of the return address stack allowed the decoder to determine which one has been reported.  However, it is now known that providing the stack depth results in incorrect decoding in other cases unrelated to recursive functions.  Consider the following illustration:
 
@@ -89,7 +89,7 @@ Had there been any branches between the two functions or inside the 2nd function
 So in summary, the decoder needs additional information to correctly determine which return target has been reported when there have been multiple returns without any branches or uninferrable calls/jumps between them.  This is true for all cases, including recursive functions.
 
 === Revised packet formats
-The following packet definitions replace those detailed in <<packets>>.  All formats and fields are the same, except *irdepth* is replaced by *irets* throughout.
+The following packet definitions replace those detailed in xref:payload.adoc#packets[Packet Formats].  All formats and fields are the same, except *irdepth* is replaced by *irets* throughout.
 
 .Packet format 2
 [align="center",float="center",cols="<12%,<20%,<~",options="header"]
@@ -122,7 +122,7 @@ bits in this field will also be the same value as *updiscon*.
 [[sec:irets]]
 ==== Format 2 *irreport* and *irets*
 
-These bits are encoded so that most of the time they will take the same value as the *updiscon* field, and will therefore compress away, having no impact on the encoding efficiency.  If Implicit Return mode is enabled, the encoder keeps track of function calls and returns, and does not generate _te_inst_ packets for return target addresses that can be inferred by the decoder, as described in  <<sec:implicit-return>>.
+These bits are encoded so that most of the time they will take the same value as the *updiscon* field, and will therefore compress away, having no impact on the encoding efficiency.  If Implicit Return mode is enabled, the encoder keeps track of function calls and returns, and does not generate _te_inst_ packets for return target addresses that can be inferred by the decoder, as described in  xref:branchTrace.adoc#sec:implicit-return[Implicit Return].
 
 When reporting an address via _te_inst_ when Implicit Return mode is enabled, the packet will include details of the number of implicit returns (i.e. return targets that have not been reported explicitly) since the last branch or _te_inst_ packet under the following conditions:
 
@@ -207,7 +207,7 @@ See <<sec:irets>>.
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
 extensions
-|*subformat*| See <<sec:f0s>>| 0 (correctly predicted
+|*subformat*| See xref:payload.adoc#sec:f0s[Format 0 Subformat]| 0 (correctly predicted
 branches)
 |*branch_count*| 32| Count of the number of correctly predicted
 branches, minus 31.
@@ -244,7 +244,7 @@ bits in this field will also be the same value as *updiscon*.
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
 extensions
-|*subformat*| See <<sec:f0s>>| 1 (jump target cache)
+|*subformat*| See xref:payload.adoc#sec:f0s[Format 0 Subformat]| 1 (jump target cache)
 |*index*| __cache_size_p__| Jump target cache index of entry containing
 target address.
 |*branches*| 5| Number of valid bits in *branch_map*. The length of
@@ -281,7 +281,7 @@ to report the implicit return count.
 | *Field name*| *Bits*| *Description*
 |*format*| 2| 00 (opt-ext): formats for optional efficiency
 extensions
-|*subformat*| See <<sec:f0s>>| 1 (jump target cache)
+|*subformat*| See xref:payload.adoc#sec:f0s[Format 0 Subformat]| 1 (jump target cache)
 |*index*| __cache_size_p__| Jump target cache index of entry containing
 target address.
 |*branches*| 5| Number of valid bits in *branch_map*. The length of
@@ -328,7 +328,7 @@ It adds *dtype* encodings to support data trace of multi-memory access instructi
 If this extension is implemented, the Standard Support Packet extention to Efficient Trace for RISC-V v2.0 (see <<sec:ext-support>>) must also be implemented.
 
 === Revised packet formats
-The following packet definitions replace those defined in <<dataTracePackets>>.  The *format* and *subtype* fields have been restructured but all other fields are the same.
+The following packet definitions replace those defined in xref:dataTracePayload.adoc#dataTracePackets[Data Trace Packets].  The *format* and *subtype* fields have been restructured but all other fields are the same.
 
 [[sec:dtrace-format]]
 ==== format field

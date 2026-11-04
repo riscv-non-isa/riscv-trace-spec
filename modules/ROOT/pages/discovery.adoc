@@ -32,7 +32,7 @@ indicates that there is no jump target cache implemented.
 |_ecause_choice_p_ |  |  Number of bits of exception cause to match using
 multiple choice
 |_f0s_width_p_ |  |  Width of the *subformat* field in format 0 _te_inst_
-packets (see <<sec:f0s>>).
+packets (see xref:payload.adoc#sec:f0s[Format 0 Subformat]).
 |_filter_context_p_ | 0 or 1 | Filtering on context supported when 1
 |_filter_time_p_ | 0 or 1 | Filtering on time supported when 1
 |_filter_excint_p_ |  |  Filtering on exception cause or interrupt
@@ -126,7 +126,7 @@ parameters be mapped to discoverable attributes, even if not directly
 required by the decoder. In particular, attributes related to filtering
 capabilities. <<tab:optionalAttributes>>
 lists the attributes associated with the filtering recommendations
-discussed in <<ch:filtering>>, <<tab:otherAttributes>> lists attributes related to
+discussed in xref:filtering.adoc#ch:filtering[Filtering], xref:discovery.adoc#tab:otherAttributes[Other Attributes] lists attributes related to
 other instruction trace parameters mentioned in this document, and <<tab:dataAttributes>> lists attributes related to
 data trace.
 
