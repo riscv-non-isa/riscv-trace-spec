@@ -14,4 +14,7 @@
 ** xref:decoder.adoc[Decoder]
 ** xref:exampleCodeSnippets.adoc[Example Code Snippets]
 ** xref:fragmentCodeAndTransport.adoc[Fragment Code and Transport]
-** xref:extensions.adoc[Extensions]
+** xref:extensions.adoc#sec:ext-support[Standard Support Packet v1.0]
+** xref:extensions.adoc#sec:ext-impret[Implicit Return v1.0]
+** xref:extensions.adoc#sec:ext-mmacas[Data Trace of Multiple-Memory Access and Compare and Swap v1.0]
+
