@@ -7,7 +7,7 @@ A reference algorithm for compressed branch trace is given in
 <<fig:algo>>. In the diagram, the following terms are used:
 
 * _te_inst._ The name of the packet type emitted by the encoder (see
-<<packets>>);
+xref:payload.adoc#packets[Instruction Trace Encoder Output Packets]);
 * _inst._ Abbreviation for 'instruction';
 * _trap. Exception or interrupt signalled;_
 * _updiscon._ Uninferable PC discontinuity. This identifies an
@@ -22,11 +22,11 @@ branch. A 0 indicates the branch was taken, a 1 indicates that it was
 not;
 * _ppccd._ Privilege has changed, or context has changed and needs to be
 reported precisely or treated as an uninferable PC discontinuity (see
-<<tab:context-type>>);
+xref:ingressPort.adoc#tab:context-type[Context type ctype values and corresponding actions]);
 * _ppccd_br._ As above, but branch map not empty;
-* _ntf._ Trace notify trigger (see <<tab:debugModuleTriggerSupport>>);
+* _ntf._ Trace notify trigger (see xref:ingressPort.adoc#tab:debugModuleTriggerSupport[Debug Module trigger support (mcontrol action)]);
 * _cci._ context change that can be reported imprecisely (see
-<<tab:context-type>>);
+xref:ingressPort.adoc#tab:context-type[Context type ctype values and corresponding actions]);
 * _rpt_br._ Report branches due to full branch map or misprediction;
 * _branches._ The number of branches encountered but not yet reported to
 the decoder;
@@ -57,7 +57,7 @@ instruction.
 
 Additionally, the encoder can generate one further packet type, not
 shown on the diagram for clarity. The _support_ packet (format 3,
-subformat 3 - see <<sec:format33>>) is sent when:
+subformat 3 - see xref:payload.adoc#sec:format33[Format 3 subformat 3 - Support]) is sent when:
 
 * The encoder is enabled or disabled, or its configuration is changed,
 to inform the decoder of the operating mode of the encoder;
@@ -70,7 +70,7 @@ _support_ packet. Following this, tracing will resume with a sync
 packet.
 
 Note: if the *halted* or *reset* sideband signals are asserted (see
-<<tab:ingress-side-band>>) the encoder will behave as if it has received an unqualified instruction (output _te_inst_ reporting the address of the previous instruction, followed by
+xref:ingressPort.adoc#tab:ingress-side-band[Optional sideband encoder input signals]) the encoder will behave as if it has received an unqualified instruction (output _te_inst_ reporting the address of the previous instruction, followed by
 _te_support_);
 
 [[fig:algo]]
@@ -92,7 +92,7 @@ predicted correctly, nothing is output at this time, and the encoder
 continues to count correctly predicted branch outcomes. As soon as one
 of the branch outcomes is not correctly predicted, the encoder will
 output a format 0, subformat 0 packet. See also
-<<sec:format0>>.
+xref:payload.adoc#sec:format0[Format 0 packets].
 
 The choice between formats for the "format 0/1/2" case in the middle of
 the diagram also needs further explanation.
@@ -106,19 +106,19 @@ address. This will include branch information if there are any branches
 to report. However, the encoder may chose to output the equivalent
 format 1 or 2 packet (containing the differential address, with or
 without branch information) if that will result in a shorter packet (see
-<<sec:format0>>);
+xref:payload.adoc#sec:format0[Format 0 packets]);
 * Else, if there are branches to report, format 1 is used, otherwise
 format 2.
 
 Packet formats 0, 1 and 2 are organized so that the address is usually
 the final field. Minimizing the number of bits required to represent the
 address reduces the total packet size and significantly improves
-efficiency. See <<packets>>.
+efficiency. See xref:payload.adoc#packets[Instruction Trace Encoder Output Packets].
 
 [[sec:resync]]
 === Resynchronisation
 
-Per <<sec:synchronization>>, a format 3
+Per xref:branchTrace.adoc#sec:synchronization[Synchronization], a format 3
 synchronisation packet must be output after "a prolonged period of
 time". The exact mechanism for determining this is not specified, but
 options might be to count the number of _te_inst_ packets emitted, or

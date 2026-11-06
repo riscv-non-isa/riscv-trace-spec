@@ -114,7 +114,7 @@ There are two issues with this:
 * It would require the generation of 2 packets on the same cycle, which
 adds significant additional complexity to the encoder;
 * It would complicate the algorithm shown in
-<<fig:algo>>.
+xref:exampleAlgorithm.adoc#fig:algo[Instruction delta trace algorithm].
 
 [[sec:format31]]
 === Format 3 subformat 1 - Trap
@@ -125,7 +125,7 @@ and includes the cause, the 'trap value' (for exceptions), and the
 address of the trap handler, or of the exception itself - <<sec:thaddr>>.
 
 If the implicit exception mode is enabled (see
-<<sec:implicit-exception>>), the trap
+xref:branchTrace.adoc#sec:implicit-exception[Implicit exception mode]), the trap
 handler address is omitted if *thaddr* is 1.
 
 .Packet format 3, subformat 1
@@ -189,7 +189,7 @@ nature of the exception. It is omitted from the packet for interrupts.
 
 This packet contains only the context and/or the timestamp, and is
 output when the context value changes and can be reported imprecisely
-(see <<tab:context-type>>).
+(see xref:ingressPort.adoc#tab:context-type[Context type ctype values and corresponding actions]).
 
 .Packet format 3, subformat 2
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -298,7 +298,7 @@ indicated using *ended_rep*.
 This packet contains only an instruction address, and is used when the
 address of an instruction must be reported, and there is no unreported
 branch information. The address is in differential format unless full
-address mode is enabled (see <<sec:full-address>>).
+address mode is enabled (see xref:branchTrace.adoc#sec:full-address[Full address mode]).
 
 .Packet format 2
 [%autowidth,align="center",float="center",cols="<,<,<",options="header"]
@@ -311,7 +311,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see <<sec:trigger>>).
+notification was requested via *trigger[2]* (see xref:ingressPort.adoc#sec:trigger[Using trigger outputs from the Debug Module]).
 |*updiscon*| 1| If the value of this bit is different from *notify*, it
 indicates that this packet is reporting the instruction following an
 uninferable discontinuity and is also the instruction before an
@@ -483,7 +483,7 @@ branch information must be reported (for example because the branch map
 is full), or when the address of an instruction must be reported, and
 there has been at least one branch since the previous packet. If
 included, the address is in differential format unless full address mode
-is enabled (see <<sec:full-address>>).
+is enabled (see xref:branchTrace.adoc#sec:full-address[Full address mode]).
 
 .Packet format 1 - address, branch map
 [align="center",float="center",cols="<1,<1,<3",options="header"]
@@ -512,7 +512,7 @@ instruction address.
 |*notify*| 1| If the value of this bit is different from the MSB of
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
-notification was requested via *trigger[2]* (see <<sec:trigger>>).
+notification was requested via *trigger[2]* (see xref:ingressPort.adoc#sec:trigger[Using trigger outputs from the Debug Module]).
 |*updiscon*| 1| If the value of this bit is different from the MSB of
 *notify*, it indicates that this packet is reporting the instruction
 following an uninferable discontinuity and is also the instruction
@@ -643,7 +643,7 @@ instruction address.
 *address*, it indicates that this packet is reporting an instruction
 that is not the target of an uninferable discontinuity because a
 notification was requested via *trigger[2]* (see
-<<sec:trigger>>).
+xref:ingressPort.adoc#sec:trigger[Using trigger outputs from the Debug Module]).
 |*updiscon*| 1| If the value of this bit is different from *notify*, it
 indicates that this packet is reporting the instruction following an
 uninferable discontinuity and is also the instruction before an
@@ -738,7 +738,7 @@ or nested call count. If *irreport* is the same value as
 The width of this field depends on the number of optional formats
 supported. Currently, two optional formats are defined (correctly
 predicted branches and jump target cache). The width is specified by the
-_f0s_width_ discovery field (see <<sec:disco>>). If
+_f0s_width_ discovery field (see xref:discovery.adoc#sec:disco[Discovery of encoder parameters]). If
 multiple optional formats are supported, the field width must be
 non-zero. However, if only one optional format is supported, the field
 can be omitted, and the value of the field inferred from the *options*
