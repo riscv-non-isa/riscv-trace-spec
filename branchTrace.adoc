@@ -95,7 +95,7 @@ beforehand must be traced. Following this the next valid instruction
 address (the first of the trap handler) must be traced.
 
 Note: not all exceptions and interrupts cause traps (see
-<<sec:terminology>> for definitions). Most
+xref:introduction.adoc#sec:terminology[Terminology] for definitions). Most
 notably, floating point exceptions and disabled interrupts do not trap.
 If an exception or interrupt doesn't trap, the program counter does not
 change. So, there is no need to trace all exceptions/interrupts, just
@@ -133,7 +133,7 @@ Some examples of why tracing may stop are:
 * The hart may be halted (entered debug mode);
 * The hart may be reset;
 * Encoding may be stopped (for example via a _Trace-off_ trigger - see
-<<sec:trigger>>);
+xref:ingressPort.adoc#sec:trigger[Using trigger outputs from the Debug Module]);
 * The matching criteria for any filtering capabilities implemented by
 the encoder may no longer be met;
 * The encoder may be disabled.
@@ -167,7 +167,7 @@ encoded as taken/non-taken, but as a more efficient branch count number.
 uninferable jump target, efficiency can be improved by caching recent
 jump targets, and reporting the cache entry index instead.
 
-Modes may have associated parameters; see <<tab:iparameters>> for further details.
+Modes may have associated parameters; see xref:discovery.adoc#tab:iparameters[Parameters to the encoder - instruction trace] for further details.
 
 All modes are optional apart from delta address mode, which must be
 supported.
@@ -225,7 +225,7 @@ sequentially inferable targets and provide this information separately
 to the encoder. The final decision as to whether to treat the jump as
 inferable or not must be made by the encoder. Both the constant load and
 the jump must be traced in order for the decoder to be able to infer the
-jump target. See <<JumpClasses>> for details
+jump target. See xref:ingressPort.adoc#JumpClasses[Jump classification and target inference] for details
 of what constitutes a sequentially inferable jump.
 
 [[sec:implicit-return]]
@@ -247,7 +247,7 @@ already been reported in an earlier packet. The encoder must ensure that
 this is the case. This can be accomplished by utilizing a counter to
 keep track of the number of nested calls being traced. The counter
 increments on calls (but not tail calls), and decrements on returns (see
-<<JumpClasses>> for definitions). The counter
+xref:ingressPort.adoc#JumpClasses[Jump classification and target inference] for definitions). The counter
 will not over or underflow, and is reset to 0 whenever a synchronization
 packet is sent. Returns will be treated as inferable and will not
 generate a trace packet if the count is non-zero (i.e. the associated
