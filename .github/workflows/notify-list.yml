@@ -1,0 +1,26 @@
+---
+# Emails the group's mailing list when a new issue or pull request is opened
+# (draft PRs are sent when they are marked ready for review).
+# Set up by riscv-admin/adm-list-notify; the list address is the repo secret LIST_NOTIFY_EMAIL.
+#
+# pull_request_target (not pull_request) so that PRs from forks can send too. It is safe
+# here: the shared workflow never checks out or runs code from the PR.
+name: Notify list
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened, ready_for_review]
+
+permissions: {}
+
+jobs:
+  notify:
+    permissions:
+      id-token: write
+      contents: read
+    uses: riscv-admin/adm-list-notify/.github/workflows/notify.yml@v1
+    secrets:
+      list_email: ${{ secrets.LIST_NOTIFY_EMAIL }}
+      aws_role: ${{ secrets.LIST_NOTIFY_AWS_ROLE }}
